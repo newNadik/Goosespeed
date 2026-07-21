@@ -26,6 +26,11 @@ func _ready() -> void:
 	spring_arm.spring_length = third_person_distance
 	third_person_camera.fov = fov
 	first_person_camera.fov = fov
+	_apply_saved_camera_mode()
+	var game_settings := get_node_or_null("/root/GooseGameSettings")
+	var callback := Callable(self, "_apply_saved_camera_mode")
+	if game_settings != null and game_settings.has_signal("settings_changed") and not game_settings.is_connected("settings_changed", callback):
+		game_settings.connect("settings_changed", callback)
 	_apply_camera_mode()
 	_apply_rotation()
 
@@ -61,6 +66,11 @@ func set_active_backend(value: Node) -> void:
 	_disable_backend_cameras()
 	call_deferred("_disable_backend_cameras")
 	_sync_from_backend_if_available()
+
+
+func set_camera_mode(value: String) -> void:
+	first_person_enabled = value == "first_person"
+	_apply_camera_mode()
 
 
 func _follow_target(delta: float) -> void:
@@ -132,3 +142,10 @@ func _sync_backend_camera_state() -> void:
 	var head := active_backend.get_node_or_null("Head") as Node3D
 	if head:
 		head.rotation.x = pitch
+
+
+func _apply_saved_camera_mode() -> void:
+	var game_settings := get_node_or_null("/root/GooseGameSettings")
+	if game_settings == null:
+		return
+	set_camera_mode(str(game_settings.get("camera_mode")))

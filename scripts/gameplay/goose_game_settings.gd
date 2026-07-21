@@ -14,6 +14,10 @@ const MOVEMENT_BACKENDS := [
 ]
 const CAMERA_THIRD_PERSON := "third_person"
 const CAMERA_FIRST_PERSON := "first_person"
+const CAMERA_MODES := [
+	CAMERA_THIRD_PERSON,
+	CAMERA_FIRST_PERSON,
+]
 
 var movement_backend := MOVEMENT_Q3
 var camera_mode := CAMERA_THIRD_PERSON
@@ -33,7 +37,7 @@ func load_settings() -> void:
 	movement_backend = normalize_movement_backend(
 		str(config.get_value(SECTION, "movement_backend", movement_backend))
 	)
-	camera_mode = str(config.get_value(SECTION, "camera_mode", camera_mode))
+	camera_mode = normalize_camera_mode(str(config.get_value(SECTION, "camera_mode", camera_mode)))
 	debug_hud_visible = bool(config.get_value(SECTION, "debug_hud_visible", debug_hud_visible))
 
 
@@ -56,7 +60,22 @@ func set_movement_backend(value: String) -> void:
 	settings_changed.emit()
 
 
+func set_camera_mode(value: String) -> void:
+	var normalized := normalize_camera_mode(value)
+	if camera_mode == normalized:
+		return
+	camera_mode = normalized
+	save_settings()
+	settings_changed.emit()
+
+
 func normalize_movement_backend(value: String) -> String:
 	if value in MOVEMENT_BACKENDS:
 		return value
 	return MOVEMENT_Q3
+
+
+func normalize_camera_mode(value: String) -> String:
+	if value in CAMERA_MODES:
+		return value
+	return CAMERA_THIRD_PERSON

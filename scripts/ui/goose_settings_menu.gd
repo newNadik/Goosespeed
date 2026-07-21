@@ -5,6 +5,7 @@ signal back_requested
 signal movement_backend_changed(backend: String)
 
 @onready var backend_option: OptionButton = $CenterContainer/SettingsPanel/Margin/VBox/BackendOption
+@onready var camera_option: OptionButton = $CenterContainer/SettingsPanel/Margin/VBox/CameraOption
 @onready var back_button: Button = $CenterContainer/SettingsPanel/Margin/VBox/BackButton
 
 var syncing := false
@@ -12,7 +13,9 @@ var syncing := false
 
 func _ready() -> void:
 	_populate_backend_options()
+	_populate_camera_options()
 	backend_option.item_selected.connect(on_backend_selected)
+	camera_option.item_selected.connect(on_camera_selected)
 	back_button.pressed.connect(on_back_pressed)
 
 
@@ -34,6 +37,13 @@ func on_backend_selected(index: int) -> void:
 	movement_backend_changed.emit(backend)
 
 
+func on_camera_selected(index: int) -> void:
+	if syncing:
+		return
+	var camera_mode := str(camera_option.get_item_metadata(index))
+	GooseGameSettings.set_camera_mode(camera_mode)
+
+
 func on_back_pressed() -> void:
 	back_requested.emit()
 
@@ -46,9 +56,21 @@ func _populate_backend_options() -> void:
 	_sync_from_settings()
 
 
+func _populate_camera_options() -> void:
+	camera_option.clear()
+	_add_camera_option("Third Person", GooseGameSettings.CAMERA_THIRD_PERSON)
+	_add_camera_option("First Person", GooseGameSettings.CAMERA_FIRST_PERSON)
+	_sync_from_settings()
+
+
 func _add_backend_option(label: String, backend: String) -> void:
 	backend_option.add_item(label)
 	backend_option.set_item_metadata(backend_option.item_count - 1, backend)
+
+
+func _add_camera_option(label: String, camera_mode: String) -> void:
+	camera_option.add_item(label)
+	camera_option.set_item_metadata(camera_option.item_count - 1, camera_mode)
 
 
 func _sync_from_settings() -> void:
@@ -56,6 +78,9 @@ func _sync_from_settings() -> void:
 	for index in backend_option.item_count:
 		if backend_option.get_item_metadata(index) == GooseGameSettings.movement_backend:
 			backend_option.select(index)
-			syncing = false
-			return
+			break
+	for index in camera_option.item_count:
+		if camera_option.get_item_metadata(index) == GooseGameSettings.camera_mode:
+			camera_option.select(index)
+			break
 	syncing = false
