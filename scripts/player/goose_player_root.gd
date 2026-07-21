@@ -13,12 +13,15 @@ const PLATFORMER_CONTROLLER_SCENE := preload("res://scenes/platformer_controller
 @onready var active_movement_controller: Node = $ActiveMovementController
 @onready var glide_flap_modifier: Node = $GlideFlapModifier
 @onready var movement_state_bridge: Node = $MovementStateBridge
+@onready var goose_camera_rig: Node = $GooseCameraRig
 @onready var goose_visual: Node = $GooseVisual
 
 
 func _ready() -> void:
 	_spawn_backend()
 	movement_state_bridge.set_controller(active_movement_controller)
+	goose_camera_rig.set_state_bridge(movement_state_bridge)
+	goose_camera_rig.set_active_backend(active_movement_controller)
 	goose_visual.set_state_bridge(movement_state_bridge)
 
 
@@ -72,6 +75,7 @@ func _replace_active_controller(controller: Node, spawn_transform: Transform3D) 
 func _configure_basic_controller() -> void:
 	active_movement_controller.input_adapter = input_adapter
 	active_movement_controller.glide_flap_modifier = glide_flap_modifier
+	call_deferred("_disable_backend_cameras")
 
 
 func _hide_backend_debug_visuals() -> void:
@@ -81,6 +85,11 @@ func _hide_backend_debug_visuals() -> void:
 	var face_marker := active_movement_controller.get_node_or_null("FaceMarker") as Node3D
 	if face_marker:
 		face_marker.visible = false
+
+
+func _disable_backend_cameras() -> void:
+	if goose_camera_rig:
+		goose_camera_rig.set_active_backend(active_movement_controller)
 
 
 func _resolve_movement_backend() -> String:

@@ -32,6 +32,14 @@ func _ready() -> void:
 			push_error("Platformer backend facing direction is not normalized to face_yaw")
 			get_tree().quit(1)
 			return
+		if not _goosespeed_camera_is_current(player):
+			push_error("Backend %s does not use GooseSpeed current camera" % backend)
+			get_tree().quit(1)
+			return
+		if not _backend_cameras_are_disabled(controller):
+			push_error("Backend %s has a current backend camera" % backend)
+			get_tree().quit(1)
+			return
 		player.queue_free()
 		await get_tree().process_frame
 
@@ -51,3 +59,24 @@ func _platformer_facing_is_normalized(player: Node) -> bool:
 	await get_tree().process_frame
 	var state: RefCounted = player.movement_state_bridge.get_state()
 	return state.facing_direction.is_equal_approx(Vector3.RIGHT)
+
+
+func _goosespeed_camera_is_current(player: Node) -> bool:
+	var camera := player.get_node_or_null("GooseCameraRig/YawPivot/PitchPivot/SpringArm3D/ThirdPersonCamera") as Camera3D
+	return camera != null and camera.current
+
+
+func _backend_cameras_are_disabled(controller: Node) -> bool:
+	for camera in _find_cameras(controller):
+		if camera.current:
+			return false
+	return true
+
+
+func _find_cameras(root: Node) -> Array[Camera3D]:
+	var cameras: Array[Camera3D] = []
+	if root is Camera3D:
+		cameras.append(root as Camera3D)
+	for child in root.get_children():
+		cameras.append_array(_find_cameras(child))
+	return cameras

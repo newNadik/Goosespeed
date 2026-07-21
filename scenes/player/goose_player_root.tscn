@@ -1,4 +1,4 @@
-[gd_scene load_steps=16 format=3]
+[gd_scene load_steps=17 format=3]
 
 [ext_resource type="Script" path="res://scripts/player/goose_player_root.gd" id="1_root"]
 [ext_resource type="Script" path="res://scripts/player/player_input_adapter.gd" id="2_input"]
@@ -6,6 +6,7 @@
 [ext_resource type="Script" path="res://scripts/player/glide_flap_modifier.gd" id="4_glide"]
 [ext_resource type="Script" path="res://scripts/player/movement_state_bridge.gd" id="5_bridge"]
 [ext_resource type="Script" path="res://scripts/player/goose_visual_controller.gd" id="6_visual"]
+[ext_resource type="Script" path="res://scripts/player/goose_camera_rig.gd" id="7_camera"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_player"]
 radius = 0.34
@@ -69,6 +70,25 @@ script = ExtResource("4_glide")
 
 [node name="MovementStateBridge" type="Node" parent="."]
 script = ExtResource("5_bridge")
+
+[node name="GooseCameraRig" type="Node3D" parent="."]
+script = ExtResource("7_camera")
+
+[node name="YawPivot" type="Node3D" parent="GooseCameraRig"]
+
+[node name="PitchPivot" type="Node3D" parent="GooseCameraRig/YawPivot"]
+
+[node name="SpringArm3D" type="SpringArm3D" parent="GooseCameraRig/YawPivot/PitchPivot"]
+spring_length = 6.0
+margin = 0.15
+collision_mask = 1
+
+[node name="ThirdPersonCamera" type="Camera3D" parent="GooseCameraRig/YawPivot/PitchPivot/SpringArm3D"]
+current = true
+fov = 100.0
+
+[node name="FirstPersonCamera" type="Camera3D" parent="GooseCameraRig/YawPivot/PitchPivot"]
+fov = 100.0
 
 [node name="GooseVisual" type="Node3D" parent="."]
 script = ExtResource("6_visual")
