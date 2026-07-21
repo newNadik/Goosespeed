@@ -4,6 +4,12 @@
 [ext_resource type="Texture2D" uid="uid://cvl2ke2lkm7lm" path="res://assets/ui/main_menu_bg.png" id="2_fe2o3"]
 [ext_resource type="Texture2D" uid="uid://bgk2bx48iaxca" path="res://assets/ui/pause_bg.png" id="3_m1kxf"]
 [ext_resource type="Texture2D" uid="uid://c7n3yjpere6kg" path="res://assets/ui/full_logo.png" id="4_x2yvf"]
+[ext_resource type="PackedScene" uid="uid://bhv4nsat8y6fw" path="res://scenes/ui/goose_menu_button.tscn" id="5_button"]
+[ext_resource type="PackedScene" path="res://scenes/ui/goose_menu_separator.tscn" id="6_separator"]
+[ext_resource type="Texture2D" uid="uid://dry1r48mwn3rl" path="res://assets/ui/icons/ic_play.png" id="7_play"]
+[ext_resource type="Texture2D" uid="uid://btug6m8h6qwl4" path="res://assets/ui/icons/ic_settings.png" id="8_q85j6"]
+[ext_resource type="Texture2D" uid="uid://dicf6nds28vr7" path="res://assets/ui/icons/ic_quit.png" id="8_quit"]
+[ext_resource type="PackedScene" path="res://scenes/ui/goose_settings_menu.tscn" id="9_settings"]
 
 [node name="MainMenu" type="Control" unique_id=1763581018]
 layout_mode = 3
@@ -33,6 +39,18 @@ grow_horizontal = 2
 grow_vertical = 2
 texture = ExtResource("2_fe2o3")
 
+[node name="MenuBackgroundShadow" type="TextureRect" parent="." unique_id=610999285]
+modulate = Color(0, 0, 0, 0.13725491)
+layout_mode = 1
+offset_left = -32.0
+offset_top = 18.0
+offset_right = 842.0
+offset_bottom = 1098.0
+rotation = -0.061086524
+mouse_filter = 2
+texture = ExtResource("3_m1kxf")
+stretch_mode = 5
+
 [node name="MenuBackground" type="TextureRect" parent="." unique_id=1020065978]
 layout_mode = 1
 offset_left = -50.0
@@ -60,7 +78,7 @@ theme_override_constants/margin_bottom = 48
 
 [node name="VBoxContainer" type="VBoxContainer" parent="MenuBackground/MarginContainer" unique_id=878607575]
 layout_mode = 2
-theme_override_constants/separation = 18
+theme_override_constants/separation = 15
 
 [node name="TextureRect" type="TextureRect" parent="MenuBackground/MarginContainer/VBoxContainer" unique_id=1610262223]
 custom_minimum_size = Vector2(0, 250)
@@ -70,12 +88,31 @@ texture = ExtResource("4_x2yvf")
 expand_mode = 1
 stretch_mode = 5
 
-[node name="StartButton" type="Button" parent="MenuBackground/MarginContainer/VBoxContainer" unique_id=1282232914]
-custom_minimum_size = Vector2(0, 56)
+[node name="StartButton" parent="MenuBackground/MarginContainer/VBoxContainer" unique_id=1282232914 instance=ExtResource("5_button")]
 layout_mode = 2
-text = "Start Test Level"
+text = "Start"
+icon = ExtResource("7_play")
+label_text = "Start"
+button_icon = ExtResource("7_play")
 
-[node name="QuitButton" type="Button" parent="MenuBackground/MarginContainer/VBoxContainer" unique_id=1558086319]
-custom_minimum_size = Vector2(0, 56)
+[node name="ButtonSeparator" parent="MenuBackground/MarginContainer/VBoxContainer" unique_id=492883848 instance=ExtResource("6_separator")]
+layout_mode = 2
+
+[node name="SettingsButton" parent="MenuBackground/MarginContainer/VBoxContainer" unique_id=862024904 instance=ExtResource("5_button")]
+layout_mode = 2
+text = "Settings"
+icon = ExtResource("8_q85j6")
+label_text = "Settings"
+button_icon = ExtResource("8_q85j6")
+
+[node name="ButtonSeparator2" parent="MenuBackground/MarginContainer/VBoxContainer" unique_id=265191299 instance=ExtResource("6_separator")]
+layout_mode = 2
+
+[node name="QuitButton" parent="MenuBackground/MarginContainer/VBoxContainer" unique_id=1558086319 instance=ExtResource("5_button")]
 layout_mode = 2
 text = "Quit"
+icon = ExtResource("8_quit")
+label_text = "Quit"
+button_icon = ExtResource("8_quit")
+
+[node name="GooseSettingsMenu" parent="." unique_id=392463973 instance=ExtResource("9_settings")]

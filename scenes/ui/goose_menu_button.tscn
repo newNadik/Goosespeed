@@ -1,0 +1,37 @@
+[gd_scene format=3 uid="uid://bhv4nsat8y6fw"]
+
+[ext_resource type="Script" uid="uid://cokx0bxxaba1p" path="res://scripts/ui/goose_menu_button.gd" id="1_button"]
+[ext_resource type="FontFile" uid="uid://bkdpp3abo73lr" path="res://assets/ui/fonts/Condor Medium Condensed.otf" id="1_me82c"]
+[ext_resource type="Texture2D" uid="uid://bpbak25jcvem4" path="res://assets/ui/icons/ic_check.png" id="2_rxcet"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_rxcet"]
+content_margin_left = 0.0
+content_margin_top = 0.0
+content_margin_right = 0.0
+content_margin_bottom = 0.0
+bg_color = Color(1, 1, 1, 0)
+
+[node name="GooseMenuButton" type="Button" unique_id=862024904]
+custom_minimum_size = Vector2(0, 64)
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.15294118, 0.24705882, 0.30980393, 1)
+theme_override_colors/font_focus_color = Color(0.99607843, 0.46666667, 0.2627451, 1)
+theme_override_colors/font_pressed_color = Color(0.99607843, 0.46666667, 0.2627451, 1)
+theme_override_colors/font_hover_color = Color(0.99607843, 0.46666667, 0.2627451, 1)
+theme_override_colors/font_hover_pressed_color = Color(0.99607843, 0.46666667, 0.2627451, 1)
+theme_override_colors/font_disabled_color = Color(0.09941176, 0.16058823, 0.20137255, 1)
+theme_override_constants/h_separation = 10
+theme_override_constants/icon_max_width = 75
+theme_override_fonts/font = ExtResource("1_me82c")
+theme_override_font_sizes/font_size = 56
+theme_override_styles/normal = SubResource("StyleBoxFlat_rxcet")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_rxcet")
+theme_override_styles/hover = SubResource("StyleBoxFlat_rxcet")
+theme_override_styles/disabled = SubResource("StyleBoxFlat_rxcet")
+theme_override_styles/focus = SubResource("StyleBoxFlat_rxcet")
+text = "Button"
+icon = ExtResource("2_rxcet")
+flat = true
+alignment = 0
+script = ExtResource("1_button")
+button_icon = ExtResource("2_rxcet")
