@@ -10,6 +10,7 @@
 [ext_resource type="Texture2D" uid="uid://btug6m8h6qwl4" path="res://assets/ui/icons/ic_settings.png" id="8_q85j6"]
 [ext_resource type="Texture2D" uid="uid://dicf6nds28vr7" path="res://assets/ui/icons/ic_quit.png" id="8_quit"]
 [ext_resource type="PackedScene" path="res://scenes/ui/goose_settings_overlay.tscn" id="9_settings"]
+[ext_resource type="Theme" path="res://themes/goosespeed_theme.tres" id="10_theme"]
 
 [node name="MainMenu" type="Control" unique_id=1763581018]
 layout_mode = 3
@@ -18,6 +19,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+theme = ExtResource("10_theme")
 script = ExtResource("1_main")
 
 [node name="Background" type="ColorRect" parent="." unique_id=393546418]

@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" path="res://scripts/ui/goose_settings_menu.gd" id="1_settings"]
 [ext_resource type="PackedScene" path="res://scenes/ui/goose_backend_tuning_panel.tscn" id="2_tuning"]
+[ext_resource type="Theme" path="res://themes/goosespeed_theme.tres" id="3_theme"]
 
 [node name="GooseSettingsMenu" type="Control"]
 visible = false
@@ -11,6 +12,7 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+theme = ExtResource("3_theme")
 script = ExtResource("1_settings")
 
 [node name="CenterContainer" type="CenterContainer" parent="."]

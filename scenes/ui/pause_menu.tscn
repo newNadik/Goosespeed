@@ -2,10 +2,12 @@
 
 [ext_resource type="Script" uid="uid://84t74g14kt78" path="res://scripts/ui/pause_menu.gd" id="1_pause"]
 [ext_resource type="PackedScene" path="res://scenes/ui/goose_settings_overlay.tscn" id="2_settings"]
+[ext_resource type="Theme" path="res://themes/goosespeed_theme.tres" id="3_theme"]
 
 [node name="PauseMenu" type="CanvasLayer" unique_id=1882656991]
 process_mode = 3
 layer = 5
+theme = ExtResource("3_theme")
 script = ExtResource("1_pause")
 
 [node name="MenuRoot" type="Control" parent="." unique_id=1114414113]
