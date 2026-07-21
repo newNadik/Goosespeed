@@ -65,11 +65,22 @@ func _replace_active_controller(controller: Node, spawn_transform: Transform3D) 
 	add_child(active_movement_controller)
 	(active_movement_controller as Node3D).global_transform = spawn_transform
 	active_movement_controller.set_meta("spawn_transform", spawn_transform)
+	_hide_backend_debug_visuals()
+	call_deferred("_hide_backend_debug_visuals")
 
 
 func _configure_basic_controller() -> void:
 	active_movement_controller.input_adapter = input_adapter
 	active_movement_controller.glide_flap_modifier = glide_flap_modifier
+
+
+func _hide_backend_debug_visuals() -> void:
+	var body_mesh := active_movement_controller.get_node_or_null("BodyMesh") as Node3D
+	if body_mesh:
+		body_mesh.visible = false
+	var face_marker := active_movement_controller.get_node_or_null("FaceMarker") as Node3D
+	if face_marker:
+		face_marker.visible = false
 
 
 func _resolve_movement_backend() -> String:
