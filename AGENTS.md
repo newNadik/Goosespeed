@@ -18,6 +18,20 @@ This is the main GooseSpeed Godot project.
 - Search for deleted names and old action names with `rg`.
 - Fix warnings introduced by the task.
 
+## Code Structure
+
+- Keep code decoupled by layer. Do not create long scripts that combine input,
+  movement, camera, visuals, UI, settings, persistence, and debug output.
+- Prefer dedicated scripts for each responsibility, such as:
+  `PlayerInputAdapter`, movement backend adapters, `MovementStateBridge`,
+  `GooseCameraRig`, `GooseVisualController`, HUD/controllers, and settings
+  persistence.
+- GooseSpeed-owned player-facing layers should depend on normalized contracts,
+  not direct prototype internals.
+- Temporary `goose-moves` backend access should stay behind wrappers or bridges.
+- If a task starts to blur layer boundaries, stop and propose a cleaner structure
+  before changing files.
+
 ## Validation Before Done
 
 Use the relevant checks:
@@ -35,6 +49,9 @@ behind unless they are intentional project tests.
 ## Commit Rule
 
 - Commit only stable, cleaned, validated work.
+- After validation, summarize the result and wait for explicit user approval
+  before committing.
+- User approval to implement a task does not imply approval to commit it.
 - Commit only intentional files for the confirmed task.
 - Do not commit unrelated user changes.
 - If validation cannot be completed, ask before committing.
