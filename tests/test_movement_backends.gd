@@ -28,6 +28,10 @@ func _ready() -> void:
 			push_error("Platformer backend debug visuals are visible")
 			get_tree().quit(1)
 			return
+		if backend == "platformer" and not await _platformer_facing_is_normalized(player):
+			push_error("Platformer backend facing direction is not normalized to face_yaw")
+			get_tree().quit(1)
+			return
 		player.queue_free()
 		await get_tree().process_frame
 
@@ -39,3 +43,11 @@ func _platformer_debug_visuals_are_hidden(controller: Node) -> bool:
 	var body_mesh := controller.get_node_or_null("BodyMesh") as Node3D
 	var face_marker := controller.get_node_or_null("FaceMarker") as Node3D
 	return body_mesh != null and face_marker != null and not body_mesh.visible and not face_marker.visible
+
+
+func _platformer_facing_is_normalized(player: Node) -> bool:
+	var controller: Node = player.get_active_controller()
+	controller.set("face_yaw", PI * 0.5)
+	await get_tree().process_frame
+	var state: RefCounted = player.movement_state_bridge.get_state()
+	return state.facing_direction.is_equal_approx(Vector3.RIGHT)

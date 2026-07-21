@@ -58,9 +58,7 @@ func _capture_controller_state() -> RefCounted:
 	if typeof(controller_velocity) == TYPE_VECTOR3:
 		result.velocity = controller_velocity
 	result.horizontal_speed = Vector2(result.velocity.x, result.velocity.z).length()
-	var facing := -(controller as Node3D).global_transform.basis.z
-	facing.y = 0.0
-	result.facing_direction = facing.normalized() if not facing.is_zero_approx() else Vector3.FORWARD
+	result.facing_direction = _capture_facing_direction()
 	if controller.has_method("is_on_floor"):
 		result.grounded = controller.is_on_floor()
 	result.swimming = _controller_is_swimming()
@@ -82,3 +80,13 @@ func _controller_is_swimming() -> bool:
 	if current_medium != null:
 		return StringName(current_medium) == &"water"
 	return false
+
+
+func _capture_facing_direction() -> Vector3:
+	var face_yaw = controller.get("face_yaw")
+	if face_yaw != null:
+		return Vector3(sin(float(face_yaw)), 0.0, cos(float(face_yaw))).normalized()
+
+	var facing := -(controller as Node3D).global_transform.basis.z
+	facing.y = 0.0
+	return facing.normalized() if not facing.is_zero_approx() else Vector3.FORWARD
