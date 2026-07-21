@@ -1,13 +1,20 @@
 [gd_scene format=3 uid="uid://6sdb6alu2q8p"]
 
 [ext_resource type="Script" uid="uid://84t74g14kt78" path="res://scripts/ui/pause_menu.gd" id="1_pause"]
+[ext_resource type="Texture2D" uid="uid://bgk2bx48iaxca" path="res://assets/ui/pause_bg.png" id="2_ht4ye"]
 [ext_resource type="PackedScene" path="res://scenes/ui/goose_settings_overlay.tscn" id="2_settings"]
-[ext_resource type="Theme" path="res://themes/goosespeed_theme.tres" id="3_theme"]
+[ext_resource type="FontFile" uid="uid://bkdpp3abo73lr" path="res://assets/ui/fonts/Condor Medium Condensed.otf" id="3_7yca1"]
+[ext_resource type="PackedScene" uid="uid://bhv4nsat8y6fw" path="res://scenes/ui/goose_menu_button.tscn" id="4_lrbnh"]
+[ext_resource type="Texture2D" uid="uid://dry1r48mwn3rl" path="res://assets/ui/icons/ic_play.png" id="5_6qnem"]
+[ext_resource type="PackedScene" path="res://scenes/ui/goose_menu_separator.tscn" id="6_ynwdf"]
+[ext_resource type="Texture2D" uid="uid://bn5d8brjvidq2" path="res://assets/ui/icons/ic_replay.png" id="7_p4b6u"]
+[ext_resource type="Texture2D" uid="uid://btug6m8h6qwl4" path="res://assets/ui/icons/ic_settings.png" id="8_3fvc3"]
+[ext_resource type="Texture2D" uid="uid://dvhj1a5mmwgso" path="res://assets/ui/icons/ic_home.png" id="9_kk5q1"]
+[ext_resource type="Texture2D" uid="uid://dicf6nds28vr7" path="res://assets/ui/icons/ic_quit.png" id="10_ukr1j"]
 
 [node name="PauseMenu" type="CanvasLayer" unique_id=1882656991]
 process_mode = 3
 layer = 5
-theme = ExtResource("3_theme")
 script = ExtResource("1_pause")
 
 [node name="MenuRoot" type="Control" parent="." unique_id=1114414113]
@@ -26,60 +33,117 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-color = Color(0.26666668, 0.49019608, 0.60784316, 0.3529412)
+color = Color(0.26666668, 0.49019608, 0.60784316, 0.39215687)
 
-[node name="CenterContainer" type="CenterContainer" parent="MenuRoot" unique_id=27384071]
+[node name="MenuBackgroundShadow" type="TextureRect" parent="MenuRoot" unique_id=1474700416]
+modulate = Color(0, 0, 0, 0.13725491)
+layout_mode = 0
+offset_left = -32.0
+offset_top = 18.0
+offset_right = 842.0
+offset_bottom = 1098.0
+rotation = -0.061086524
+mouse_filter = 2
+texture = ExtResource("2_ht4ye")
+stretch_mode = 5
+
+[node name="MenuBackground" type="TextureRect" parent="MenuRoot" unique_id=1383981351]
+layout_mode = 0
+offset_left = -50.0
+offset_right = 824.0
+offset_bottom = 1080.0
+rotation = -0.061086524
+texture = ExtResource("2_ht4ye")
+stretch_mode = 5
+
+[node name="MarginContainer" type="MarginContainer" parent="MenuRoot/MenuBackground" unique_id=1306322297]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+offset_left = 75.0
+offset_top = 120.0
+offset_right = -69.0
+offset_bottom = -60.0
 grow_horizontal = 2
 grow_vertical = 2
+theme_override_constants/margin_left = 48
+theme_override_constants/margin_top = 48
+theme_override_constants/margin_right = 48
+theme_override_constants/margin_bottom = 48
 
-[node name="PausePanel" type="PanelContainer" parent="MenuRoot/CenterContainer" unique_id=875583226]
-custom_minimum_size = Vector2(360, 0)
+[node name="VBoxContainer" type="VBoxContainer" parent="MenuRoot/MenuBackground/MarginContainer" unique_id=507672506]
 layout_mode = 2
+size_flags_vertical = 4
+theme_override_constants/separation = 15
 
-[node name="Margin" type="MarginContainer" parent="MenuRoot/CenterContainer/PausePanel" unique_id=1737073349]
+[node name="Label" type="Label" parent="MenuRoot/MenuBackground/MarginContainer/VBoxContainer" unique_id=317124534]
 layout_mode = 2
-theme_override_constants/margin_left = 28
-theme_override_constants/margin_top = 26
-theme_override_constants/margin_right = 28
-theme_override_constants/margin_bottom = 26
-
-[node name="VBox" type="VBoxContainer" parent="MenuRoot/CenterContainer/PausePanel/Margin" unique_id=47953107]
-layout_mode = 2
-theme_override_constants/separation = 14
-
-[node name="Title" type="Label" parent="MenuRoot/CenterContainer/PausePanel/Margin/VBox" unique_id=1782321600]
-layout_mode = 2
-theme_override_font_sizes/font_size = 30
+theme_override_colors/font_color = Color(0.15294118, 0.24705882, 0.30980393, 1)
+theme_override_fonts/font = ExtResource("3_7yca1")
+theme_override_font_sizes/font_size = 72
 text = "Paused"
 horizontal_alignment = 1
 
-[node name="ResumeButton" type="Button" parent="MenuRoot/CenterContainer/PausePanel/Margin/VBox" unique_id=2079143918]
-custom_minimum_size = Vector2(0, 42)
+[node name="Label2" type="Label" parent="MenuRoot/MenuBackground/MarginContainer/VBoxContainer" unique_id=1024262313]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.15294118, 0.24705882, 0.30980393, 1)
+theme_override_fonts/font = ExtResource("3_7yca1")
+theme_override_font_sizes/font_size = 72
+horizontal_alignment = 1
+
+[node name="ResumeButton" parent="MenuRoot/MenuBackground/MarginContainer/VBoxContainer" unique_id=862024904 instance=ExtResource("4_lrbnh")]
 layout_mode = 2
 text = "Resume"
+icon = ExtResource("5_6qnem")
+label_text = "Resume"
+button_icon = ExtResource("5_6qnem")
 
-[node name="RestartButton" type="Button" parent="MenuRoot/CenterContainer/PausePanel/Margin/VBox" unique_id=1243870166]
-custom_minimum_size = Vector2(0, 42)
+[node name="ButtonSeparator" parent="MenuRoot/MenuBackground/MarginContainer/VBoxContainer" unique_id=2011762002 instance=ExtResource("6_ynwdf")]
+layout_mode = 2
+
+[node name="RestartButton" parent="MenuRoot/MenuBackground/MarginContainer/VBoxContainer" unique_id=1705335563 instance=ExtResource("4_lrbnh")]
 layout_mode = 2
 text = "Restart Level"
+icon = ExtResource("7_p4b6u")
+label_text = "Restart Level"
+button_icon = ExtResource("7_p4b6u")
 
-[node name="SettingsButton" type="Button" parent="MenuRoot/CenterContainer/PausePanel/Margin/VBox" unique_id=1899824861]
-custom_minimum_size = Vector2(0, 42)
+[node name="ButtonSeparator3" parent="MenuRoot/MenuBackground/MarginContainer/VBoxContainer" unique_id=1574354808 instance=ExtResource("6_ynwdf")]
+layout_mode = 2
+
+[node name="SettingsButton" parent="MenuRoot/MenuBackground/MarginContainer/VBoxContainer" unique_id=1941917730 instance=ExtResource("4_lrbnh")]
 layout_mode = 2
 text = "Settings"
+icon = ExtResource("8_3fvc3")
+label_text = "Settings"
+button_icon = ExtResource("8_3fvc3")
 
-[node name="MainMenuButton" type="Button" parent="MenuRoot/CenterContainer/PausePanel/Margin/VBox" unique_id=1490802062]
-custom_minimum_size = Vector2(0, 42)
+[node name="ButtonSeparator2" parent="MenuRoot/MenuBackground/MarginContainer/VBoxContainer" unique_id=213767431 instance=ExtResource("6_ynwdf")]
+layout_mode = 2
+
+[node name="MainMenuButton" parent="MenuRoot/MenuBackground/MarginContainer/VBoxContainer" unique_id=1491097451 instance=ExtResource("4_lrbnh")]
 layout_mode = 2
 text = "Main Menu"
+icon = ExtResource("9_kk5q1")
+label_text = "Main Menu"
+button_icon = ExtResource("9_kk5q1")
 
-[node name="QuitButton" type="Button" parent="MenuRoot/CenterContainer/PausePanel/Margin/VBox" unique_id=1605164163]
-custom_minimum_size = Vector2(0, 42)
+[node name="ButtonSeparator4" parent="MenuRoot/MenuBackground/MarginContainer/VBoxContainer" unique_id=1741496736 instance=ExtResource("6_ynwdf")]
+layout_mode = 2
+
+[node name="QuitButton" parent="MenuRoot/MenuBackground/MarginContainer/VBoxContainer" unique_id=1283153940 instance=ExtResource("4_lrbnh")]
 layout_mode = 2
 text = "Quit"
+icon = ExtResource("10_ukr1j")
+label_text = "Quit"
+button_icon = ExtResource("10_ukr1j")
 
-[node name="GooseSettingsOverlay" parent="." instance=ExtResource("2_settings")]
+[node name="Label3" type="Label" parent="MenuRoot/MenuBackground/MarginContainer/VBoxContainer" unique_id=1166935026]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.15294118, 0.24705882, 0.30980393, 1)
+theme_override_fonts/font = ExtResource("3_7yca1")
+theme_override_font_sizes/font_size = 72
+horizontal_alignment = 1
+
+[node name="GooseSettingsOverlay" parent="." unique_id=1536650979 instance=ExtResource("2_settings")]
