@@ -8,6 +8,7 @@ func _initialize() -> void:
 	var visual := VisualControllerScript.new()
 	var failures: Array[String] = []
 
+	visual.set_movement_backend(VisualControllerScript.BACKEND_PLATFORMER)
 	_expect_animation(
 		failures,
 		visual,
@@ -60,6 +61,7 @@ func _initialize() -> void:
 	_expect_sticky_run(failures, visual)
 	_expect_locomotion_hold(failures, visual)
 	_expect_run_speed_scale(failures, visual)
+	_expect_q3_mapping(failures, visual)
 	_expect_locomotion_phase_preserved(failures)
 	_expect_animation(
 		failures,
@@ -167,10 +169,45 @@ func _expect_locomotion_hold(failures: Array[String], visual: Node) -> void:
 
 
 func _expect_run_speed_scale(failures: Array[String], visual: Node) -> void:
+	visual.set_movement_backend(VisualControllerScript.BACKEND_PLATFORMER)
 	visual.latest_state = _state({"grounded": true, "horizontal_speed": 14.0})
 	var speed_scale: float = visual._animation_speed_scale(VisualControllerScript.ANIM_RUN_FAST)
 	if speed_scale > 1.15:
 		failures.append("run fast speed scale %.3f exceeded readable cap" % speed_scale)
+
+
+func _expect_q3_mapping(failures: Array[String], visual: Node) -> void:
+	visual.set_movement_backend(VisualControllerScript.BACKEND_Q3)
+	_expect_animation(
+		failures,
+		visual,
+		_state({"grounded": true, "horizontal_speed": 3.0}),
+		VisualControllerScript.ANIM_WALK_FAST,
+		"q3 crouch speed",
+	)
+	_expect_animation(
+		failures,
+		visual,
+		_state({"grounded": true, "horizontal_speed": 6.1}),
+		VisualControllerScript.ANIM_RUN_FAST,
+		"q3 shift walk speed",
+	)
+	_expect_animation(
+		failures,
+		visual,
+		_state({"grounded": true, "horizontal_speed": 12.2}),
+		VisualControllerScript.ANIM_RUN_FAST,
+		"q3 run speed",
+	)
+	visual.latest_state = _state({"grounded": true, "horizontal_speed": 3.0})
+	var crouch_scale: float = visual._animation_speed_scale(VisualControllerScript.ANIM_WALK_FAST)
+	if crouch_scale < 1.0:
+		failures.append("q3 crouch speed scale %.3f should keep feet moving" % crouch_scale)
+	visual.latest_state = _state({"grounded": true, "horizontal_speed": 6.1})
+	var walk_scale: float = visual._animation_speed_scale(VisualControllerScript.ANIM_RUN_FAST)
+	if walk_scale < 1.0:
+		failures.append("q3 shift walk speed scale %.3f should keep feet moving" % walk_scale)
+	visual.set_movement_backend(VisualControllerScript.BACKEND_PLATFORMER)
 
 
 func _expect_locomotion_phase_preserved(failures: Array[String]) -> void:

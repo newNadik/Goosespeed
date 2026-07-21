@@ -43,6 +43,36 @@ func _ready() -> void:
 		_restore_settings(original_backend, original_camera_mode)
 		get_tree().quit(1)
 		return
+	if not _hints_contain(hud, "Shift  Walk"):
+		push_error("Q3 HUD hints are missing walk hint")
+		_restore_settings(original_backend, original_camera_mode)
+		get_tree().quit(1)
+		return
+	if not _hints_contain(hud, "Ctrl  Crouch / Slide"):
+		push_error("Q3 HUD hints are missing crouch/slide hint")
+		_restore_settings(original_backend, original_camera_mode)
+		get_tree().quit(1)
+		return
+
+	GooseGameSettings.movement_backend = GooseGameSettings.MOVEMENT_PLATFORMER
+	player.movement_backend = GooseGameSettings.MOVEMENT_PLATFORMER
+	hud.set_player(player)
+	await get_tree().process_frame
+	if _hints_contain(hud, "Shift"):
+		push_error("Platformer HUD hints should not advertise Shift")
+		_restore_settings(original_backend, original_camera_mode)
+		get_tree().quit(1)
+		return
+	if not _hints_contain(hud, "Ctrl+Space  Trick Jump"):
+		push_error("Platformer HUD hints are missing trick jump hint")
+		_restore_settings(original_backend, original_camera_mode)
+		get_tree().quit(1)
+		return
+	if not _hints_contain(hud, "E in Air  Dive"):
+		push_error("Platformer HUD hints are missing dive hint")
+		_restore_settings(original_backend, original_camera_mode)
+		get_tree().quit(1)
+		return
 
 	_restore_settings(original_backend, original_camera_mode)
 	print("Goose game HUD OK")
@@ -57,6 +87,17 @@ func _label_contains(root: Node, path: NodePath, expected_text: String) -> bool:
 func _label_text(root: Node, path: NodePath) -> String:
 	var label := root.get_node_or_null(path) as Label
 	return label.text if label != null else "<missing>"
+
+
+func _hints_contain(hud: Node, expected_text: String) -> bool:
+	var hints_list := hud.get_node_or_null("Root/HintsPanel/Margin/HintsList")
+	if hints_list == null:
+		return false
+	for child in hints_list.get_children():
+		var label := child as Label
+		if label != null and label.visible and label.text.contains(expected_text):
+			return true
+	return false
 
 
 func _restore_settings(backend: String, camera_mode: String) -> void:

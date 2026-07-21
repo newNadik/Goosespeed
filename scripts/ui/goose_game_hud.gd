@@ -7,6 +7,7 @@ extends CanvasLayer
 @onready var speed_label: Label = $Root/TopRightPanel/Margin/VBox/SpeedLabel
 @onready var state_label: Label = $Root/TopRightPanel/Margin/VBox/StateLabel
 @onready var timer_label: Label = $Root/TopRightPanel/Margin/VBox/TimerLabel
+@onready var hints_list: VBoxContainer = $Root/HintsPanel/Margin/HintsList
 
 var player: Node
 var state_bridge: Node
@@ -31,9 +32,11 @@ func set_run_state(time_seconds: float, finished: bool) -> void:
 
 
 func _update_labels() -> void:
-	backend_label.text = "Backend  %s" % _humanize_id(GooseGameSettings.movement_backend)
+	var backend := _active_backend_id()
+	backend_label.text = "Backend  %s" % _humanize_id(backend)
 	camera_label.text = "Camera  %s" % _humanize_id(GooseGameSettings.camera_mode)
 	fps_label.text = "FPS  %d" % Engine.get_frames_per_second()
+	_update_hints(backend)
 
 	var state := _get_movement_state()
 	speed_label.text = "Speed  %.1f m/s" % state.horizontal_speed
@@ -45,6 +48,61 @@ func _get_movement_state() -> RefCounted:
 	if state_bridge != null and state_bridge.has_method("get_state"):
 		return state_bridge.get_state()
 	return preload("res://scripts/player/movement_state.gd").new()
+
+
+func _active_backend_id() -> String:
+	if player != null:
+		var backend = player.get("movement_backend")
+		if backend != null:
+			return str(backend)
+	return GooseGameSettings.movement_backend
+
+
+func _update_hints(backend: String) -> void:
+	var hints := _control_hints_for_backend(backend)
+	for index in hints_list.get_child_count():
+		var label := hints_list.get_child(index) as Label
+		if label == null:
+			continue
+		label.visible = index < hints.size()
+		if index < hints.size():
+			label.text = hints[index]
+
+
+func _control_hints_for_backend(backend: String) -> Array[String]:
+	if backend == GooseGameSettings.MOVEMENT_PLATFORMER:
+		return [
+			"WASD  Move",
+			"Mouse  Look",
+			"Space  Jump",
+			"Ctrl+Space  Trick Jump",
+			"Ctrl in Air  Ground Pound",
+			"E in Air  Dive",
+			"R  Restart",
+			"C  Recenter Camera",
+			"Esc  Pause",
+		]
+	if backend == GooseGameSettings.MOVEMENT_BASIC:
+		return [
+			"WASD  Move",
+			"Mouse  Look",
+			"Space  Jump / Flap",
+			"Shift  Sprint",
+			"Ctrl  Brake",
+			"R  Restart",
+			"C  Recenter Camera",
+			"Esc  Pause",
+		]
+	return [
+		"WASD  Move",
+		"Mouse  Look",
+		"Space  Jump",
+		"Shift  Walk",
+		"Ctrl  Crouch / Slide",
+		"R  Restart",
+		"C  Recenter Camera",
+		"Esc  Pause",
+	]
 
 
 func _state_text(state: RefCounted) -> String:

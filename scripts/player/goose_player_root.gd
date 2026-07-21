@@ -22,6 +22,8 @@ func _ready() -> void:
 	movement_state_bridge.set_controller(active_movement_controller)
 	goose_camera_rig.set_state_bridge(movement_state_bridge)
 	goose_camera_rig.set_active_backend(active_movement_controller)
+	if goose_visual.has_method("set_movement_backend"):
+		goose_visual.set_movement_backend(movement_backend)
 	goose_visual.set_state_bridge(movement_state_bridge)
 
 
