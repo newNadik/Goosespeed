@@ -1,0 +1,11 @@
+[gd_resource type="Theme" load_steps=3 format=3]
+
+[ext_resource type="FontFile" uid="uid://bfgtqf7ryi1g6" path="res://assets/ui/fonts/Condor Light.otf" id="1_regular"]
+[ext_resource type="FontFile" uid="uid://bkdpp3abo73lr" path="res://assets/ui/fonts/Condor Medium Condensed.otf" id="2_medium"]
+
+[resource]
+default_font = ExtResource("1_regular")
+default_font_size = 20
+Button/fonts/font = ExtResource("2_medium")
+CheckButton/fonts/font = ExtResource("2_medium")
+OptionButton/fonts/font = ExtResource("2_medium")

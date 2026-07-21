@@ -2,13 +2,13 @@
 
 importer="font_data_dynamic"
 type="FontFile"
-uid="uid://bkdpp3abo73lr"
-path="res://.godot/imported/Condor Medium Condensed.otf-46d354b7e0c004927e99dc864b769e41.fontdata"
+uid="uid://bfgtqf7ryi1g6"
+path="res://.godot/imported/Condor Light.otf-2bc67eda4eab376c536e7b19b1ca01a4.fontdata"
 
 [deps]
 
-source_file="res://assets/fonts/Condor Medium Condensed.otf"
-dest_files=["res://.godot/imported/Condor Medium Condensed.otf-46d354b7e0c004927e99dc864b769e41.fontdata"]
+source_file="res://assets/ui/fonts/Condor Light.otf"
+dest_files=["res://.godot/imported/Condor Light.otf-2bc67eda4eab376c536e7b19b1ca01a4.fontdata"]
 
 [params]
 
