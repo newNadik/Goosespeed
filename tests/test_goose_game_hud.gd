@@ -53,6 +53,11 @@ func _ready() -> void:
 		_restore_settings(original_backend, original_camera_mode)
 		get_tree().quit(1)
 		return
+	if not _hints_contain(hud, "Q  Honk"):
+		push_error("Q3 HUD hints are missing honk hint")
+		_restore_settings(original_backend, original_camera_mode)
+		get_tree().quit(1)
+		return
 
 	GooseGameSettings.movement_backend = GooseGameSettings.MOVEMENT_PLATFORMER
 	player.movement_backend = GooseGameSettings.MOVEMENT_PLATFORMER
@@ -70,6 +75,11 @@ func _ready() -> void:
 		return
 	if not _hints_contain(hud, "E in Air  Dive"):
 		push_error("Platformer HUD hints are missing dive hint")
+		_restore_settings(original_backend, original_camera_mode)
+		get_tree().quit(1)
+		return
+	if not _hints_contain(hud, "Q  Honk"):
+		push_error("Platformer HUD hints are missing honk hint")
 		_restore_settings(original_backend, original_camera_mode)
 		get_tree().quit(1)
 		return

@@ -20,6 +20,7 @@ config/icon="uid://cpll7mvn0f4gx"
 GooseGameSettings="*res://scripts/gameplay/goose_game_settings.gd"
 Settings="*res://scripts/settings.gd"
 KeybindingsSettings="*res://scripts/keybindings_settings.gd"
+GooseHonk="*res://scripts/audio/goose_honk.gd"
 
 [display]
 
