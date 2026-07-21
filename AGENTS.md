@@ -26,6 +26,7 @@ Use the relevant checks:
 env HOME=/tmp XDG_DATA_HOME=/tmp /Applications/Godot.app/Contents/MacOS/godot --headless --path . --quit-after 1
 env HOME=/tmp XDG_DATA_HOME=/tmp /Applications/Godot.app/Contents/MacOS/godot --headless --path . scenes/test/goosespeed_movement_lab.tscn --quit-after 1
 env HOME=/tmp XDG_DATA_HOME=/tmp /Applications/Godot.app/Contents/MacOS/godot --headless --path . --script tests/test_input_map.gd
+env HOME=/tmp XDG_DATA_HOME=/tmp /Applications/Godot.app/Contents/MacOS/godot --headless --path . tests/test_movement_backends.tscn
 ```
 
 Add tests where practical. Do not leave validation-only scripts or debug scenes
@@ -47,3 +48,7 @@ behind unless they are intentional project tests.
 - `goose-moves/` remains the movement reference. Reuse its scale, fixtures, UI
   flow, and button conventions, but do not pull movement internals into this
   project without a confirmed integration plan.
+- During temporary movement integration, `external/goose-moves` and the root
+  `res://scripts`, `res://scenes`, and `res://data` aliases may point at
+  symlinked `goose-moves` files. Treat those as development-only wiring to be
+  removed before release.

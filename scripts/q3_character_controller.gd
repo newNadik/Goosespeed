@@ -1,0 +1,1 @@
+../external/goose-moves/scripts/q3_character_controller.gd

@@ -1,0 +1,1 @@
+../external/goose-moves/scripts/flight_controller.gd

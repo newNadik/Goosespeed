@@ -59,6 +59,14 @@ horizontal_alignment = 1
 custom_minimum_size = Vector2(0, 12)
 layout_mode = 2
 
+[node name="BackendLabel" type="Label" parent="CenterContainer/MainPanel/Margin/VBox"]
+layout_mode = 2
+text = "Movement"
+
+[node name="BackendOption" type="OptionButton" parent="CenterContainer/MainPanel/Margin/VBox"]
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+
 [node name="StartButton" type="Button" parent="CenterContainer/MainPanel/Margin/VBox"]
 custom_minimum_size = Vector2(0, 44)
 layout_mode = 2

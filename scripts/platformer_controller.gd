@@ -1,0 +1,1 @@
+../external/goose-moves/scripts/platformer_controller.gd
