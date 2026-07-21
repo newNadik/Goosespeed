@@ -2,12 +2,12 @@ class_name GooseCameraRig
 extends Node3D
 
 @export var mouse_sensitivity := 0.003
-@export var third_person_distance := 6.0
-@export var target_height := 1.25
+@export var third_person_distance := 4.0
+@export var target_height := 0.9
 @export var follow_speed := 18.0
 @export var pitch_min_degrees := -75.0
 @export var pitch_max_degrees := 60.0
-@export var fov := 100.0
+@export var fov := 78.0
 
 @onready var yaw_pivot: Node3D = $YawPivot
 @onready var pitch_pivot: Node3D = $YawPivot/PitchPivot
