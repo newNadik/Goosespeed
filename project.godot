@@ -17,9 +17,9 @@ config/icon="uid://cpll7mvn0f4gx"
 
 [autoload]
 
-RuntimeConfig="*res://scripts/gameplay/runtime_config.gd"
-Settings="*res://external/goose-moves/scripts/settings.gd"
-KeybindingsSettings="*res://external/goose-moves/scripts/keybindings_settings.gd"
+GooseGameSettings="*res://scripts/gameplay/goose_game_settings.gd"
+Settings="*res://scripts/settings.gd"
+KeybindingsSettings="*res://scripts/keybindings_settings.gd"
 
 [display]
 

@@ -1,0 +1,1 @@
+../external/goose-moves/scripts/keybindings_settings.gd

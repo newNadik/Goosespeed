@@ -9,8 +9,9 @@ const BACKENDS := [
 
 
 func _ready() -> void:
+	var original_backend: String = GooseGameSettings.movement_backend
 	for backend in BACKENDS:
-		RuntimeConfig.movement_backend = backend
+		GooseGameSettings.movement_backend = backend
 		var player := PLAYER_SCENE.instantiate()
 		add_child(player)
 		await get_tree().process_frame
@@ -43,6 +44,7 @@ func _ready() -> void:
 		player.queue_free()
 		await get_tree().process_frame
 
+	GooseGameSettings.movement_backend = original_backend
 	print("Movement backends OK: %d backends" % BACKENDS.size())
 	get_tree().quit(0)
 

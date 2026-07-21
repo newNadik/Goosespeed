@@ -93,9 +93,9 @@ func _disable_backend_cameras() -> void:
 
 
 func _resolve_movement_backend() -> String:
-	var runtime_config := get_node_or_null("/root/RuntimeConfig")
-	if runtime_config != null:
-		var configured_backend = runtime_config.get("movement_backend")
+	var game_settings := get_node_or_null("/root/GooseGameSettings")
+	if game_settings != null:
+		var configured_backend = game_settings.get("movement_backend")
 		if configured_backend in [BASIC_BACKEND, Q3_BACKEND, PLATFORMER_BACKEND]:
 			return configured_backend
 	return movement_backend

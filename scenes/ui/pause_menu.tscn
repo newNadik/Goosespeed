@@ -1,6 +1,7 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://scripts/ui/pause_menu.gd" id="1_pause"]
+[ext_resource type="PackedScene" path="res://scenes/ui/goose_settings_menu.tscn" id="2_settings"]
 
 [node name="PauseMenu" type="CanvasLayer"]
 layer = 5
@@ -64,6 +65,11 @@ custom_minimum_size = Vector2(0, 42)
 layout_mode = 2
 text = "Restart Level"
 
+[node name="SettingsButton" type="Button" parent="MenuRoot/CenterContainer/PausePanel/Margin/VBox"]
+custom_minimum_size = Vector2(0, 42)
+layout_mode = 2
+text = "Settings"
+
 [node name="MainMenuButton" type="Button" parent="MenuRoot/CenterContainer/PausePanel/Margin/VBox"]
 custom_minimum_size = Vector2(0, 42)
 layout_mode = 2
@@ -73,3 +79,6 @@ text = "Main Menu"
 custom_minimum_size = Vector2(0, 42)
 layout_mode = 2
 text = "Quit"
+
+[node name="GooseSettingsMenu" parent="MenuRoot" instance=ExtResource("2_settings")]
+layout_mode = 1
