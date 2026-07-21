@@ -15,8 +15,7 @@ const LABELED_FIXTURE_ROOTS := [
 ]
 
 @onready var player: Node = $GoosePlayerRoot
-@onready var timer_label: Label = $HUD/RunPanel/Margin/VBox/TimerLabel
-@onready var state_label: Label = $HUD/RunPanel/Margin/VBox/StateLabel
+@onready var game_hud = $GooseGameHud
 @onready var finish_area: Area3D = $FinishTrigger
 
 var elapsed_time := 0.0
@@ -28,6 +27,7 @@ func _ready() -> void:
 	_connect_volumes()
 	finish_area.body_entered.connect(_on_finish_body_entered)
 	player.set_spawn_transform(player.get_active_controller().global_transform)
+	game_hud.set_player(player)
 	add_child(PAUSE_MENU_SCENE.instantiate())
 	_update_hud()
 
@@ -76,12 +76,7 @@ func _on_finish_body_entered(body: Node3D) -> void:
 
 
 func _update_hud() -> void:
-	var state: RefCounted = player.movement_state_bridge.get_state()
-	timer_label.text = "%05.2f" % elapsed_time
-	var medium_text := "water" if state.swimming else "ground" if state.grounded else "air"
-	state_label.text = "Speed %.1f m/s  %s" % [state.horizontal_speed, medium_text]
-	if finished:
-		state_label.text += "  FINISH"
+	game_hud.set_run_state(elapsed_time, finished)
 
 
 func _add_fixture_labels() -> void:

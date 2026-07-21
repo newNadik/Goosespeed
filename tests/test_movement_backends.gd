@@ -31,6 +31,10 @@ func _ready() -> void:
 			push_error("Platformer backend debug visuals are visible")
 			get_tree().quit(1)
 			return
+		if not _backend_hud_is_hidden(controller):
+			push_error("Backend %s debug HUD is visible" % backend)
+			get_tree().quit(1)
+			return
 		if backend == "platformer" and not await _platformer_facing_is_normalized(player):
 			push_error("Platformer backend facing direction is not normalized to face_yaw")
 			get_tree().quit(1)
@@ -97,6 +101,11 @@ func _backend_cameras_are_disabled(controller: Node) -> bool:
 		if camera.current:
 			return false
 	return true
+
+
+func _backend_hud_is_hidden(controller: Node) -> bool:
+	var backend_hud := controller.get_node_or_null("HUD") as CanvasLayer
+	return backend_hud == null or not backend_hud.visible
 
 
 func _find_cameras(root: Node) -> Array[Camera3D]:

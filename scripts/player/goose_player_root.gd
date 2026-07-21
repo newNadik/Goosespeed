@@ -85,6 +85,9 @@ func _hide_backend_debug_visuals() -> void:
 	var face_marker := active_movement_controller.get_node_or_null("FaceMarker") as Node3D
 	if face_marker:
 		face_marker.visible = false
+	var backend_hud := active_movement_controller.get_node_or_null("HUD") as CanvasLayer
+	if backend_hud:
+		backend_hud.visible = false
 
 
 func _disable_backend_cameras() -> void:

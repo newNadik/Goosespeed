@@ -1,0 +1,140 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/goose_game_hud.gd" id="1_hud"]
+
+[node name="GooseGameHud" type="CanvasLayer"]
+layer = 2
+script = ExtResource("1_hud")
+
+[node name="Root" type="Control" parent="."]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="TopLeftPanel" type="PanelContainer" parent="Root"]
+custom_minimum_size = Vector2(250, 0)
+layout_mode = 1
+offset_left = 16.0
+offset_top = 16.0
+offset_right = 266.0
+offset_bottom = 110.0
+
+[node name="Margin" type="MarginContainer" parent="Root/TopLeftPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 14
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 14
+theme_override_constants/margin_bottom = 10
+
+[node name="VBox" type="VBoxContainer" parent="Root/TopLeftPanel/Margin"]
+layout_mode = 2
+
+[node name="BackendLabel" type="Label" parent="Root/TopLeftPanel/Margin/VBox"]
+layout_mode = 2
+text = "Backend  Q3"
+
+[node name="CameraLabel" type="Label" parent="Root/TopLeftPanel/Margin/VBox"]
+layout_mode = 2
+text = "Camera  Third Person"
+
+[node name="FpsLabel" type="Label" parent="Root/TopLeftPanel/Margin/VBox"]
+layout_mode = 2
+text = "FPS  0"
+
+[node name="TopRightPanel" type="PanelContainer" parent="Root"]
+custom_minimum_size = Vector2(260, 0)
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -276.0
+offset_top = 16.0
+offset_right = -16.0
+offset_bottom = 110.0
+
+[node name="Margin" type="MarginContainer" parent="Root/TopRightPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 14
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 14
+theme_override_constants/margin_bottom = 10
+
+[node name="VBox" type="VBoxContainer" parent="Root/TopRightPanel/Margin"]
+layout_mode = 2
+
+[node name="SpeedLabel" type="Label" parent="Root/TopRightPanel/Margin/VBox"]
+layout_mode = 2
+text = "Speed  0.0 m/s"
+horizontal_alignment = 2
+
+[node name="StateLabel" type="Label" parent="Root/TopRightPanel/Margin/VBox"]
+layout_mode = 2
+text = "State  ground"
+horizontal_alignment = 2
+
+[node name="TimerLabel" type="Label" parent="Root/TopRightPanel/Margin/VBox"]
+layout_mode = 2
+text = "Run  00.00"
+horizontal_alignment = 2
+
+[node name="HintsPanel" type="PanelContainer" parent="Root"]
+custom_minimum_size = Vector2(260, 0)
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -276.0
+offset_top = 126.0
+offset_right = -16.0
+offset_bottom = 394.0
+
+[node name="Margin" type="MarginContainer" parent="Root/HintsPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 14
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 14
+theme_override_constants/margin_bottom = 10
+
+[node name="HintsList" type="VBoxContainer" parent="Root/HintsPanel/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="MoveLabel" type="Label" parent="Root/HintsPanel/Margin/HintsList"]
+layout_mode = 2
+text = "WASD  Move"
+
+[node name="LookLabel" type="Label" parent="Root/HintsPanel/Margin/HintsList"]
+layout_mode = 2
+text = "Mouse  Look"
+
+[node name="JumpLabel" type="Label" parent="Root/HintsPanel/Margin/HintsList"]
+layout_mode = 2
+text = "Space  Jump"
+
+[node name="CrouchLabel" type="Label" parent="Root/HintsPanel/Margin/HintsList"]
+layout_mode = 2
+text = "Ctrl  Crouch"
+
+[node name="WalkLabel" type="Label" parent="Root/HintsPanel/Margin/HintsList"]
+layout_mode = 2
+text = "Shift  Walk"
+
+[node name="SpecialLabel" type="Label" parent="Root/HintsPanel/Margin/HintsList"]
+layout_mode = 2
+text = "E  Special"
+
+[node name="RestartLabel" type="Label" parent="Root/HintsPanel/Margin/HintsList"]
+layout_mode = 2
+text = "R  Restart"
+
+[node name="CameraLabel" type="Label" parent="Root/HintsPanel/Margin/HintsList"]
+layout_mode = 2
+text = "C  Reset Camera"
+
+[node name="PauseLabel" type="Label" parent="Root/HintsPanel/Margin/HintsList"]
+layout_mode = 2
+text = "Esc  Pause"

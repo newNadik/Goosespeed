@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" path="res://scripts/gameplay/movement_lab.gd" id="1_spawner"]
 [ext_resource type="PackedScene" path="res://scenes/player/goose_player_root.tscn" id="2_player"]
+[ext_resource type="PackedScene" path="res://scenes/ui/goose_game_hud.tscn" id="3_hud"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_1"]
 sky_top_color = Color(0.105, 0.149, 0.2, 1)
@@ -508,29 +509,4 @@ transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 84)
 size = Vector3(12, 6, 0.3)
 material = SubResource("StandardMaterial_amber")
 
-[node name="HUD" type="CanvasLayer" parent="."]
-
-[node name="RunPanel" type="PanelContainer" parent="HUD"]
-anchors_preset = 1
-anchor_left = 1.0
-anchor_right = 1.0
-offset_left = -260.0
-offset_top = 16.0
-offset_right = -16.0
-offset_bottom = 102.0
-
-[node name="Margin" type="MarginContainer" parent="HUD/RunPanel"]
-theme_override_constants/margin_left = 14
-theme_override_constants/margin_top = 10
-theme_override_constants/margin_right = 14
-theme_override_constants/margin_bottom = 10
-
-[node name="VBox" type="VBoxContainer" parent="HUD/RunPanel/Margin"]
-
-[node name="TimerLabel" type="Label" parent="HUD/RunPanel/Margin/VBox"]
-text = "00.00"
-horizontal_alignment = 2
-
-[node name="StateLabel" type="Label" parent="HUD/RunPanel/Margin/VBox"]
-text = "Speed 0.0 m/s  ground"
-horizontal_alignment = 2
+[node name="GooseGameHud" parent="." instance=ExtResource("3_hud")]
