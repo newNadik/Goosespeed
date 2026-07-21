@@ -12,7 +12,7 @@ config_version=5
 
 config/name="Goosespeed"
 config/features=PackedStringArray("4.7", "Forward Plus")
-config/icon="res://icon.svg"
+config/icon="uid://cpll7mvn0f4gx"
 
 [display]
 
@@ -26,4 +26,3 @@ window/stretch/aspect="expand"
 [rendering]
 
 rendering_device/driver.windows="d3d12"
-renderer/rendering_method="forward_plus"
