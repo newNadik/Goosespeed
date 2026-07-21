@@ -1,6 +1,7 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=3 format=3]
 
 [ext_resource type="Script" path="res://scripts/ui/goose_settings_menu.gd" id="1_settings"]
+[ext_resource type="PackedScene" path="res://scenes/ui/goose_backend_tuning_panel.tscn" id="2_tuning"]
 
 [node name="GooseSettingsMenu" type="Control"]
 visible = false
@@ -55,6 +56,9 @@ text = "Camera"
 
 [node name="CameraOption" type="OptionButton" parent="CenterContainer/SettingsPanel/Margin/VBox"]
 custom_minimum_size = Vector2(0, 42)
+layout_mode = 2
+
+[node name="TuningPanel" parent="CenterContainer/SettingsPanel/Margin/VBox" instance=ExtResource("2_tuning")]
 layout_mode = 2
 
 [node name="BackButton" type="Button" parent="CenterContainer/SettingsPanel/Margin/VBox"]

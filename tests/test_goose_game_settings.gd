@@ -38,6 +38,11 @@ func _ready() -> void:
 		_restore_settings(original_backend, original_camera_mode)
 		get_tree().quit(1)
 		return
+	if not _settings_menu_tuning_is_valid(settings_menu):
+		settings_menu.queue_free()
+		_restore_settings(original_backend, original_camera_mode)
+		get_tree().quit(1)
+		return
 
 	settings_menu.queue_free()
 	_restore_settings(original_backend, original_camera_mode)
@@ -69,6 +74,27 @@ func _settings_menu_options_are_valid(settings_menu: Node) -> bool:
 				% [index, camera_mode, expected_camera_modes[index]]
 			)
 			return false
+	return true
+
+
+func _settings_menu_tuning_is_valid(settings_menu: Node) -> bool:
+	var tuning_panel := settings_menu.get_node("CenterContainer/SettingsPanel/Margin/VBox/TuningPanel")
+	tuning_panel.rebuild(GooseGameSettings.MOVEMENT_Q3)
+	for key in ["movement_mode", "auto_jump", "crouch_slide", "wall_jump"]:
+		if not tuning_panel.has_control(key):
+			push_error("Q3 tuning is missing %s" % key)
+			return false
+
+	tuning_panel.rebuild(GooseGameSettings.MOVEMENT_PLATFORMER)
+	for key in ["max_run_speed", "ground_acceleration", "jump_velocity"]:
+		if not tuning_panel.has_control(key):
+			push_error("Platformer tuning is missing %s" % key)
+			return false
+
+	tuning_panel.rebuild(GooseGameSettings.MOVEMENT_BASIC)
+	if tuning_panel.has_control("movement_mode") or tuning_panel.has_control("max_run_speed"):
+		push_error("Basic backend should not expose prototype tuning controls")
+		return false
 	return true
 
 

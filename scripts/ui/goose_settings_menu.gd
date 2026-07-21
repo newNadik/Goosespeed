@@ -6,6 +6,7 @@ signal movement_backend_changed(backend: String)
 
 @onready var backend_option: OptionButton = $CenterContainer/SettingsPanel/Margin/VBox/BackendOption
 @onready var camera_option: OptionButton = $CenterContainer/SettingsPanel/Margin/VBox/CameraOption
+@onready var tuning_panel = $CenterContainer/SettingsPanel/Margin/VBox/TuningPanel
 @onready var back_button: Button = $CenterContainer/SettingsPanel/Margin/VBox/BackButton
 
 var syncing := false
@@ -34,6 +35,7 @@ func on_backend_selected(index: int) -> void:
 		return
 	var backend := str(backend_option.get_item_metadata(index))
 	GooseGameSettings.set_movement_backend(backend)
+	tuning_panel.rebuild(backend)
 	movement_backend_changed.emit(backend)
 
 
@@ -83,4 +85,5 @@ func _sync_from_settings() -> void:
 		if camera_option.get_item_metadata(index) == GooseGameSettings.camera_mode:
 			camera_option.select(index)
 			break
+	tuning_panel.rebuild(GooseGameSettings.movement_backend)
 	syncing = false
