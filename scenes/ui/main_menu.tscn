@@ -1,8 +1,11 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene format=3 uid="uid://b2xi4tbxi7xek"]
 
-[ext_resource type="Script" path="res://scripts/ui/main_menu.gd" id="1_main"]
+[ext_resource type="Script" uid="uid://bkm7j0kasswck" path="res://scripts/ui/main_menu.gd" id="1_main"]
+[ext_resource type="Texture2D" uid="uid://cvl2ke2lkm7lm" path="res://assets/ui/main_menu_bg.png" id="2_fe2o3"]
+[ext_resource type="Texture2D" uid="uid://bgk2bx48iaxca" path="res://assets/ui/pause_bg.png" id="3_m1kxf"]
+[ext_resource type="Texture2D" uid="uid://c7n3yjpere6kg" path="res://assets/ui/full_logo.png" id="4_x2yvf"]
 
-[node name="MainMenu" type="Control"]
+[node name="MainMenu" type="Control" unique_id=1763581018]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -11,60 +14,68 @@ grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_main")
 
-[node name="Background" type="ColorRect" parent="."]
+[node name="Background" type="ColorRect" parent="." unique_id=393546418]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0.055, 0.075, 0.1, 1)
 mouse_filter = 2
+color = Color(0.9529412, 0.91764706, 0.8745098, 1)
 
-[node name="CenterContainer" type="CenterContainer" parent="."]
+[node name="BackgroundImage" type="TextureRect" parent="." unique_id=539308480]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
+texture = ExtResource("2_fe2o3")
 
-[node name="MainPanel" type="PanelContainer" parent="CenterContainer"]
-custom_minimum_size = Vector2(400, 0)
+[node name="MenuBackground" type="TextureRect" parent="." unique_id=1020065978]
+layout_mode = 1
+offset_left = -50.0
+offset_right = 824.0
+offset_bottom = 1080.0
+rotation = -0.061086524
+texture = ExtResource("3_m1kxf")
+stretch_mode = 5
+
+[node name="MarginContainer" type="MarginContainer" parent="MenuBackground" unique_id=1618452810]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 75.0
+offset_top = 120.0
+offset_right = -69.0
+offset_bottom = -60.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 48
+theme_override_constants/margin_top = 48
+theme_override_constants/margin_right = 48
+theme_override_constants/margin_bottom = 48
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MenuBackground/MarginContainer" unique_id=878607575]
 layout_mode = 2
+theme_override_constants/separation = 18
 
-[node name="Margin" type="MarginContainer" parent="CenterContainer/MainPanel"]
+[node name="TextureRect" type="TextureRect" parent="MenuBackground/MarginContainer/VBoxContainer" unique_id=1610262223]
+custom_minimum_size = Vector2(0, 250)
 layout_mode = 2
-theme_override_constants/margin_left = 28
-theme_override_constants/margin_top = 26
-theme_override_constants/margin_right = 28
-theme_override_constants/margin_bottom = 26
+size_flags_horizontal = 3
+texture = ExtResource("4_x2yvf")
+expand_mode = 1
+stretch_mode = 5
 
-[node name="VBox" type="VBoxContainer" parent="CenterContainer/MainPanel/Margin"]
-layout_mode = 2
-theme_override_constants/separation = 14
-
-[node name="Title" type="Label" parent="CenterContainer/MainPanel/Margin/VBox"]
-layout_mode = 2
-theme_override_font_sizes/font_size = 34
-text = "GooseSpeed"
-horizontal_alignment = 1
-
-[node name="Subtitle" type="Label" parent="CenterContainer/MainPanel/Margin/VBox"]
-layout_mode = 2
-text = "Movement test lab"
-horizontal_alignment = 1
-
-[node name="Spacer" type="Control" parent="CenterContainer/MainPanel/Margin/VBox"]
-custom_minimum_size = Vector2(0, 12)
-layout_mode = 2
-
-[node name="StartButton" type="Button" parent="CenterContainer/MainPanel/Margin/VBox"]
-custom_minimum_size = Vector2(0, 44)
+[node name="StartButton" type="Button" parent="MenuBackground/MarginContainer/VBoxContainer" unique_id=1282232914]
+custom_minimum_size = Vector2(0, 56)
 layout_mode = 2
 text = "Start Test Level"
 
-[node name="QuitButton" type="Button" parent="CenterContainer/MainPanel/Margin/VBox"]
-custom_minimum_size = Vector2(0, 44)
+[node name="QuitButton" type="Button" parent="MenuBackground/MarginContainer/VBoxContainer" unique_id=1558086319]
+custom_minimum_size = Vector2(0, 56)
 layout_mode = 2
 text = "Quit"

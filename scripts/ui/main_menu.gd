@@ -3,8 +3,8 @@ extends Control
 
 const LEVEL_SCENE := "res://scenes/test/goosespeed_movement_lab.tscn"
 
-@onready var start_button: Button = $CenterContainer/MainPanel/Margin/VBox/StartButton
-@onready var quit_button: Button = $CenterContainer/MainPanel/Margin/VBox/QuitButton
+@onready var start_button: Button = $MenuBackground/MarginContainer/VBoxContainer/StartButton
+@onready var quit_button: Button = $MenuBackground/MarginContainer/VBoxContainer/QuitButton
 
 
 func _ready() -> void:
