@@ -11,6 +11,7 @@
 [ext_resource type="Texture2D" uid="uid://btug6m8h6qwl4" path="res://assets/ui/icons/ic_settings.png" id="8_3fvc3"]
 [ext_resource type="Texture2D" uid="uid://dvhj1a5mmwgso" path="res://assets/ui/icons/ic_home.png" id="9_kk5q1"]
 [ext_resource type="Texture2D" uid="uid://dicf6nds28vr7" path="res://assets/ui/icons/ic_quit.png" id="10_ukr1j"]
+[ext_resource type="Script" path="res://scripts/ui/menu_paper_fitter.gd" id="11_fitter"]
 
 [node name="PauseMenu" type="CanvasLayer" unique_id=1882656991]
 process_mode = 3
@@ -145,5 +146,10 @@ theme_override_colors/font_color = Color(0.15294118, 0.24705882, 0.30980393, 1)
 theme_override_fonts/font = ExtResource("3_7yca1")
 theme_override_font_sizes/font_size = 72
 horizontal_alignment = 1
+
+[node name="MenuPaperFitter" type="Node" parent="MenuRoot"]
+script = ExtResource("11_fitter")
+paper_path = NodePath("../MenuBackground")
+shadow_path = NodePath("../MenuBackgroundShadow")
 
 [node name="GooseSettingsOverlay" parent="." unique_id=1536650979 instance=ExtResource("2_settings")]

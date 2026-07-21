@@ -11,6 +11,7 @@
 [ext_resource type="Texture2D" uid="uid://dicf6nds28vr7" path="res://assets/ui/icons/ic_quit.png" id="8_quit"]
 [ext_resource type="PackedScene" path="res://scenes/ui/goose_settings_overlay.tscn" id="9_settings"]
 [ext_resource type="Theme" path="res://themes/goosespeed_theme.tres" id="10_theme"]
+[ext_resource type="Script" path="res://scripts/ui/menu_paper_fitter.gd" id="11_fitter"]
 
 [node name="MainMenu" type="Control" unique_id=1763581018]
 layout_mode = 3
@@ -40,6 +41,8 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 texture = ExtResource("2_fe2o3")
+expand_mode = 1
+stretch_mode = 6
 
 [node name="MenuBackgroundShadow" type="TextureRect" parent="." unique_id=610999285]
 modulate = Color(0, 0, 0, 0.13725491)
@@ -116,5 +119,10 @@ text = "Quit"
 icon = ExtResource("8_quit")
 label_text = "Quit"
 button_icon = ExtResource("8_quit")
+
+[node name="MenuPaperFitter" type="Node" parent="."]
+script = ExtResource("11_fitter")
+paper_path = NodePath("../MenuBackground")
+shadow_path = NodePath("../MenuBackgroundShadow")
 
 [node name="GooseSettingsOverlay" parent="." instance=ExtResource("9_settings")]
