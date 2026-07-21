@@ -1,14 +1,14 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene format=3 uid="uid://6sdb6alu2q8p"]
 
-[ext_resource type="Script" path="res://scripts/ui/pause_menu.gd" id="1_pause"]
-[ext_resource type="PackedScene" path="res://scenes/ui/goose_settings_menu.tscn" id="2_settings"]
+[ext_resource type="Script" uid="uid://84t74g14kt78" path="res://scripts/ui/pause_menu.gd" id="1_pause"]
+[ext_resource type="PackedScene" path="res://scenes/ui/goose_settings_overlay.tscn" id="2_settings"]
 
-[node name="PauseMenu" type="CanvasLayer"]
-layer = 5
+[node name="PauseMenu" type="CanvasLayer" unique_id=1882656991]
 process_mode = 3
+layer = 5
 script = ExtResource("1_pause")
 
-[node name="MenuRoot" type="Control" parent="."]
+[node name="MenuRoot" type="Control" parent="." unique_id=1114414113]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -16,17 +16,17 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="Scrim" type="ColorRect" parent="MenuRoot"]
+[node name="Scrim" type="ColorRect" parent="MenuRoot" unique_id=1042346898]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-color = Color(0.01, 0.015, 0.025, 0.78)
 mouse_filter = 2
+color = Color(0.26666668, 0.49019608, 0.60784316, 0.3529412)
 
-[node name="CenterContainer" type="CenterContainer" parent="MenuRoot"]
+[node name="CenterContainer" type="CenterContainer" parent="MenuRoot" unique_id=27384071]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -34,51 +34,50 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 
-[node name="PausePanel" type="PanelContainer" parent="MenuRoot/CenterContainer"]
+[node name="PausePanel" type="PanelContainer" parent="MenuRoot/CenterContainer" unique_id=875583226]
 custom_minimum_size = Vector2(360, 0)
 layout_mode = 2
 
-[node name="Margin" type="MarginContainer" parent="MenuRoot/CenterContainer/PausePanel"]
+[node name="Margin" type="MarginContainer" parent="MenuRoot/CenterContainer/PausePanel" unique_id=1737073349]
 layout_mode = 2
 theme_override_constants/margin_left = 28
 theme_override_constants/margin_top = 26
 theme_override_constants/margin_right = 28
 theme_override_constants/margin_bottom = 26
 
-[node name="VBox" type="VBoxContainer" parent="MenuRoot/CenterContainer/PausePanel/Margin"]
+[node name="VBox" type="VBoxContainer" parent="MenuRoot/CenterContainer/PausePanel/Margin" unique_id=47953107]
 layout_mode = 2
 theme_override_constants/separation = 14
 
-[node name="Title" type="Label" parent="MenuRoot/CenterContainer/PausePanel/Margin/VBox"]
+[node name="Title" type="Label" parent="MenuRoot/CenterContainer/PausePanel/Margin/VBox" unique_id=1782321600]
 layout_mode = 2
 theme_override_font_sizes/font_size = 30
 text = "Paused"
 horizontal_alignment = 1
 
-[node name="ResumeButton" type="Button" parent="MenuRoot/CenterContainer/PausePanel/Margin/VBox"]
+[node name="ResumeButton" type="Button" parent="MenuRoot/CenterContainer/PausePanel/Margin/VBox" unique_id=2079143918]
 custom_minimum_size = Vector2(0, 42)
 layout_mode = 2
 text = "Resume"
 
-[node name="RestartButton" type="Button" parent="MenuRoot/CenterContainer/PausePanel/Margin/VBox"]
+[node name="RestartButton" type="Button" parent="MenuRoot/CenterContainer/PausePanel/Margin/VBox" unique_id=1243870166]
 custom_minimum_size = Vector2(0, 42)
 layout_mode = 2
 text = "Restart Level"
 
-[node name="SettingsButton" type="Button" parent="MenuRoot/CenterContainer/PausePanel/Margin/VBox"]
+[node name="SettingsButton" type="Button" parent="MenuRoot/CenterContainer/PausePanel/Margin/VBox" unique_id=1899824861]
 custom_minimum_size = Vector2(0, 42)
 layout_mode = 2
 text = "Settings"
 
-[node name="MainMenuButton" type="Button" parent="MenuRoot/CenterContainer/PausePanel/Margin/VBox"]
+[node name="MainMenuButton" type="Button" parent="MenuRoot/CenterContainer/PausePanel/Margin/VBox" unique_id=1490802062]
 custom_minimum_size = Vector2(0, 42)
 layout_mode = 2
 text = "Main Menu"
 
-[node name="QuitButton" type="Button" parent="MenuRoot/CenterContainer/PausePanel/Margin/VBox"]
+[node name="QuitButton" type="Button" parent="MenuRoot/CenterContainer/PausePanel/Margin/VBox" unique_id=1605164163]
 custom_minimum_size = Vector2(0, 42)
 layout_mode = 2
 text = "Quit"
 
-[node name="GooseSettingsMenu" parent="MenuRoot" instance=ExtResource("2_settings")]
-layout_mode = 1
+[node name="GooseSettingsOverlay" parent="." instance=ExtResource("2_settings")]

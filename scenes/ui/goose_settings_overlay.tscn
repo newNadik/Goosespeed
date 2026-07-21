@@ -1,0 +1,33 @@
+[gd_scene load_steps=3 format=3]
+
+[ext_resource type="Script" path="res://scripts/ui/goose_settings_overlay.gd" id="1_overlay"]
+[ext_resource type="PackedScene" path="res://scenes/ui/goose_settings_menu.tscn" id="2_settings"]
+
+[node name="GooseSettingsOverlay" type="CanvasLayer"]
+visible = false
+process_mode = 3
+layer = 20
+script = ExtResource("1_overlay")
+
+[node name="Root" type="Control" parent="."]
+visible = false
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 0
+
+[node name="Scrim" type="ColorRect" parent="Root"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 0
+color = Color(0.15294118, 0.24705882, 0.30980393, 0.42)
+
+[node name="GooseSettingsMenu" parent="Root" instance=ExtResource("2_settings")]
+layout_mode = 1

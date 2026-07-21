@@ -1,6 +1,7 @@
 extends Node
 
 const SETTINGS_MENU_SCENE := preload("res://scenes/ui/goose_settings_menu.tscn")
+const SETTINGS_OVERLAY_SCENE := preload("res://scenes/ui/goose_settings_overlay.tscn")
 
 
 func _ready() -> void:
@@ -43,6 +44,11 @@ func _ready() -> void:
 		_restore_settings(original_backend, original_camera_mode)
 		get_tree().quit(1)
 		return
+	if not await _settings_overlay_is_valid():
+		settings_menu.queue_free()
+		_restore_settings(original_backend, original_camera_mode)
+		get_tree().quit(1)
+		return
 
 	settings_menu.queue_free()
 	_restore_settings(original_backend, original_camera_mode)
@@ -74,6 +80,26 @@ func _settings_menu_options_are_valid(settings_menu: Node) -> bool:
 				% [index, camera_mode, expected_camera_modes[index]]
 			)
 			return false
+	return true
+
+
+func _settings_overlay_is_valid() -> bool:
+	var overlay := SETTINGS_OVERLAY_SCENE.instantiate()
+	add_child(overlay)
+	await get_tree().process_frame
+	overlay.show_settings()
+	await get_tree().process_frame
+	if not overlay.visible:
+		push_error("Settings overlay did not become visible")
+		overlay.queue_free()
+		return false
+	overlay.hide_settings()
+	await get_tree().process_frame
+	if overlay.visible:
+		push_error("Settings overlay did not hide")
+		overlay.queue_free()
+		return false
+	overlay.queue_free()
 	return true
 
 
