@@ -16,9 +16,14 @@ const ANIM_SWIM_MEDIUM := &"Goose|A_SwimMoveMedium"
 const ANIM_SWIM_FAST := &"Goose|A_SwimMoveFast"
 const ANIM_FLY_FLAP := &"Goose|A_FlyFlapping"
 const ANIM_FLY_GLIDE := &"Goose|A_FlyGliding"
+const ANIM_PRE_LAND := &"Goose|A_Landing_PreLanding"
 const ANIM_LAND := &"Goose|A_Landing_Touch"
+const ANIM_TAKEOFF_BOUNCE := &"Goose|A_TakeOff_BounceOff"
+const ANIM_TAKEOFF_RUNUP := &"Goose|A_TakeOff_RunUp"
 const BACKEND_BASIC := "basic"
 const BACKEND_Q3 := "q3"
+const BACKEND_Q3_FLIGHT := "q3_n_flight"
+const BACKEND_FLIGHT := "flight"
 const BACKEND_PLATFORMER := "platformer"
 const LOOPING_ANIMATIONS := [
 	ANIM_IDLE,
@@ -34,6 +39,7 @@ const LOOPING_ANIMATIONS := [
 	ANIM_SWIM_FAST,
 	ANIM_FLY_FLAP,
 	ANIM_FLY_GLIDE,
+	ANIM_TAKEOFF_RUNUP,
 ]
 
 @export var body_bob_amount := 0.08
@@ -55,6 +61,7 @@ const LOOPING_ANIMATIONS := [
 @export var airborne_flap_speed := 1.0
 @export var flap_hold_time := 0.28
 @export var landing_hold_time := 0.22
+@export var prelanding_vertical_speed := -8.0
 
 @onready var body: Node3D = get_node_or_null("Body") as Node3D
 @onready var left_wing: Node3D = get_node_or_null("Body/LeftWing") as Node3D
@@ -97,7 +104,9 @@ func _process(delta: float) -> void:
 	landing_hold_remaining = maxf(landing_hold_remaining - delta, 0.0)
 	run_fast_hold_remaining = maxf(run_fast_hold_remaining - delta, 0.0)
 	locomotion_hold_remaining = maxf(locomotion_hold_remaining - delta, 0.0)
-	if previous_grounded and not latest_state.grounded and latest_state.velocity.y > airborne_flap_speed:
+	if Input.is_action_just_pressed(&"player_flap") and _flap_input_can_animate():
+		flap_hold_remaining = flap_hold_time
+	if latest_state.just_entered_flight:
 		flap_hold_remaining = flap_hold_time
 
 	global_position = global_position.lerp(latest_state.position, minf(delta * 20.0, 1.0))
@@ -145,6 +154,11 @@ func animation_for_state(state: RefCounted) -> StringName:
 
 
 func _animation_for_state(state: RefCounted, use_ground_stability: bool) -> StringName:
+	if state.crashed or state.knocked_down or state.hard_landed or state.just_landed:
+		if use_ground_stability:
+			_clear_ground_locomotion()
+		return _first_available([ANIM_LAND, ANIM_PRE_LAND, ANIM_IDLE])
+
 	if state.swimming:
 		if use_ground_stability:
 			_clear_ground_locomotion()
@@ -154,12 +168,37 @@ func _animation_for_state(state: RefCounted, use_ground_stability: bool) -> Stri
 			return _first_available([ANIM_SWIM_MEDIUM, ANIM_SWIM_MOVE])
 		return _first_available([ANIM_SWIM_STEADY, ANIM_SWIM_MOVE])
 
+	if state.flight_activation_charging and state.grounded:
+		if use_ground_stability:
+			_clear_ground_locomotion()
+		return _first_available([ANIM_TAKEOFF_RUNUP, ANIM_RUN_FAST, ANIM_WALK_FAST])
+
+	if state.just_entered_flight:
+		if use_ground_stability:
+			_clear_ground_locomotion()
+		return _first_available([ANIM_FLY_FLAP, ANIM_TAKEOFF_BOUNCE, ANIM_FLY_GLIDE])
+
+	if state.mode == &"flight":
+		if use_ground_stability:
+			_clear_ground_locomotion()
+		if state.flapping or flap_hold_remaining > 0.0:
+			return _first_available([ANIM_FLY_FLAP, ANIM_FLY_GLIDE])
+		return _first_available([ANIM_FLY_GLIDE, ANIM_FLY_FLAP])
+
 	if not state.grounded:
 		if use_ground_stability:
 			_clear_ground_locomotion()
-		if state.flapping or state.velocity.y > airborne_flap_speed or flap_hold_remaining > 0.0:
+		if state.flapping or flap_hold_remaining > 0.0:
 			return _first_available([ANIM_FLY_FLAP, ANIM_FLY_GLIDE])
+		if state.falling and state.vertical_speed <= prelanding_vertical_speed:
+			return _first_available([ANIM_PRE_LAND, ANIM_FLY_GLIDE])
 		return _first_available([ANIM_FLY_GLIDE, ANIM_FLY_FLAP])
+
+	if state.crouch_sliding or state.sliding:
+		var slide_candidate := _ground_slide_animation_for_speed(state.horizontal_speed)
+		if use_ground_stability:
+			return _stable_ground_animation(slide_candidate, state.horizontal_speed)
+		return slide_candidate
 
 	var candidate := _ground_animation_for_speed(state.horizontal_speed)
 	if use_ground_stability:
@@ -168,7 +207,7 @@ func _animation_for_state(state: RefCounted, use_ground_stability: bool) -> Stri
 
 
 func _ground_animation_for_speed(horizontal_speed: float) -> StringName:
-	if movement_backend == BACKEND_Q3:
+	if _uses_q3_thresholds():
 		return _q3_ground_animation_for_speed(horizontal_speed)
 	if horizontal_speed < idle_speed_threshold:
 		return _first_available([ANIM_IDLE, ANIM_IDLE_ALT])
@@ -179,6 +218,12 @@ func _ground_animation_for_speed(horizontal_speed: float) -> StringName:
 	if horizontal_speed < run_fast_speed:
 		return _first_available([ANIM_RUN_SLOW, ANIM_RUN_FAST, ANIM_WALK_FAST])
 	return _first_available([ANIM_RUN_FAST, ANIM_RUN_SLOW, ANIM_WALK_FAST])
+
+
+func _ground_slide_animation_for_speed(horizontal_speed: float) -> StringName:
+	if horizontal_speed >= _run_slow_speed():
+		return _first_available([ANIM_RUN_FAST, ANIM_RUN_SLOW, ANIM_WALK_FAST])
+	return _first_available([ANIM_WALK_FAST, ANIM_RUN_SLOW, ANIM_WALK_MEDIUM])
 
 
 func _q3_ground_animation_for_speed(horizontal_speed: float) -> StringName:
@@ -229,6 +274,9 @@ func _configure_animation_player() -> void:
 	for animation_name in LOOPING_ANIMATIONS:
 		if animation_player.has_animation(animation_name):
 			animation_player.get_animation(animation_name).loop_mode = Animation.LOOP_LINEAR
+	for animation_name in [ANIM_PRE_LAND, ANIM_TAKEOFF_BOUNCE]:
+		if animation_player.has_animation(animation_name):
+			animation_player.get_animation(animation_name).loop_mode = Animation.LOOP_NONE
 	if animation_player.has_animation(ANIM_LAND):
 		animation_player.get_animation(ANIM_LAND).loop_mode = Animation.LOOP_NONE
 
@@ -236,7 +284,7 @@ func _configure_animation_player() -> void:
 func _update_animation() -> void:
 	if animation_player == null:
 		return
-	var just_landed := not previous_grounded and latest_state.grounded
+	var just_landed := latest_state.just_landed or (not previous_grounded and latest_state.grounded)
 	if just_landed:
 		landing_hold_remaining = landing_hold_time
 	var next_animation := (
@@ -262,7 +310,7 @@ func _play_animation(animation_name: StringName, speed_scale: float) -> void:
 
 
 func _animation_speed_scale(animation_name: StringName) -> float:
-	if movement_backend == BACKEND_Q3:
+	if _uses_q3_thresholds():
 		return _q3_animation_speed_scale(animation_name)
 	if animation_name == ANIM_RUN_FAST:
 		return clampf(latest_state.horizontal_speed / run_fast_speed, 0.9, 1.15)
@@ -323,15 +371,23 @@ func _current_animation_phase() -> float:
 
 
 func _walk_medium_speed() -> float:
-	return q3_walk_fast_speed if movement_backend == BACKEND_Q3 else walk_medium_speed
+	return q3_walk_fast_speed if _uses_q3_thresholds() else walk_medium_speed
 
 
 func _run_slow_speed() -> float:
-	return q3_run_slow_speed if movement_backend == BACKEND_Q3 else run_slow_speed
+	return q3_run_slow_speed if _uses_q3_thresholds() else run_slow_speed
 
 
 func _run_fast_exit_speed() -> float:
-	return q3_run_fast_exit_speed if movement_backend == BACKEND_Q3 else run_fast_exit_speed
+	return q3_run_fast_exit_speed if _uses_q3_thresholds() else run_fast_exit_speed
+
+
+func _uses_q3_thresholds() -> bool:
+	return movement_backend == BACKEND_Q3 or movement_backend == BACKEND_Q3_FLIGHT
+
+
+func _flap_input_can_animate() -> bool:
+	return latest_state.mode == &"flight" or not latest_state.grounded
 
 
 func _first_available(animation_names: Array) -> StringName:

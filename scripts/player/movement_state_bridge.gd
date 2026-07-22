@@ -41,11 +41,13 @@ func _connect_controller() -> void:
 		and not controller.is_connected("movement_state_changed", _on_controller_state_changed)
 	):
 		controller.connect("movement_state_changed", _on_controller_state_changed)
-	current_state = controller.get_movement_state() if controller.has_method("get_movement_state") else _capture_controller_state()
+	current_state = _normalize_state(
+		controller.get_movement_state() if controller.has_method("get_movement_state") else _capture_controller_state()
+	)
 
 
-func _on_controller_state_changed(state: RefCounted) -> void:
-	current_state = state.duplicate_state()
+func _on_controller_state_changed(state) -> void:
+	current_state = _normalize_state(state)
 	state_changed.emit(current_state.duplicate_state())
 
 
@@ -58,17 +60,29 @@ func _capture_controller_state() -> RefCounted:
 	if typeof(controller_velocity) == TYPE_VECTOR3:
 		result.velocity = controller_velocity
 	result.horizontal_speed = Vector2(result.velocity.x, result.velocity.z).length()
+	result.vertical_speed = result.velocity.y
 	result.facing_direction = _capture_facing_direction()
 	if controller.has_method("is_on_floor"):
 		result.grounded = controller.is_on_floor()
+	result.airborne = not result.grounded
 	result.swimming = _controller_is_swimming()
-	result.sliding = controller.get("is_crouch_sliding") == true
+	result.crouching = controller.get("is_crouching") == true
+	result.crouch_sliding = controller.get("is_crouch_sliding") == true
+	result.sliding = result.crouch_sliding
 	result.gliding = false
 	result.flapping = false
 	result.falling = not result.grounded and result.velocity.y < -0.2
 	var controller_surface = controller.get("current_surface")
 	result.surface_type = StringName(controller_surface) if controller_surface != null else &"default"
 	result.medium_type = &"water" if result.swimming else &"air"
+	return result
+
+
+func _normalize_state(state) -> RefCounted:
+	if state is RefCounted and state.has_method("duplicate_state"):
+		return state.duplicate_state()
+	var result := MovementStateScript.new()
+	result.copy_from(state)
 	return result
 
 

@@ -62,6 +62,8 @@ func _initialize() -> void:
 	_expect_locomotion_hold(failures, visual)
 	_expect_run_speed_scale(failures, visual)
 	_expect_q3_mapping(failures, visual)
+	_expect_q3_flight_mapping(failures, visual)
+	_expect_transition_mapping(failures, visual)
 	_expect_locomotion_phase_preserved(failures)
 	_expect_animation(
 		failures,
@@ -81,8 +83,15 @@ func _initialize() -> void:
 		failures,
 		visual,
 		_state({"grounded": false, "velocity": Vector3.UP * 2.0}),
+		VisualControllerScript.ANIM_FLY_GLIDE,
+		"upward jump without flap",
+	)
+	_expect_animation(
+		failures,
+		visual,
+		_state({"grounded": false, "flapping": true, "velocity": Vector3.UP * 2.0}),
 		VisualControllerScript.ANIM_FLY_FLAP,
-		"jump flap",
+		"explicit jump flap",
 	)
 	_expect_animation(
 		failures,
@@ -208,6 +217,97 @@ func _expect_q3_mapping(failures: Array[String], visual: Node) -> void:
 	if walk_scale < 1.0:
 		failures.append("q3 shift walk speed scale %.3f should keep feet moving" % walk_scale)
 	visual.set_movement_backend(VisualControllerScript.BACKEND_PLATFORMER)
+
+
+func _expect_q3_flight_mapping(failures: Array[String], visual: Node) -> void:
+	visual.set_movement_backend(VisualControllerScript.BACKEND_Q3_FLIGHT)
+	_expect_animation(
+		failures,
+		visual,
+		_state({"grounded": true, "horizontal_speed": 6.1}),
+		VisualControllerScript.ANIM_RUN_FAST,
+		"q3 flight ground speed",
+	)
+	visual.latest_state = _state({"grounded": true, "horizontal_speed": 6.1})
+	var speed_scale: float = visual._animation_speed_scale(VisualControllerScript.ANIM_RUN_FAST)
+	if speed_scale < 1.0:
+		failures.append("q3 flight speed scale %.3f should use q3 thresholds" % speed_scale)
+	visual.set_movement_backend(VisualControllerScript.BACKEND_PLATFORMER)
+
+
+func _expect_transition_mapping(failures: Array[String], visual: Node) -> void:
+	_expect_animation(
+		failures,
+		visual,
+		_state({"grounded": true, "flight_activation_charging": true, "horizontal_speed": 8.0}),
+		VisualControllerScript.ANIM_TAKEOFF_RUNUP,
+		"flight activation charge",
+	)
+	_expect_animation(
+		failures,
+		visual,
+		_state({"grounded": false, "just_entered_flight": true, "velocity": Vector3.UP * 8.0}),
+		VisualControllerScript.ANIM_FLY_FLAP,
+		"flight entry",
+	)
+	_expect_animation(
+		failures,
+		visual,
+		_state({"grounded": false, "just_took_off": true, "velocity": Vector3.UP * 8.0}),
+		VisualControllerScript.ANIM_FLY_GLIDE,
+		"generic takeoff without flap",
+	)
+	_expect_animation(
+		failures,
+		visual,
+		_state({"mode": &"flight", "grounded": false, "velocity": Vector3.FORWARD * 10.0}),
+		VisualControllerScript.ANIM_FLY_GLIDE,
+		"flight glide mode",
+	)
+	_expect_animation(
+		failures,
+		visual,
+		_state({"mode": &"flight", "grounded": false, "velocity": Vector3.UP * 4.0}),
+		VisualControllerScript.ANIM_FLY_GLIDE,
+		"rising flight without flap",
+	)
+	_expect_animation(
+		failures,
+		visual,
+		_state({"mode": &"flight", "grounded": false, "flapping": true}),
+		VisualControllerScript.ANIM_FLY_FLAP,
+		"explicit flight flap",
+	)
+	visual.flap_hold_remaining = visual.flap_hold_time
+	_expect_animation(
+		failures,
+		visual,
+		_state({"mode": &"flight", "grounded": false, "velocity": Vector3.UP * 4.0}),
+		VisualControllerScript.ANIM_FLY_FLAP,
+		"flight input flap pulse",
+	)
+	visual.flap_hold_remaining = 0.0
+	_expect_animation(
+		failures,
+		visual,
+		_state({"grounded": false, "falling": true, "vertical_speed": -12.0, "velocity": Vector3.DOWN * 12.0}),
+		VisualControllerScript.ANIM_PRE_LAND,
+		"fast prelanding fall",
+	)
+	_expect_animation(
+		failures,
+		visual,
+		_state({"grounded": true, "just_landed": true, "landing_vertical_impact_speed": 6.0}),
+		VisualControllerScript.ANIM_LAND,
+		"landing event",
+	)
+	_expect_animation(
+		failures,
+		visual,
+		_state({"grounded": true, "crouch_sliding": true, "horizontal_speed": 5.0}),
+		VisualControllerScript.ANIM_WALK_FAST,
+		"crouch slide",
+	)
 
 
 func _expect_locomotion_phase_preserved(failures: Array[String]) -> void:
