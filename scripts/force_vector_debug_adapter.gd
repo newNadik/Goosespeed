@@ -1,0 +1,1 @@
+../external/goose-moves/scripts/force_vector_debug_adapter.gd

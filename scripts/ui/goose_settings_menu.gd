@@ -52,8 +52,10 @@ func on_back_pressed() -> void:
 
 func _populate_backend_options() -> void:
 	backend_option.clear()
+	_add_backend_option("Q3 + Flight", GooseGameSettings.MOVEMENT_Q3_FLIGHT)
 	_add_backend_option("Q3", GooseGameSettings.MOVEMENT_Q3)
 	_add_backend_option("Platformer", GooseGameSettings.MOVEMENT_PLATFORMER)
+	_add_backend_option("Flight", GooseGameSettings.MOVEMENT_FLIGHT)
 	_add_backend_option("Basic", GooseGameSettings.MOVEMENT_BASIC)
 	_sync_from_settings()
 

@@ -1,0 +1,1 @@
+../external/goose-moves/scripts/force_vector_visualizer_3d.gd

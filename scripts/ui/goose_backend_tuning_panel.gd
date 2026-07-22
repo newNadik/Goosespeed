@@ -2,11 +2,21 @@ class_name GooseBackendTuningPanel
 extends VBoxContainer
 
 const TUNING_KEYS := {
+	"q3_n_flight": [
+		"flight_hold_threshold",
+		"flight_min_activation_speed",
+		"movement_mode",
+		"auto_jump",
+		"crouch_slide",
+		"wall_jump",
+		"debug_force_vectors",
+	],
 	"q3": [
 		"movement_mode",
 		"auto_jump",
 		"crouch_slide",
 		"wall_jump",
+		"debug_force_vectors",
 	],
 	"platformer": [
 		"max_run_speed",
@@ -118,12 +128,16 @@ func _setting_def(key: String) -> Dictionary:
 
 
 func _settings_backend() -> String:
+	if backend == GooseGameSettings.MOVEMENT_Q3_FLIGHT:
+		return Settings.CHARACTER_Q3_N_FLIGHT
 	if backend == GooseGameSettings.MOVEMENT_PLATFORMER:
 		return Settings.CHARACTER_PLATFORMER
 	return Settings.CHARACTER_Q3
 
 
 func _backend_label(value: String) -> String:
+	if value == GooseGameSettings.MOVEMENT_Q3_FLIGHT:
+		return "Q3 + Flight"
 	if value == GooseGameSettings.MOVEMENT_PLATFORMER:
 		return "Platformer"
 	if value == GooseGameSettings.MOVEMENT_BASIC:

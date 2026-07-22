@@ -6,6 +6,7 @@ const REQUIRED_ACTIONS := [
 	&"player_left",
 	&"player_right",
 	&"player_jump",
+	&"player_flap",
 	&"player_crouch",
 	&"player_special",
 	&"player_walk",

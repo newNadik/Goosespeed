@@ -6,10 +6,14 @@ const SAVE_PATH := "user://goosespeed_settings.cfg"
 const SECTION := "goosespeed"
 const MOVEMENT_BASIC := "basic"
 const MOVEMENT_Q3 := "q3"
+const MOVEMENT_Q3_FLIGHT := "q3_n_flight"
 const MOVEMENT_PLATFORMER := "platformer"
+const MOVEMENT_FLIGHT := "flight"
 const MOVEMENT_BACKENDS := [
+	MOVEMENT_Q3_FLIGHT,
 	MOVEMENT_Q3,
 	MOVEMENT_PLATFORMER,
+	MOVEMENT_FLIGHT,
 	MOVEMENT_BASIC,
 ]
 const CAMERA_THIRD_PERSON := "third_person"
@@ -19,13 +23,14 @@ const CAMERA_MODES := [
 	CAMERA_FIRST_PERSON,
 ]
 
-var movement_backend := MOVEMENT_Q3
+var movement_backend := MOVEMENT_Q3_FLIGHT
 var camera_mode := CAMERA_THIRD_PERSON
 var debug_hud_visible := true
 
 
 func _ready() -> void:
 	load_settings()
+	call_deferred("_connect_prototype_settings")
 
 
 func load_settings() -> void:
@@ -39,6 +44,7 @@ func load_settings() -> void:
 	)
 	camera_mode = normalize_camera_mode(str(config.get_value(SECTION, "camera_mode", camera_mode)))
 	debug_hud_visible = bool(config.get_value(SECTION, "debug_hud_visible", debug_hud_visible))
+	_sync_from_prototype_settings()
 
 
 func save_settings() -> void:
@@ -56,6 +62,7 @@ func set_movement_backend(value: String) -> void:
 	if movement_backend == normalized:
 		return
 	movement_backend = normalized
+	_sync_to_prototype_settings(normalized)
 	save_settings()
 	settings_changed.emit()
 
@@ -72,10 +79,44 @@ func set_camera_mode(value: String) -> void:
 func normalize_movement_backend(value: String) -> String:
 	if value in MOVEMENT_BACKENDS:
 		return value
-	return MOVEMENT_Q3
+	return MOVEMENT_Q3_FLIGHT
 
 
 func normalize_camera_mode(value: String) -> String:
 	if value in CAMERA_MODES:
 		return value
 	return CAMERA_THIRD_PERSON
+
+
+func _sync_from_prototype_settings() -> void:
+	if movement_backend == MOVEMENT_BASIC:
+		return
+	var prototype_settings := get_node_or_null("/root/Settings")
+	if prototype_settings == null:
+		return
+	var character_controller = prototype_settings.get("character_controller")
+	if character_controller != null:
+		var normalized := normalize_movement_backend(str(character_controller))
+		if movement_backend != normalized:
+			movement_backend = normalized
+			save_settings()
+			settings_changed.emit()
+
+
+func _sync_to_prototype_settings(backend: String) -> void:
+	if backend == MOVEMENT_BASIC:
+		return
+	var prototype_settings := get_node_or_null("/root/Settings")
+	if prototype_settings != null and prototype_settings.has_method("set_character_controller"):
+		prototype_settings.set_character_controller(backend)
+
+
+func _connect_prototype_settings() -> void:
+	var prototype_settings := get_node_or_null("/root/Settings")
+	if prototype_settings == null or not prototype_settings.has_signal("settings_changed"):
+		return
+	if not prototype_settings.is_connected("settings_changed", _sync_from_prototype_settings):
+		prototype_settings.connect("settings_changed", _sync_from_prototype_settings)
+	if movement_backend == MOVEMENT_Q3_FLIGHT and prototype_settings.has_method("set_character_controller"):
+		prototype_settings.set_character_controller(MOVEMENT_Q3_FLIGHT)
+	_sync_from_prototype_settings()

@@ -22,8 +22,8 @@ func _ready() -> void:
 		get_tree().quit(1)
 		return
 
-	if GooseGameSettings.normalize_movement_backend("unknown") != GooseGameSettings.MOVEMENT_Q3:
-		push_error("Invalid movement backend did not normalize to Q3")
+	if GooseGameSettings.normalize_movement_backend("unknown") != GooseGameSettings.MOVEMENT_Q3_FLIGHT:
+		push_error("Invalid movement backend did not normalize to Q3 + Flight")
 		get_tree().quit(1)
 		return
 	if GooseGameSettings.normalize_camera_mode("unknown") != GooseGameSettings.CAMERA_THIRD_PERSON:
@@ -87,10 +87,15 @@ func _settings_overlay_is_valid() -> bool:
 	var overlay := SETTINGS_OVERLAY_SCENE.instantiate()
 	add_child(overlay)
 	await get_tree().process_frame
+	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 	overlay.show_settings()
 	await get_tree().process_frame
 	if not overlay.visible:
 		push_error("Settings overlay did not become visible")
+		overlay.queue_free()
+		return false
+	if Input.mouse_mode != Input.MOUSE_MODE_VISIBLE:
+		push_error("Settings overlay did not restore visible mouse mode")
 		overlay.queue_free()
 		return false
 	overlay.hide_settings()
@@ -105,8 +110,14 @@ func _settings_overlay_is_valid() -> bool:
 
 func _settings_menu_tuning_is_valid(settings_menu: Node) -> bool:
 	var tuning_panel := settings_menu.get_node("CenterContainer/SettingsPanel/Margin/VBox/TuningPanel")
+	tuning_panel.rebuild(GooseGameSettings.MOVEMENT_Q3_FLIGHT)
+	for key in ["flight_hold_threshold", "flight_min_activation_speed", "movement_mode", "debug_force_vectors"]:
+		if not tuning_panel.has_control(key):
+			push_error("Q3 + Flight tuning is missing %s" % key)
+			return false
+
 	tuning_panel.rebuild(GooseGameSettings.MOVEMENT_Q3)
-	for key in ["movement_mode", "auto_jump", "crouch_slide", "wall_jump"]:
+	for key in ["movement_mode", "auto_jump", "crouch_slide", "wall_jump", "debug_force_vectors"]:
 		if not tuning_panel.has_control(key):
 			push_error("Q3 tuning is missing %s" % key)
 			return false

@@ -1,9 +1,6 @@
 class_name GooseGameHud
 extends CanvasLayer
 
-@onready var backend_label: Label = $Root/TopLeftPanel/Margin/VBox/BackendLabel
-@onready var camera_label: Label = $Root/TopLeftPanel/Margin/VBox/CameraLabel
-@onready var fps_label: Label = $Root/TopLeftPanel/Margin/VBox/FpsLabel
 @onready var speed_label: Label = $Root/TopRightPanel/Margin/VBox/SpeedLabel
 @onready var state_label: Label = $Root/TopRightPanel/Margin/VBox/StateLabel
 @onready var timer_label: Label = $Root/TopRightPanel/Margin/VBox/TimerLabel
@@ -33,9 +30,6 @@ func set_run_state(time_seconds: float, finished: bool) -> void:
 
 func _update_labels() -> void:
 	var backend := _active_backend_id()
-	backend_label.text = "Backend  %s" % _humanize_id(backend)
-	camera_label.text = "Camera  %s" % _humanize_id(GooseGameSettings.camera_mode)
-	fps_label.text = "FPS  %d" % Engine.get_frames_per_second()
 	_update_hints(backend)
 
 	var state := _get_movement_state()
@@ -60,6 +54,9 @@ func _active_backend_id() -> String:
 
 func _update_hints(backend: String) -> void:
 	var hints := _control_hints_for_backend(backend)
+	while hints_list.get_child_count() < hints.size():
+		var label := Label.new()
+		hints_list.add_child(label)
 	for index in hints_list.get_child_count():
 		var label := hints_list.get_child(index) as Label
 		if label == null:
@@ -70,6 +67,19 @@ func _update_hints(backend: String) -> void:
 
 
 func _control_hints_for_backend(backend: String) -> Array[String]:
+	if backend == GooseGameSettings.MOVEMENT_Q3_FLIGHT:
+		return [
+			"WASD  Move / Fly",
+			"Mouse  Look",
+			"Space  Jump / Hold Flight",
+			"Shift  Walk",
+			"Ctrl  Crouch / Exit Flight",
+			"E  Wall Jump",
+			"Q  Honk",
+			"R  Restart",
+			"C  Recenter Camera",
+			"Esc  Pause",
+		]
 	if backend == GooseGameSettings.MOVEMENT_PLATFORMER:
 		return [
 			"WASD  Move",
@@ -78,6 +88,16 @@ func _control_hints_for_backend(backend: String) -> Array[String]:
 			"Ctrl+Space  Trick Jump",
 			"Ctrl in Air  Ground Pound",
 			"E in Air  Dive",
+			"Q  Honk",
+			"R  Restart",
+			"C  Recenter Camera",
+			"Esc  Pause",
+		]
+	if backend == GooseGameSettings.MOVEMENT_FLIGHT:
+		return [
+			"WASD  Pitch / Roll",
+			"Mouse  Look",
+			"Space  Flap",
 			"Q  Honk",
 			"R  Restart",
 			"C  Recenter Camera",
@@ -123,16 +143,3 @@ func _state_text(state: RefCounted) -> String:
 		return "ground"
 	return "air"
 
-
-func _humanize_id(value: String) -> String:
-	if value == GooseGameSettings.MOVEMENT_Q3:
-		return "Q3"
-	if value == GooseGameSettings.MOVEMENT_PLATFORMER:
-		return "Platformer"
-	if value == GooseGameSettings.MOVEMENT_BASIC:
-		return "Basic"
-	if value == GooseGameSettings.CAMERA_THIRD_PERSON:
-		return "Third Person"
-	if value == GooseGameSettings.CAMERA_FIRST_PERSON:
-		return "First Person"
-	return value.replace("_", " ").capitalize()

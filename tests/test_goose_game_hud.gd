@@ -7,7 +7,7 @@ const HUD_SCENE := preload("res://scenes/ui/goose_game_hud.tscn")
 func _ready() -> void:
 	var original_backend: String = GooseGameSettings.movement_backend
 	var original_camera_mode: String = GooseGameSettings.camera_mode
-	GooseGameSettings.movement_backend = GooseGameSettings.MOVEMENT_Q3
+	GooseGameSettings.set_movement_backend(GooseGameSettings.MOVEMENT_Q3_FLIGHT)
 	GooseGameSettings.camera_mode = GooseGameSettings.CAMERA_THIRD_PERSON
 
 	var player := PLAYER_SCENE.instantiate()
@@ -20,16 +20,8 @@ func _ready() -> void:
 	hud.set_run_state(12.34, true)
 	await get_tree().process_frame
 
-	if not _label_contains(hud, "Root/TopLeftPanel/Margin/VBox/BackendLabel", "Q3"):
-		push_error(
-			"HUD backend label did not use saved backend: %s"
-			% _label_text(hud, "Root/TopLeftPanel/Margin/VBox/BackendLabel")
-		)
-		_restore_settings(original_backend, original_camera_mode)
-		get_tree().quit(1)
-		return
-	if not _label_contains(hud, "Root/TopLeftPanel/Margin/VBox/CameraLabel", "Third Person"):
-		push_error("HUD camera label did not use saved camera mode")
+	if hud.get_node_or_null("Root/TopLeftPanel") != null:
+		push_error("HUD top-left status panel should be removed")
 		_restore_settings(original_backend, original_camera_mode)
 		get_tree().quit(1)
 		return
@@ -38,28 +30,33 @@ func _ready() -> void:
 		_restore_settings(original_backend, original_camera_mode)
 		get_tree().quit(1)
 		return
-	if not _label_contains(hud, "Root/HintsPanel/Margin/HintsList/PauseLabel", "Esc  Pause"):
+	if not _hints_contain(hud, "Esc  Pause"):
 		push_error("HUD hints label is missing pause hint")
 		_restore_settings(original_backend, original_camera_mode)
 		get_tree().quit(1)
 		return
 	if not _hints_contain(hud, "Shift  Walk"):
-		push_error("Q3 HUD hints are missing walk hint")
+		push_error("Q3 + Flight HUD hints are missing walk hint")
 		_restore_settings(original_backend, original_camera_mode)
 		get_tree().quit(1)
 		return
-	if not _hints_contain(hud, "Ctrl  Crouch / Slide"):
-		push_error("Q3 HUD hints are missing crouch/slide hint")
+	if not _hints_contain(hud, "Space  Jump / Hold Flight"):
+		push_error("Q3 + Flight HUD hints are missing flight hint")
+		_restore_settings(original_backend, original_camera_mode)
+		get_tree().quit(1)
+		return
+	if not _hints_contain(hud, "Ctrl  Crouch / Exit Flight"):
+		push_error("Q3 + Flight HUD hints are missing crouch/flight-exit hint")
 		_restore_settings(original_backend, original_camera_mode)
 		get_tree().quit(1)
 		return
 	if not _hints_contain(hud, "Q  Honk"):
-		push_error("Q3 HUD hints are missing honk hint")
+		push_error("Q3 + Flight HUD hints are missing honk hint")
 		_restore_settings(original_backend, original_camera_mode)
 		get_tree().quit(1)
 		return
 
-	GooseGameSettings.movement_backend = GooseGameSettings.MOVEMENT_PLATFORMER
+	GooseGameSettings.set_movement_backend(GooseGameSettings.MOVEMENT_PLATFORMER)
 	player.movement_backend = GooseGameSettings.MOVEMENT_PLATFORMER
 	hud.set_player(player)
 	await get_tree().process_frame
@@ -94,11 +91,6 @@ func _label_contains(root: Node, path: NodePath, expected_text: String) -> bool:
 	return label != null and label.text.contains(expected_text)
 
 
-func _label_text(root: Node, path: NodePath) -> String:
-	var label := root.get_node_or_null(path) as Label
-	return label.text if label != null else "<missing>"
-
-
 func _hints_contain(hud: Node, expected_text: String) -> bool:
 	var hints_list := hud.get_node_or_null("Root/HintsPanel/Margin/HintsList")
 	if hints_list == null:
@@ -111,5 +103,5 @@ func _hints_contain(hud: Node, expected_text: String) -> bool:
 
 
 func _restore_settings(backend: String, camera_mode: String) -> void:
-	GooseGameSettings.movement_backend = backend
+	GooseGameSettings.set_movement_backend(backend)
 	GooseGameSettings.camera_mode = camera_mode
