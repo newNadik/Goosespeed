@@ -46,6 +46,26 @@ func _settings_overlay_is_valid() -> bool:
 		push_error("Settings overlay did not restore visible mouse mode")
 		overlay.queue_free()
 		return false
+	var settings_tabs := overlay.get_node("Root/SettingsMenu/Panel/Margin/VBox/SettingsTabs") as TabContainer
+	if settings_tabs.current_tab != 1:
+		push_error("Settings overlay did not open movement adjustments")
+		overlay.queue_free()
+		return false
+	var character_row := overlay.get_node("Root/SettingsMenu/Panel/Margin/VBox/SettingsTabs/Character/CharacterRow") as Control
+	if character_row.visible:
+		push_error("Settings overlay exposed movement backend switching")
+		overlay.queue_free()
+		return false
+	var controller_title := overlay.get_node("Root/SettingsMenu/Panel/Margin/VBox/SettingsTabs/Character/ControllerTitle") as Label
+	if not controller_title.text.contains("Q3 + Flight"):
+		push_error("Settings overlay did not show Q3 + Flight adjustments")
+		overlay.queue_free()
+		return false
+	var keybindings_button := overlay.get_node("Root/SettingsMenu/Panel/Margin/VBox/SettingsTabs/Character/KeybindingsButton") as Button
+	if not keybindings_button.visible or keybindings_button.disabled:
+		push_error("Settings overlay did not expose key bindings")
+		overlay.queue_free()
+		return false
 	overlay.hide_settings()
 	await get_tree().process_frame
 	if overlay.visible:
