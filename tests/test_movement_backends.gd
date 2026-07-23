@@ -4,9 +4,6 @@ const PLAYER_SCENE := preload("res://scenes/player/goose_player_root.tscn")
 
 
 func _ready() -> void:
-	var original_camera_mode: String = GooseGameSettings.camera_mode
-	GooseGameSettings.camera_mode = GooseGameSettings.CAMERA_THIRD_PERSON
-
 	var player := PLAYER_SCENE.instantiate()
 	add_child(player)
 	await get_tree().process_frame
@@ -19,10 +16,6 @@ func _ready() -> void:
 		push_error("Active controller has unexpected name %s" % controller.name)
 		get_tree().quit(1)
 		return
-	if player.movement_backend != "q3_n_flight":
-		push_error("GoosePlayerRoot is not locked to Q3 + Flight")
-		get_tree().quit(1)
-		return
 	await get_tree().process_frame
 	if not _prototype_visuals_are_hidden(controller):
 		push_error("Prototype visuals are visible")
@@ -32,16 +25,11 @@ func _ready() -> void:
 		push_error("Debug HUD is hidden")
 		get_tree().quit(1)
 		return
-		if not _goosespeed_cameras_are_disabled(player):
-			push_error("GooseSpeed camera is current while addon camera is authoritative")
-			get_tree().quit(1)
-			return
-		if not _backend_camera_is_current(controller):
-			push_error("Q3 + Flight does not use an addon camera")
-			get_tree().quit(1)
-			return
+	if not _backend_camera_is_current(controller):
+		push_error("Q3 + Flight does not use an addon camera")
+		get_tree().quit(1)
+		return
 
-	GooseGameSettings.camera_mode = original_camera_mode
 	print("Q3 + Flight backend OK")
 	get_tree().quit(0)
 
@@ -52,18 +40,6 @@ func _prototype_visuals_are_hidden(controller: Node) -> bool:
 		if visual != null and visual.visible:
 			return false
 	return true
-
-
-func _goosespeed_cameras_are_disabled(player: Node) -> bool:
-	var third_person_camera := player.get_node_or_null(
-		"GooseCameraRig/YawPivot/PitchPivot/SpringArm3D/ThirdPersonCamera"
-	) as Camera3D
-	var first_person_camera := player.get_node_or_null(
-		"GooseCameraRig/YawPivot/PitchPivot/FirstPersonCamera"
-	) as Camera3D
-	if third_person_camera == null or first_person_camera == null:
-		return false
-	return not third_person_camera.current and not first_person_camera.current
 
 
 func _backend_camera_is_current(controller: Node) -> bool:

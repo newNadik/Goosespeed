@@ -9,7 +9,6 @@ var speed_held := false
 var control_held := false
 var peck_pressed := false
 var honk_pressed := false
-var reset_camera_pressed := false
 
 
 func _process(_delta: float) -> void:
@@ -35,7 +34,6 @@ func _sample() -> void:
 	jump_pressed = jump_pressed or Input.is_action_just_pressed(&"player_jump")
 	peck_pressed = peck_pressed or Input.is_action_just_pressed(&"player_special")
 	honk_pressed = honk_pressed or Input.is_action_just_pressed(&"player_honk")
-	reset_camera_pressed = reset_camera_pressed or Input.is_action_just_pressed(&"player_reset_camera")
 	jump_held = Input.is_action_pressed(&"player_jump")
 	speed_held = Input.is_action_pressed(&"player_walk")
 	control_held = Input.is_action_pressed(&"player_crouch")
@@ -56,12 +54,6 @@ func consume_peck_pressed() -> bool:
 func consume_honk_pressed() -> bool:
 	var result := honk_pressed
 	honk_pressed = false
-	return result
-
-
-func consume_reset_camera_pressed() -> bool:
-	var result := reset_camera_pressed
-	reset_camera_pressed = false
 	return result
 
 

@@ -5,9 +5,6 @@ const HUD_SCENE := preload("res://scenes/ui/goose_game_hud.tscn")
 
 
 func _ready() -> void:
-	var original_camera_mode: String = GooseGameSettings.camera_mode
-	GooseGameSettings.camera_mode = GooseGameSettings.CAMERA_THIRD_PERSON
-
 	var player := PLAYER_SCENE.instantiate()
 	var hud := HUD_SCENE.instantiate()
 	add_child(player)
@@ -20,12 +17,10 @@ func _ready() -> void:
 
 	if hud.get_node_or_null("Root/TopLeftPanel") != null:
 		push_error("HUD top-left status panel should be removed")
-		_restore_settings(original_camera_mode)
 		get_tree().quit(1)
 		return
 	if not _label_contains(hud, "Root/TopRightPanel/Margin/VBox/TimerLabel", "12.34"):
 		push_error("HUD timer label did not use run state")
-		_restore_settings(original_camera_mode)
 		get_tree().quit(1)
 		return
 	for hint in [
@@ -37,11 +32,9 @@ func _ready() -> void:
 	]:
 		if not _hints_contain(hud, hint):
 			push_error("HUD hints are missing %s" % hint)
-			_restore_settings(original_camera_mode)
 			get_tree().quit(1)
 			return
 
-	_restore_settings(original_camera_mode)
 	print("Goose game HUD OK")
 	get_tree().quit(0)
 
@@ -60,7 +53,3 @@ func _hints_contain(hud: Node, expected_text: String) -> bool:
 		if label != null and label.visible and label.text.contains(expected_text):
 			return true
 	return false
-
-
-func _restore_settings(camera_mode: String) -> void:
-	GooseGameSettings.camera_mode = camera_mode

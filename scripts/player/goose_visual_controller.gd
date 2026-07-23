@@ -37,8 +37,6 @@ const LOOPING_ANIMATIONS := [
 	ANIM_TAKEOFF_RUNUP,
 ]
 
-@export var body_bob_amount := 0.08
-@export var max_lean_degrees := 10.0
 @export var animation_blend_time := 0.18
 @export var idle_speed_threshold := 0.25
 @export var q3_walk_fast_speed := 2.5
@@ -54,10 +52,6 @@ const LOOPING_ANIMATIONS := [
 @export var landing_hold_time := 0.22
 @export var prelanding_vertical_speed := -8.0
 
-@onready var body: Node3D = get_node_or_null("Body") as Node3D
-@onready var left_wing: Node3D = get_node_or_null("Body/LeftWing") as Node3D
-@onready var right_wing: Node3D = get_node_or_null("Body/RightWing") as Node3D
-@onready var neck: Node3D = get_node_or_null("Body/Neck") as Node3D
 @onready var animation_player: AnimationPlayer = get_node_or_null("AnimationPlayer") as AnimationPlayer
 
 var state_bridge: Node
@@ -98,27 +92,6 @@ func _process(delta: float) -> void:
 	if not latest_state.facing_direction.is_zero_approx():
 		var target_yaw := atan2(-latest_state.facing_direction.x, -latest_state.facing_direction.z)
 		global_rotation.y = lerp_angle(global_rotation.y, target_yaw, minf(delta * 14.0, 1.0))
-
-	if body:
-		var speed_scale := clampf(latest_state.horizontal_speed / 16.0, 0.0, 1.5)
-		var bob := sin(Time.get_ticks_msec() * 0.018 * maxf(speed_scale, 0.2)) * body_bob_amount * speed_scale
-		body.position.y = bob
-
-		var lean := deg_to_rad(max_lean_degrees) * clampf(latest_state.velocity.y / 12.0, -1.0, 1.0)
-		body.rotation.x = lerpf(body.rotation.x, -lean, minf(delta * 8.0, 1.0))
-
-	var wing_target := 0.25
-	if latest_state.gliding:
-		wing_target = 1.1
-	elif latest_state.flapping:
-		wing_target = -0.75
-	if left_wing:
-		left_wing.rotation.z = lerp_angle(left_wing.rotation.z, wing_target, minf(delta * 12.0, 1.0))
-	if right_wing:
-		right_wing.rotation.z = lerp_angle(right_wing.rotation.z, -wing_target, minf(delta * 12.0, 1.0))
-	if neck:
-		var neck_target := -0.12 if latest_state.gliding or latest_state.falling else 0.08
-		neck.rotation.x = lerpf(neck.rotation.x, neck_target, minf(delta * 8.0, 1.0))
 
 	_update_animation()
 	previous_grounded = latest_state.grounded

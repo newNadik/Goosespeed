@@ -4,18 +4,14 @@ const SETTINGS_OVERLAY_SCENE := preload("res://scenes/ui/goose_settings_overlay.
 
 
 func _ready() -> void:
-	var original_camera_mode: String = GooseGameSettings.camera_mode
+	var original_debug_visible: bool = GooseGameSettings.debug_hud_visible
 
-	GooseGameSettings.set_camera_mode(GooseGameSettings.CAMERA_FIRST_PERSON)
-	GooseGameSettings.camera_mode = GooseGameSettings.CAMERA_THIRD_PERSON
+	GooseGameSettings.debug_hud_visible = false
+	GooseGameSettings.save_settings()
+	GooseGameSettings.debug_hud_visible = true
 	GooseGameSettings.load_settings()
-	if GooseGameSettings.camera_mode != GooseGameSettings.CAMERA_FIRST_PERSON:
-		push_error("Saved camera mode did not load")
-		get_tree().quit(1)
-		return
-
-	if GooseGameSettings.normalize_camera_mode("unknown") != GooseGameSettings.CAMERA_THIRD_PERSON:
-		push_error("Invalid camera mode did not normalize to third person")
+	if GooseGameSettings.debug_hud_visible:
+		push_error("Saved debug HUD visibility did not load")
 		get_tree().quit(1)
 		return
 
@@ -26,11 +22,11 @@ func _ready() -> void:
 		return
 
 	if not await _settings_overlay_is_valid():
-		_restore_settings(original_camera_mode)
+		_restore_settings(original_debug_visible)
 		get_tree().quit(1)
 		return
 
-	_restore_settings(original_camera_mode)
+	_restore_settings(original_debug_visible)
 	print("Goose game settings OK")
 	get_tree().quit(0)
 
@@ -60,5 +56,6 @@ func _settings_overlay_is_valid() -> bool:
 	return true
 
 
-func _restore_settings(camera_mode: String) -> void:
-	GooseGameSettings.set_camera_mode(camera_mode)
+func _restore_settings(debug_visible: bool) -> void:
+	GooseGameSettings.debug_hud_visible = debug_visible
+	GooseGameSettings.save_settings()

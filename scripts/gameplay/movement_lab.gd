@@ -13,7 +13,6 @@ var finished := false
 
 func _ready() -> void:
 	_disable_embedded_level_runtime()
-	_connect_volumes()
 	finish_area.body_entered.connect(_on_finish_body_entered)
 	player.set_spawn_transform(player.get_active_controller().global_transform)
 	game_hud.set_player(player)
@@ -33,33 +32,6 @@ func _restart_run() -> void:
 	elapsed_time = 0.0
 	finished = false
 	player.reset_to_spawn()
-
-
-func _connect_volumes() -> void:
-	var volumes := level.get_node_or_null("Volumes")
-	if volumes == null:
-		return
-	for area in volumes.get_children():
-		if not area is Area3D:
-			continue
-		(area as Area3D).body_entered.connect(_on_volume_body_entered.bind(area))
-		(area as Area3D).body_exited.connect(_on_volume_body_exited.bind(area))
-
-
-func _on_volume_body_entered(body: Node3D, area: Area3D) -> void:
-	if body != player.get_active_controller():
-		return
-	var medium := StringName(area.get_meta("platformer_medium", area.get_meta("q3_volume_type", "air")))
-	if medium == &"water":
-		player.set_medium(&"water")
-
-
-func _on_volume_body_exited(body: Node3D, area: Area3D) -> void:
-	if body != player.get_active_controller():
-		return
-	var medium := StringName(area.get_meta("platformer_medium", area.get_meta("q3_volume_type", "air")))
-	if medium == &"water":
-		player.set_medium(&"air")
 
 
 func _on_finish_body_entered(body: Node3D) -> void:

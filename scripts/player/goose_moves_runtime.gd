@@ -38,10 +38,6 @@ func spawn_controller(placeholder: Node3D) -> Node:
 	return active_controller
 
 
-func get_active_controller() -> Node:
-	return active_controller
-
-
 func reset_to_spawn() -> void:
 	if active_controller == null:
 		return
@@ -52,11 +48,6 @@ func set_spawn_transform(value: Transform3D) -> void:
 	if active_controller == null:
 		return
 	active_controller.set_spawn_transform(value)
-
-
-func set_medium(value: StringName) -> void:
-	if active_controller != null and active_controller.has_method("set_medium"):
-		active_controller.set_medium(value)
 
 
 func apply_debug_visibility(debug_visible: bool) -> void:

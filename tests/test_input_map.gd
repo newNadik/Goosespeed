@@ -12,7 +12,6 @@ const REQUIRED_ACTIONS := [
 	&"player_walk",
 	&"player_honk",
 	&"player_restart",
-	&"player_reset_camera",
 	&"ui_cancel",
 ]
 
