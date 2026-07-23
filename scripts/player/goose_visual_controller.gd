@@ -20,11 +20,6 @@ const ANIM_PRE_LAND := &"Goose|A_Landing_PreLanding"
 const ANIM_LAND := &"Goose|A_Landing_Touch"
 const ANIM_TAKEOFF_BOUNCE := &"Goose|A_TakeOff_BounceOff"
 const ANIM_TAKEOFF_RUNUP := &"Goose|A_TakeOff_RunUp"
-const BACKEND_BASIC := "basic"
-const BACKEND_Q3 := "q3"
-const BACKEND_Q3_FLIGHT := "q3_n_flight"
-const BACKEND_FLIGHT := "flight"
-const BACKEND_PLATFORMER := "platformer"
 const LOOPING_ANIMATIONS := [
 	ANIM_IDLE,
 	ANIM_IDLE_ALT,
@@ -46,10 +41,6 @@ const LOOPING_ANIMATIONS := [
 @export var max_lean_degrees := 10.0
 @export var animation_blend_time := 0.18
 @export var idle_speed_threshold := 0.25
-@export var walk_medium_speed := 4.5
-@export var run_slow_speed := 6.5
-@export var run_fast_speed := 8.0
-@export var run_fast_exit_speed := 7.2
 @export var q3_walk_fast_speed := 2.5
 @export var q3_run_slow_speed := 4.0
 @export var q3_run_fast_speed := 5.5
@@ -77,7 +68,6 @@ var landing_hold_remaining := 0.0
 var active_locomotion_animation: StringName = &""
 var run_fast_hold_remaining := 0.0
 var locomotion_hold_remaining := 0.0
-var movement_backend := BACKEND_PLATFORMER
 
 
 func _ready() -> void:
@@ -92,11 +82,6 @@ func set_state_bridge(value: Node) -> void:
 	state_bridge = value
 	if is_inside_tree() and state_bridge:
 		_connect_bridge()
-
-
-func set_movement_backend(value: String) -> void:
-	movement_backend = value
-	_clear_ground_locomotion()
 
 
 func _process(delta: float) -> void:
@@ -207,26 +192,6 @@ func _animation_for_state(state: RefCounted, use_ground_stability: bool) -> Stri
 
 
 func _ground_animation_for_speed(horizontal_speed: float) -> StringName:
-	if _uses_q3_thresholds():
-		return _q3_ground_animation_for_speed(horizontal_speed)
-	if horizontal_speed < idle_speed_threshold:
-		return _first_available([ANIM_IDLE, ANIM_IDLE_ALT])
-	if horizontal_speed < walk_medium_speed:
-		return _first_available([ANIM_WALK_MEDIUM, ANIM_WALK_FAST, ANIM_WALK_SLOW])
-	if horizontal_speed < run_slow_speed:
-		return _first_available([ANIM_WALK_FAST, ANIM_RUN_SLOW])
-	if horizontal_speed < run_fast_speed:
-		return _first_available([ANIM_RUN_SLOW, ANIM_RUN_FAST, ANIM_WALK_FAST])
-	return _first_available([ANIM_RUN_FAST, ANIM_RUN_SLOW, ANIM_WALK_FAST])
-
-
-func _ground_slide_animation_for_speed(horizontal_speed: float) -> StringName:
-	if horizontal_speed >= _run_slow_speed():
-		return _first_available([ANIM_RUN_FAST, ANIM_RUN_SLOW, ANIM_WALK_FAST])
-	return _first_available([ANIM_WALK_FAST, ANIM_RUN_SLOW, ANIM_WALK_MEDIUM])
-
-
-func _q3_ground_animation_for_speed(horizontal_speed: float) -> StringName:
 	if horizontal_speed < idle_speed_threshold:
 		return _first_available([ANIM_IDLE, ANIM_IDLE_ALT])
 	if horizontal_speed < q3_walk_fast_speed:
@@ -236,6 +201,12 @@ func _q3_ground_animation_for_speed(horizontal_speed: float) -> StringName:
 	if horizontal_speed < q3_run_fast_speed:
 		return _first_available([ANIM_RUN_SLOW, ANIM_RUN_FAST, ANIM_WALK_FAST])
 	return _first_available([ANIM_RUN_FAST, ANIM_RUN_SLOW, ANIM_WALK_FAST])
+
+
+func _ground_slide_animation_for_speed(horizontal_speed: float) -> StringName:
+	if horizontal_speed >= _run_slow_speed():
+		return _first_available([ANIM_RUN_FAST, ANIM_RUN_SLOW, ANIM_WALK_FAST])
+	return _first_available([ANIM_WALK_FAST, ANIM_RUN_SLOW, ANIM_WALK_MEDIUM])
 
 
 func _stable_ground_animation(candidate: StringName, horizontal_speed: float) -> StringName:
@@ -310,18 +281,6 @@ func _play_animation(animation_name: StringName, speed_scale: float) -> void:
 
 
 func _animation_speed_scale(animation_name: StringName) -> float:
-	if _uses_q3_thresholds():
-		return _q3_animation_speed_scale(animation_name)
-	if animation_name == ANIM_RUN_FAST:
-		return clampf(latest_state.horizontal_speed / run_fast_speed, 0.9, 1.15)
-	if animation_name in [ANIM_WALK_SLOW, ANIM_WALK_MEDIUM, ANIM_WALK_FAST, ANIM_RUN_SLOW, ANIM_RUN_FAST]:
-		return clampf(latest_state.horizontal_speed / run_slow_speed, 0.75, 1.2)
-	if animation_name in [ANIM_SWIM_MOVE, ANIM_SWIM_MEDIUM, ANIM_SWIM_FAST]:
-		return clampf(latest_state.horizontal_speed / walk_medium_speed, 0.75, 1.35)
-	return 1.0
-
-
-func _q3_animation_speed_scale(animation_name: StringName) -> float:
 	if animation_name == ANIM_WALK_MEDIUM:
 		return clampf(latest_state.horizontal_speed / q3_walk_fast_speed, 0.85, 1.25)
 	if animation_name == ANIM_WALK_FAST:
@@ -371,19 +330,15 @@ func _current_animation_phase() -> float:
 
 
 func _walk_medium_speed() -> float:
-	return q3_walk_fast_speed if _uses_q3_thresholds() else walk_medium_speed
+	return q3_walk_fast_speed
 
 
 func _run_slow_speed() -> float:
-	return q3_run_slow_speed if _uses_q3_thresholds() else run_slow_speed
+	return q3_run_slow_speed
 
 
 func _run_fast_exit_speed() -> float:
-	return q3_run_fast_exit_speed if _uses_q3_thresholds() else run_fast_exit_speed
-
-
-func _uses_q3_thresholds() -> bool:
-	return movement_backend == BACKEND_Q3 or movement_backend == BACKEND_Q3_FLIGHT
+	return q3_run_fast_exit_speed
 
 
 func _flap_input_can_animate() -> bool:

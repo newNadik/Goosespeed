@@ -29,9 +29,7 @@ func set_run_state(time_seconds: float, finished: bool) -> void:
 
 
 func _update_labels() -> void:
-	var backend := _active_backend_id()
-	_update_hints(backend)
-
+	_update_hints()
 	var state := _get_movement_state()
 	speed_label.text = "Speed  %.1f m/s" % state.horizontal_speed
 	state_label.text = "State  %s" % _state_text(state)
@@ -44,16 +42,8 @@ func _get_movement_state() -> RefCounted:
 	return preload("res://scripts/player/movement_state.gd").new()
 
 
-func _active_backend_id() -> String:
-	if player != null:
-		var backend = player.get("movement_backend")
-		if backend != null:
-			return str(backend)
-	return GooseGameSettings.movement_backend
-
-
-func _update_hints(backend: String) -> void:
-	var hints := _control_hints_for_backend(backend)
+func _update_hints() -> void:
+	var hints := _control_hints()
 	while hints_list.get_child_count() < hints.size():
 		var label := Label.new()
 		hints_list.add_child(label)
@@ -66,61 +56,14 @@ func _update_hints(backend: String) -> void:
 			label.text = hints[index]
 
 
-func _control_hints_for_backend(backend: String) -> Array[String]:
-	if backend == GooseGameSettings.MOVEMENT_Q3_FLIGHT:
-		return [
-			"WASD  Move / Fly",
-			"Mouse  Look",
-			"Space  Jump / Hold Flight",
-			"Shift  Walk",
-			"Ctrl  Crouch / Exit Flight",
-			"E  Wall Jump",
-			"Q  Honk",
-			"R  Restart",
-			"C  Recenter Camera",
-			"Esc  Pause",
-		]
-	if backend == GooseGameSettings.MOVEMENT_PLATFORMER:
-		return [
-			"WASD  Move",
-			"Mouse  Look",
-			"Space  Jump",
-			"Ctrl+Space  Trick Jump",
-			"Ctrl in Air  Ground Pound",
-			"E in Air  Dive",
-			"Q  Honk",
-			"R  Restart",
-			"C  Recenter Camera",
-			"Esc  Pause",
-		]
-	if backend == GooseGameSettings.MOVEMENT_FLIGHT:
-		return [
-			"WASD  Pitch / Roll",
-			"Mouse  Look",
-			"Space  Flap",
-			"Q  Honk",
-			"R  Restart",
-			"C  Recenter Camera",
-			"Esc  Pause",
-		]
-	if backend == GooseGameSettings.MOVEMENT_BASIC:
-		return [
-			"WASD  Move",
-			"Mouse  Look",
-			"Space  Jump / Flap",
-			"Shift  Sprint",
-			"Ctrl  Brake",
-			"Q  Honk",
-			"R  Restart",
-			"C  Recenter Camera",
-			"Esc  Pause",
-		]
+func _control_hints() -> Array[String]:
 	return [
-		"WASD  Move",
+		"WASD  Move / Fly",
 		"Mouse  Look",
-		"Space  Jump",
+		"Space  Jump / Hold Flight",
 		"Shift  Walk",
-		"Ctrl  Crouch / Slide",
+		"Ctrl  Crouch / Exit Flight",
+		"E  Wall Jump",
 		"Q  Honk",
 		"R  Restart",
 		"C  Recenter Camera",
@@ -142,4 +85,3 @@ func _state_text(state: RefCounted) -> String:
 	if state.grounded:
 		return "ground"
 	return "air"
-

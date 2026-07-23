@@ -39,7 +39,7 @@ func show_settings() -> void:
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	settings_menu.visible = true
 	keybindings_menu.visible = false
-	settings_menu.show_character_settings()
+	settings_menu.show_global_settings()
 	settings_menu.focus_first()
 
 
@@ -64,5 +64,5 @@ func on_keybindings_requested() -> void:
 func on_keybindings_back_requested() -> void:
 	keybindings_menu.visible = false
 	settings_menu.visible = true
-	settings_menu.show_character_settings()
+	settings_menu.show_global_settings()
 	settings_menu.focus_first()

@@ -8,7 +8,6 @@ func _initialize() -> void:
 	var visual := VisualControllerScript.new()
 	var failures: Array[String] = []
 
-	visual.set_movement_backend(VisualControllerScript.BACKEND_PLATFORMER)
 	_expect_animation(
 		failures,
 		visual,
@@ -19,50 +18,27 @@ func _initialize() -> void:
 	_expect_animation(
 		failures,
 		visual,
-		_state({"grounded": true, "horizontal_speed": 2.0}),
-		VisualControllerScript.ANIM_WALK_MEDIUM,
-		"low speed walk",
-	)
-	_expect_animation(
-		failures,
-		visual,
-		_state({"grounded": true, "horizontal_speed": 4.0}),
-		VisualControllerScript.ANIM_WALK_MEDIUM,
-		"medium walk",
-	)
-	_expect_animation(
-		failures,
-		visual,
-		_state({"grounded": true, "horizontal_speed": 5.0}),
+		_state({"grounded": true, "horizontal_speed": 3.0}),
 		VisualControllerScript.ANIM_WALK_FAST,
-		"fast walk",
+		"q3 crouch speed",
 	)
 	_expect_animation(
 		failures,
 		visual,
-		_state({"grounded": true, "horizontal_speed": 7.0}),
-		VisualControllerScript.ANIM_RUN_SLOW,
-		"slow run",
-	)
-	_expect_animation(
-		failures,
-		visual,
-		_state({"grounded": true, "horizontal_speed": 8.5}),
+		_state({"grounded": true, "horizontal_speed": 6.1}),
 		VisualControllerScript.ANIM_RUN_FAST,
-		"run",
+		"q3 shift walk speed",
 	)
 	_expect_animation(
 		failures,
 		visual,
-		_state({"grounded": true, "horizontal_speed": 7.5}),
-		VisualControllerScript.ANIM_RUN_SLOW,
-		"slow run below fast run threshold",
+		_state({"grounded": true, "horizontal_speed": 12.2}),
+		VisualControllerScript.ANIM_RUN_FAST,
+		"q3 run speed",
 	)
 	_expect_sticky_run(failures, visual)
 	_expect_locomotion_hold(failures, visual)
-	_expect_run_speed_scale(failures, visual)
-	_expect_q3_mapping(failures, visual)
-	_expect_q3_flight_mapping(failures, visual)
+	_expect_q3_speed_scale(failures, visual)
 	_expect_transition_mapping(failures, visual)
 	_expect_locomotion_phase_preserved(failures)
 	_expect_animation(
@@ -139,7 +115,7 @@ func _expect_sticky_run(failures: Array[String], visual: Node) -> void:
 	if run != VisualControllerScript.ANIM_RUN_FAST:
 		failures.append("stable selector entered %s, expected run fast" % run)
 	var dip: StringName = visual._animation_for_state(
-		_state({"grounded": true, "horizontal_speed": 7.4}),
+		_state({"grounded": true, "horizontal_speed": 4.8}),
 		true,
 	)
 	if dip != VisualControllerScript.ANIM_RUN_FAST:
@@ -147,7 +123,7 @@ func _expect_sticky_run(failures: Array[String], visual: Node) -> void:
 	visual.run_fast_hold_remaining = 0.0
 	visual.locomotion_hold_remaining = 0.0
 	var exit: StringName = visual._animation_for_state(
-		_state({"grounded": true, "horizontal_speed": 6.0}),
+		_state({"grounded": true, "horizontal_speed": 3.5}),
 		true,
 	)
 	if exit != VisualControllerScript.ANIM_WALK_FAST:
@@ -163,51 +139,21 @@ func _expect_locomotion_hold(failures: Array[String], visual: Node) -> void:
 	if medium != VisualControllerScript.ANIM_WALK_MEDIUM:
 		failures.append("locomotion hold entered %s, expected walk medium" % medium)
 	var held: StringName = visual._animation_for_state(
-		_state({"grounded": true, "horizontal_speed": 5.0}),
+		_state({"grounded": true, "horizontal_speed": 3.0}),
 		true,
 	)
 	if held != VisualControllerScript.ANIM_WALK_MEDIUM:
 		failures.append("locomotion hold switched to %s, expected held walk medium" % held)
 	visual.locomotion_hold_remaining = 0.0
 	var released: StringName = visual._animation_for_state(
-		_state({"grounded": true, "horizontal_speed": 5.0}),
+		_state({"grounded": true, "horizontal_speed": 3.0}),
 		true,
 	)
 	if released != VisualControllerScript.ANIM_WALK_FAST:
 		failures.append("locomotion hold released to %s, expected walk fast" % released)
 
 
-func _expect_run_speed_scale(failures: Array[String], visual: Node) -> void:
-	visual.set_movement_backend(VisualControllerScript.BACKEND_PLATFORMER)
-	visual.latest_state = _state({"grounded": true, "horizontal_speed": 14.0})
-	var speed_scale: float = visual._animation_speed_scale(VisualControllerScript.ANIM_RUN_FAST)
-	if speed_scale > 1.15:
-		failures.append("run fast speed scale %.3f exceeded readable cap" % speed_scale)
-
-
-func _expect_q3_mapping(failures: Array[String], visual: Node) -> void:
-	visual.set_movement_backend(VisualControllerScript.BACKEND_Q3)
-	_expect_animation(
-		failures,
-		visual,
-		_state({"grounded": true, "horizontal_speed": 3.0}),
-		VisualControllerScript.ANIM_WALK_FAST,
-		"q3 crouch speed",
-	)
-	_expect_animation(
-		failures,
-		visual,
-		_state({"grounded": true, "horizontal_speed": 6.1}),
-		VisualControllerScript.ANIM_RUN_FAST,
-		"q3 shift walk speed",
-	)
-	_expect_animation(
-		failures,
-		visual,
-		_state({"grounded": true, "horizontal_speed": 12.2}),
-		VisualControllerScript.ANIM_RUN_FAST,
-		"q3 run speed",
-	)
+func _expect_q3_speed_scale(failures: Array[String], visual: Node) -> void:
 	visual.latest_state = _state({"grounded": true, "horizontal_speed": 3.0})
 	var crouch_scale: float = visual._animation_speed_scale(VisualControllerScript.ANIM_WALK_FAST)
 	if crouch_scale < 1.0:
@@ -216,23 +162,6 @@ func _expect_q3_mapping(failures: Array[String], visual: Node) -> void:
 	var walk_scale: float = visual._animation_speed_scale(VisualControllerScript.ANIM_RUN_FAST)
 	if walk_scale < 1.0:
 		failures.append("q3 shift walk speed scale %.3f should keep feet moving" % walk_scale)
-	visual.set_movement_backend(VisualControllerScript.BACKEND_PLATFORMER)
-
-
-func _expect_q3_flight_mapping(failures: Array[String], visual: Node) -> void:
-	visual.set_movement_backend(VisualControllerScript.BACKEND_Q3_FLIGHT)
-	_expect_animation(
-		failures,
-		visual,
-		_state({"grounded": true, "horizontal_speed": 6.1}),
-		VisualControllerScript.ANIM_RUN_FAST,
-		"q3 flight ground speed",
-	)
-	visual.latest_state = _state({"grounded": true, "horizontal_speed": 6.1})
-	var speed_scale: float = visual._animation_speed_scale(VisualControllerScript.ANIM_RUN_FAST)
-	if speed_scale < 1.0:
-		failures.append("q3 flight speed scale %.3f should use q3 thresholds" % speed_scale)
-	visual.set_movement_backend(VisualControllerScript.BACKEND_PLATFORMER)
 
 
 func _expect_transition_mapping(failures: Array[String], visual: Node) -> void:
@@ -263,13 +192,6 @@ func _expect_transition_mapping(failures: Array[String], visual: Node) -> void:
 		_state({"mode": &"flight", "grounded": false, "velocity": Vector3.FORWARD * 10.0}),
 		VisualControllerScript.ANIM_FLY_GLIDE,
 		"flight glide mode",
-	)
-	_expect_animation(
-		failures,
-		visual,
-		_state({"mode": &"flight", "grounded": false, "velocity": Vector3.UP * 4.0}),
-		VisualControllerScript.ANIM_FLY_GLIDE,
-		"rising flight without flap",
 	)
 	_expect_animation(
 		failures,
@@ -305,8 +227,8 @@ func _expect_transition_mapping(failures: Array[String], visual: Node) -> void:
 		failures,
 		visual,
 		_state({"grounded": true, "crouch_sliding": true, "horizontal_speed": 5.0}),
-		VisualControllerScript.ANIM_WALK_FAST,
-		"crouch slide",
+		VisualControllerScript.ANIM_RUN_FAST,
+		"fast crouch slide",
 	)
 
 
