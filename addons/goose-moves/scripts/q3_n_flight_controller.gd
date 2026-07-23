@@ -204,6 +204,7 @@ func get_flight_debug_state() -> Dictionary:
 func _try_flap_impulse() -> void:
 	if mode == Mode.FLIGHT and flight_motor._try_flap_impulse():
 		movement_state.record_flap()
+		flight_motor.consume_flap_impulse_fired()
 
 
 func set_spawn_transform(value: Transform3D) -> void:

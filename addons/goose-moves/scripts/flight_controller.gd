@@ -318,6 +318,7 @@ func _get_gravity_force() -> Vector3:
 func _try_flap_impulse() -> void:
 	if motor._try_flap_impulse():
 		movement_state.record_flap()
+		motor.consume_flap_impulse_fired()
 
 func _get_flap_impulse_axis() -> Vector3:
 	return motor._get_flap_impulse_axis()

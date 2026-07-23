@@ -62,6 +62,75 @@ func _project_onto_pitch_plane(direction: Vector3, pitch_axis: Vector3) -> Vecto
 	return direction - (pitch_axis * direction.dot(pitch_axis))
 
 
+func _tick_flight_input_for_test(delta: float) -> void:
+	c.flight_motor.physics_tick(delta)
+	if c.flight_motor.consume_flap_impulse_fired():
+		c.movement_state.record_flap()
+
+
+func _pulse_flap_input_for_test() -> void:
+	KeybindingsSettings.mouse_button_pulse_frames["player_flap"] = Engine.get_physics_frames() + 1
+
+
+func _check_input_flap_cooldown_gate() -> void:
+	var saved_velocity := c.velocity
+	var saved_basis := c.global_basis
+	var saved_gravity_scale := c.flight_motor.gravity_scale
+	var saved_reference_area := c.flight_motor.reference_area
+	var saved_extra_drag := c.flight_motor.extra_linear_drag_quadratic_coefficient
+	var saved_cooldown := c.flight_motor.flap_cooldown
+	var saved_cooldown_remaining := c.flight_motor.flap_cooldown_remaining
+	var saved_feedback_remaining := c.flight_motor.flap_feedback_remaining
+	var saved_pending := c.flight_motor.flap_impulses_pending
+	var saved_flapping_time_remaining := c.movement_state.flapping_time_remaining
+
+	Input.action_release("player_flap")
+	c.global_basis = Basis.IDENTITY
+	c.velocity = Vector3(0.0, 0.0, -12.0)
+	c.flight_motor.gravity_scale = 0.0
+	c.flight_motor.reference_area = 0.0
+	c.flight_motor.extra_linear_drag_quadratic_coefficient = 0.0
+	c.flight_motor.flap_cooldown = 0.5
+	c.flight_motor.flap_cooldown_remaining = 0.25
+	c.flight_motor.flap_feedback_remaining = 0.0
+	c.flight_motor.flap_impulses_pending = 0
+	c.movement_state.flapping_time_remaining = 0.0
+
+	_pulse_flap_input_for_test()
+	_tick_flight_input_for_test(DT)
+	check_vec3("input flap cooldown rejects velocity impulse", c.velocity, Vector3(0.0, 0.0, -12.0), 0.001)
+	check("input flap cooldown rejects movement flap state", not c.get_movement_state()["flapping"])
+	check("input flap cooldown leaves no pending flap event", c.flight_motor.flap_impulses_pending == 0)
+
+	c.flight_motor.flap_cooldown_remaining = 0.0
+	c.flight_motor.flap_feedback_remaining = 0.0
+	c.movement_state.flapping_time_remaining = 0.0
+	_pulse_flap_input_for_test()
+	_tick_flight_input_for_test(DT)
+	var velocity_after_accept := c.velocity
+	check("input flap applies one accepted velocity impulse", velocity_after_accept.length() > 12.1)
+	check("input flap accepted event records movement flap state", c.get_movement_state()["flapping"])
+	check("input flap accepted event is consumed once", c.flight_motor.flap_impulses_pending == 0)
+
+	c.movement_state.flapping_time_remaining = 0.0
+	_pulse_flap_input_for_test()
+	_tick_flight_input_for_test(DT)
+	check_vec3("input flap repeated during cooldown does not add speed", c.velocity, velocity_after_accept, 0.001)
+	check("input flap repeated during cooldown records no new event", c.flight_motor.flap_impulses_pending == 0)
+	Input.action_release("player_flap")
+
+	c.velocity = saved_velocity
+	c.global_basis = saved_basis
+	c.flight_motor.gravity_scale = saved_gravity_scale
+	c.flight_motor.reference_area = saved_reference_area
+	c.flight_motor.extra_linear_drag_quadratic_coefficient = saved_extra_drag
+	c.flight_motor.flap_cooldown = saved_cooldown
+	c.flight_motor.flap_cooldown_remaining = saved_cooldown_remaining
+	c.flight_motor.flap_feedback_remaining = saved_feedback_remaining
+	c.flight_motor.flap_impulses_pending = saved_pending
+	c.movement_state.flapping_time_remaining = saved_flapping_time_remaining
+
+
 func _direct_transitions() -> void:
 	if phase_frame < 2:
 		return
@@ -166,6 +235,7 @@ func _direct_transitions() -> void:
 	check("hybrid flight debug reports active flap cooldown", float(flap_debug_state["flap_cooldown_remaining"]) > 0.0)
 	c._try_flap_impulse()
 	check_vec3("hybrid flap cooldown blocks repeated impulse", c.flight_motor.velocity, post_flap_velocity, 0.001)
+	_check_input_flap_cooldown_gate()
 	c.flight_motor.flap_cooldown = saved_flap_cooldown
 	c.flight_motor.flap_cooldown_remaining = saved_flap_cooldown_remaining
 	c.flight_motor.flap_feedback_remaining = saved_flap_feedback_remaining

@@ -211,6 +211,7 @@ var view_active := true
 var flap_cooldown_remaining := 0.0
 var flap_feedback_remaining := 0.0
 var flap_impulse_fired_this_tick := false
+var flap_impulses_pending := 0
 var aoa_deg := 0.0
 var sideslip_deg := 0.0
 var _positive_max_lift_aoa_deg := 15.0
@@ -281,9 +282,10 @@ func process_tick(_delta: float) -> void:
 
 func physics_tick(delta: float) -> void:
 	flap_impulse_fired_this_tick = false
-	flap_cooldown_remaining = maxf(flap_cooldown_remaining - delta, 0.0)
+	var flap_ready_at_tick_start := flap_cooldown_remaining <= 0.0
 	flap_feedback_remaining = maxf(flap_feedback_remaining - delta, 0.0)
-	_collect_inputs(delta)
+	_collect_inputs(delta, flap_ready_at_tick_start)
+	flap_cooldown_remaining = maxf(flap_cooldown_remaining - delta, 0.0)
 	_update_aero_angles()
 	var gravity_force := _get_gravity_force()
 	var aerodynamic_force := _get_aerodynamic_force()
@@ -350,14 +352,14 @@ func set_view_active(active: bool) -> void:
 		force_vector_debug.set_active(active)
 
 
-func _collect_inputs(delta: float) -> void:
+func _collect_inputs(delta: float, flap_ready_at_tick_start := true) -> void:
 	if camera_fly_by_wire_enabled:
 		_update_camera_fly_by_wire_inputs(delta)
 	else:
 		pitch_control_input = Input.get_action_strength("player_back") - Input.get_action_strength("player_forward")
 		roll_control_input = Input.get_action_strength("player_right") - Input.get_action_strength("player_left")
 	if KeybindingsSettings.is_action_just_pressed(&"player_flap"):
-		_try_flap_impulse()
+		_try_flap_impulse(flap_ready_at_tick_start)
 
 
 func _update_aero_angles() -> void:
@@ -376,20 +378,24 @@ func _get_gravity_force() -> Vector3:
 	return gravity_direction * gravity_magnitude * gravity_scale * mass
 
 
-func _try_flap_impulse() -> bool:
-	if flap_cooldown_remaining > 0.0 or flap_impulse_strength <= 0.0:
+func _try_flap_impulse(flap_ready := flap_cooldown_remaining <= 0.0) -> bool:
+	if not flap_ready or flap_impulse_strength <= 0.0:
 		return false
 	velocity += _get_flap_impulse_axis() * flap_impulse_strength
 	flap_cooldown_remaining = maxf(flap_cooldown, MIN_ACTIVE_FLAP_COOLDOWN)
 	flap_feedback_remaining = FLAP_FEEDBACK_DURATION
 	flap_impulse_fired_this_tick = true
+	flap_impulses_pending += 1
 	return true
 
 
 func consume_flap_impulse_fired() -> bool:
-	var fired := flap_impulse_fired_this_tick
-	flap_impulse_fired_this_tick = false
-	return fired
+	if flap_impulses_pending <= 0:
+		flap_impulse_fired_this_tick = false
+		return false
+	flap_impulses_pending -= 1
+	flap_impulse_fired_this_tick = flap_impulses_pending > 0
+	return true
 
 
 func is_flapping() -> bool:
