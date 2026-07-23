@@ -12,6 +12,10 @@ func _ready() -> void:
 		push_error("Q3 + Flight did not create an active controller")
 		get_tree().quit(1)
 		return
+	if not _controller_contract_is_valid(controller):
+		push_error("Q3 + Flight controller does not match GooseSpeed runtime contract")
+		get_tree().quit(1)
+		return
 	if controller.name != "ActiveMovementController":
 		push_error("Active controller has unexpected name %s" % controller.name)
 		get_tree().quit(1)
@@ -38,6 +42,15 @@ func _prototype_visuals_are_hidden(controller: Node) -> bool:
 	for node_name in ["BodyMesh", "FaceMarker", "CharacterColliderVisual", "FlightBodyMesh"]:
 		var visual := controller.get_node_or_null(node_name) as Node3D
 		if visual != null and visual.visible:
+			return false
+	return true
+
+
+func _controller_contract_is_valid(controller: Node) -> bool:
+	if not controller is Node3D:
+		return false
+	for method_name in GooseMovesRuntime.REQUIRED_CONTROLLER_METHODS:
+		if not controller.has_method(method_name):
 			return false
 	return true
 
