@@ -7,8 +7,8 @@ const SAVE_PATH := "user://goosespeed_settings.cfg"
 const SECTION := "goosespeed"
 const DEFAULT_FLIGHT_ORIENTATION_INTENSITY := 0.65
 const DEFAULT_FLIGHT_ORIENTATION_SLERP_RATE := 7.0
-const DEFAULT_HEAD_LOOK_ENABLED := false
-const DEFAULT_HEAD_LOOK_INTENSITY := 0.65
+const DEFAULT_HEAD_LOOK_ENABLED := true
+const DEFAULT_HEAD_LOOK_INTENSITY := 1.0
 const DEFAULT_HEAD_LOOK_SMOOTHNESS := 10.0
 
 var debug_hud_visible := true

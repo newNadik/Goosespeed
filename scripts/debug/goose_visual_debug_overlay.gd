@@ -1,31 +1,14 @@
 class_name GooseVisualDebugOverlay
 extends Node3D
 
-const FACING_COLOR := Color(0.2, 0.55, 1.0, 1.0)
-const INTENDED_COLOR := Color(1.0, 0.55, 0.1, 1.0)
-const VELOCITY_COLOR := Color(0.1, 0.95, 0.35, 1.0)
-
-@export var vertical_offset := 1.25
-@export var facing_arrow_length := 2.0
-@export var velocity_arrow_scale := 0.22
-@export var max_velocity_arrow_length := 4.0
-
 var player: Node
 var state_bridge: Node
 var visual_controller: Node
 var label: RichTextLabel
-var facing_arrow: MeshInstance3D
-var intended_arrow: MeshInstance3D
-var velocity_arrow: MeshInstance3D
-var facing_material := StandardMaterial3D.new()
-var intended_material := StandardMaterial3D.new()
-var velocity_material := StandardMaterial3D.new()
 
 
 func _ready() -> void:
-	_setup_materials()
 	_setup_canvas()
-	_setup_arrows()
 	set_process(false)
 
 
@@ -41,18 +24,6 @@ func _process(_delta: float) -> void:
 		return
 	var state: RefCounted = state_bridge.get_state()
 	_update_label(state)
-	_update_arrows(state)
-
-
-func _setup_materials() -> void:
-	_configure_material(facing_material, FACING_COLOR)
-	_configure_material(intended_material, INTENDED_COLOR)
-	_configure_material(velocity_material, VELOCITY_COLOR)
-
-
-func _configure_material(material: StandardMaterial3D, color: Color) -> void:
-	material.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
-	material.albedo_color = color
 
 
 func _setup_canvas() -> void:
@@ -93,21 +64,6 @@ func _setup_canvas() -> void:
 	margin.add_child(label)
 
 
-func _setup_arrows() -> void:
-	facing_arrow = _create_arrow("FacingArrow", facing_material)
-	intended_arrow = _create_arrow("IntendedArrow", intended_material)
-	velocity_arrow = _create_arrow("VelocityArrow", velocity_material)
-
-
-func _create_arrow(node_name: String, material: Material) -> MeshInstance3D:
-	var arrow := MeshInstance3D.new()
-	arrow.name = node_name
-	arrow.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_OFF
-	arrow.material_override = material
-	add_child(arrow)
-	return arrow
-
-
 func _update_label(state: RefCounted) -> void:
 	var flight_debug := _get_flight_debug_state()
 	label.text = "\n".join([
@@ -125,67 +81,11 @@ func _update_label(state: RefCounted) -> void:
 			&"just_entered_flight",
 			&"just_exited_flight",
 			&"gliding",
-			&"flapping",
-			&"falling",
-		]),
-		"[center]flap cd %s   [color=#338cff]blue facing[/color]   [color=#ff8c1a]orange input[/color]   [color=#1df05a]green velocity[/color][/center]" % _format_flap_cooldown(flight_debug),
-	])
-
-
-func _update_arrows(state: RefCounted) -> void:
-	var origin: Vector3 = state.position + Vector3.UP * vertical_offset
-	var facing_direction := _horizontal_direction(state.facing_direction as Vector3)
-	_set_arrow(facing_arrow, origin, facing_direction, facing_arrow_length)
-
-	var intended_direction := _horizontal_direction(state.intended_movement_direction as Vector3)
-	var intended_length: float = facing_arrow_length * clampf(float(state.intended_movement_magnitude), 0.0, 1.0)
-	_set_arrow(intended_arrow, origin + Vector3.UP * 0.09, intended_direction, intended_length)
-
-	var velocity_direction := _velocity_direction(state)
-	var velocity_length := _velocity_length(state)
-	_set_arrow(velocity_arrow, origin + Vector3.UP * 0.18, velocity_direction, velocity_length)
-
-
-func _set_arrow(arrow: MeshInstance3D, origin: Vector3, direction: Vector3, length: float) -> void:
-	if direction.is_zero_approx() or length <= 0.01:
-		arrow.visible = false
-		return
-	arrow.visible = true
-	var end := origin + direction.normalized() * length
-	var side_axis := direction.cross(Vector3.UP)
-	if side_axis.length_squared() < 0.0001:
-		side_axis = direction.cross(Vector3.RIGHT)
-	var side := side_axis.normalized() * minf(length * 0.16, 0.35)
-	var back := direction.normalized() * minf(length * 0.28, 0.55)
-
-	var mesh := ImmediateMesh.new()
-	mesh.surface_begin(Mesh.PRIMITIVE_LINES)
-	mesh.surface_add_vertex(origin)
-	mesh.surface_add_vertex(end)
-	mesh.surface_add_vertex(end)
-	mesh.surface_add_vertex(end - back + side)
-	mesh.surface_add_vertex(end)
-	mesh.surface_add_vertex(end - back - side)
-	mesh.surface_end()
-	arrow.mesh = mesh
-
-
-func _horizontal_direction(value: Vector3) -> Vector3:
-	var result := Vector3(value.x, 0.0, value.z)
-	return result.normalized() if not result.is_zero_approx() else Vector3.ZERO
-
-
-func _velocity_direction(state: RefCounted) -> Vector3:
-	var velocity := state.velocity as Vector3
-	if state.mode == &"flight":
-		return velocity.normalized() if not velocity.is_zero_approx() else Vector3.ZERO
-	return _horizontal_direction(velocity)
-
-
-func _velocity_length(state: RefCounted) -> float:
-	var velocity := state.velocity as Vector3
-	var speed: float = velocity.length() if state.mode == &"flight" else state.horizontal_speed
-	return clampf(speed * velocity_arrow_scale, 0.0, max_velocity_arrow_length)
+				&"flapping",
+				&"falling",
+			]),
+			"[center]flap cd %s[/center]" % _format_flap_cooldown(flight_debug),
+		])
 
 
 func _format_flags(state: RefCounted, flags: Array[StringName]) -> String:

@@ -437,7 +437,13 @@ func _update_head_look(_delta: float) -> void:
 		return
 	head_look_controller.intensity = head_look_intensity
 	head_look_controller.smoothness = head_look_smoothness
-	head_look_controller.queue_look(latest_state, global_basis, get_viewport().get_camera_3d())
+	head_look_controller.queue_look(latest_state, _get_head_look_basis(), get_viewport().get_camera_3d())
+
+
+func _get_head_look_basis() -> Basis:
+	if latest_state.mode == &"flight":
+		return _get_root_basis().orthonormalized()
+	return global_basis
 
 
 func _animation_speed_scale(animation_name: StringName) -> float:

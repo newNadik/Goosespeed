@@ -293,6 +293,7 @@ func _expect_head_look_angles(failures: Array[String]) -> void:
 		"mode": &"ground",
 		"grounded": true,
 		"facing_direction": Vector3.RIGHT,
+		"horizontal_speed": 1.0,
 		"look_direction": Vector3.RIGHT,
 	})
 	var ground_angles: Vector2 = head_look._target_angles(
@@ -307,6 +308,7 @@ func _expect_head_look_angles(failures: Array[String]) -> void:
 		"mode": &"ground",
 		"grounded": true,
 		"facing_direction": Vector3(0.0, 1.0, -1.0).normalized(),
+		"horizontal_speed": 1.0,
 		"look_direction": Vector3(0.0, 1.0, -1.0).normalized(),
 	})
 	var pitch_angles: Vector2 = head_look._target_angles(
@@ -314,8 +316,43 @@ func _expect_head_look_angles(failures: Array[String]) -> void:
 		Basis.IDENTITY,
 		null,
 	)
-	if absf(pitch_angles.y - head_look.max_pitch) > 0.001:
-		failures.append("head look pitch %.3f should clamp to max pitch" % pitch_angles.y)
+	if pitch_angles.y <= 0.0 or pitch_angles.y >= head_look.max_pitch:
+		failures.append("head look pitch %.3f should be damped below max pitch" % pitch_angles.y)
+
+	var camera := Camera3D.new()
+	camera.basis = Basis(Vector3.FORWARD, Vector3.UP, Vector3.LEFT)
+	var camera_priority_state := _state({
+		"mode": &"flight",
+		"grounded": false,
+		"body_basis": Basis.IDENTITY,
+		"look_direction": Vector3.FORWARD,
+	})
+	var camera_angles: Vector2 = head_look._target_angles(
+		camera_priority_state,
+		Basis.IDENTITY,
+		camera,
+	)
+	if absf(camera_angles.x - head_look.max_yaw) > 0.001:
+		failures.append("head look should prefer camera target direction")
+	camera.free()
+
+	var idle_ground_state := _state({
+		"mode": &"ground",
+		"grounded": true,
+		"horizontal_speed": 0.0,
+		"intended_movement_magnitude": 0.0,
+	})
+	if head_look._state_intensity(idle_ground_state) > 0.0:
+		failures.append("idle grounded head look should be disabled")
+
+	var moving_ground_state := _state({
+		"mode": &"ground",
+		"grounded": true,
+		"horizontal_speed": 1.0,
+		"intended_movement_magnitude": 0.0,
+	})
+	if head_look._state_intensity(moving_ground_state) <= 0.0:
+		failures.append("moving grounded head look should stay enabled")
 	head_look.free()
 
 
