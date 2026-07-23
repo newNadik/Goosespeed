@@ -1,19 +1,8 @@
 extends Node3D
 
 const PAUSE_MENU_SCENE := preload("res://scenes/ui/pause_menu.tscn")
-const DEFAULT_SPAWN := Vector3(0.0, 1.2, 20.0)
-const LABELED_FIXTURE_ROOTS := [
-	"Cubes",
-	"Stairs",
-	"Ramps",
-	"Kerbs",
-	"LimitSlopes",
-	"SurfaceFlags",
-	"PlatformerSurfaces",
-	"SurfaceClassSlopes",
-	"Volumes",
-]
 
+@onready var level: Node3D = $PrimitiveTestLevel
 @onready var player: Node = $GoosePlayerRoot
 @onready var game_hud = $GooseGameHud
 @onready var finish_area: Area3D = $FinishTrigger
@@ -23,7 +12,7 @@ var finished := false
 
 
 func _ready() -> void:
-	_add_fixture_labels()
+	_disable_embedded_level_runtime()
 	_connect_volumes()
 	finish_area.body_entered.connect(_on_finish_body_entered)
 	player.set_spawn_transform(player.get_active_controller().global_transform)
@@ -47,7 +36,10 @@ func _restart_run() -> void:
 
 
 func _connect_volumes() -> void:
-	for area in $Volumes.get_children():
+	var volumes := level.get_node_or_null("Volumes")
+	if volumes == null:
+		return
+	for area in volumes.get_children():
 		if not area is Area3D:
 			continue
 		(area as Area3D).body_entered.connect(_on_volume_body_entered.bind(area))
@@ -79,53 +71,22 @@ func _update_hud() -> void:
 	game_hud.set_run_state(elapsed_time, finished)
 
 
-func _add_fixture_labels() -> void:
-	var labels_root := $FixtureLabels as Node3D
-	for root_path in LABELED_FIXTURE_ROOTS:
-		var root := get_node_or_null(root_path)
-		if root == null:
-			continue
-		for fixture in root.get_children():
-			if fixture is CSGBox3D or fixture is Area3D:
-				_add_fixture_label(labels_root, fixture as Node3D)
+func _disable_embedded_level_runtime() -> void:
+	var prototype_settings := get_node_or_null("/root/Settings")
+	if (
+		prototype_settings != null
+		and prototype_settings.has_signal("settings_changed")
+		and level.has_method("on_settings_changed")
+		and prototype_settings.is_connected("settings_changed", level.on_settings_changed)
+	):
+		prototype_settings.disconnect("settings_changed", level.on_settings_changed)
 
+	var standalone_character = level.get("active_character")
+	if standalone_character is Node:
+		(standalone_character as Node).queue_free()
+		level.set("active_character", null)
+		level.set("active_character_id", "")
 
-func _add_fixture_label(labels_root: Node3D, fixture: Node3D) -> void:
-	var label := Label3D.new()
-	label.name = "%sLabel" % fixture.name
-	label.text = _humanize_name(str(fixture.name))
-	label.billboard = BaseMaterial3D.BILLBOARD_ENABLED
-	label.pixel_size = 0.012
-	label.font_size = 42
-	label.outline_size = 10
-	label.modulate = Color(1.0, 0.96, 0.78, 1.0)
-	labels_root.add_child(label)
-	label.global_position = fixture.global_position + (Vector3.UP * _fixture_label_height(fixture))
-
-
-func _fixture_label_height(fixture: Node3D) -> float:
-	if fixture is CSGBox3D:
-		var box := fixture as CSGBox3D
-		var half_size := box.size * 0.5
-		var fixture_basis := box.global_transform.basis
-		return (
-			absf(fixture_basis.x.y) * half_size.x
-			+ absf(fixture_basis.y.y) * half_size.y
-			+ absf(fixture_basis.z.y) * half_size.z
-			+ 0.65
-		)
-	if fixture is Area3D:
-		var shape_node := fixture.get_node_or_null("CollisionShape3D") as CollisionShape3D
-		if shape_node != null and shape_node.shape is BoxShape3D:
-			return (shape_node.shape as BoxShape3D).size.y * 0.5 + 0.65
-	return 1.0
-
-
-func _humanize_name(value: String) -> String:
-	var result := ""
-	for index in value.length():
-		var character := value[index]
-		if index > 0 and character == character.to_upper() and character != character.to_lower():
-			result += " "
-		result += character
-	return result.replace("_", " ")
+	var standalone_pause_menu := level.get_node_or_null("PauseMenu")
+	if standalone_pause_menu != null:
+		standalone_pause_menu.queue_free()
