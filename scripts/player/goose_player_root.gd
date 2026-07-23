@@ -6,10 +6,10 @@ const Q3_BACKEND := "q3"
 const Q3_FLIGHT_BACKEND := "q3_n_flight"
 const PLATFORMER_BACKEND := "platformer"
 const FLIGHT_BACKEND := "flight"
-const Q3_CONTROLLER_SCENE := preload("res://scenes/q3_character_controller.tscn")
-const Q3_FLIGHT_CONTROLLER_SCENE := preload("res://scenes/q3_n_flight_controller.tscn")
-const PLATFORMER_CONTROLLER_SCENE := preload("res://scenes/platformer_controller.tscn")
-const FLIGHT_CONTROLLER_SCENE := preload("res://scenes/flight_controller.tscn")
+const Q3_CONTROLLER_SCENE := preload("res://addons/goose-moves/scenes/q3_character_controller.tscn")
+const Q3_FLIGHT_CONTROLLER_SCENE := preload("res://addons/goose-moves/scenes/q3_n_flight_controller.tscn")
+const PLATFORMER_CONTROLLER_SCENE := preload("res://addons/goose-moves/scenes/platformer_controller.tscn")
+const FLIGHT_CONTROLLER_SCENE := preload("res://addons/goose-moves/scenes/flight_controller.tscn")
 
 @export_enum("q3_n_flight", "q3", "platformer", "flight", "basic") var movement_backend := Q3_FLIGHT_BACKEND
 

@@ -1,0 +1,532 @@
+extends Node
+
+signal settings_changed
+
+const Q3CC := preload("res://addons/goose-moves/scripts/q3_character_controller.gd")
+const PLATFORMER_CC := preload("res://addons/goose-moves/scripts/platformer_controller.gd")
+const FLIGHT_CC := preload("res://addons/goose-moves/scripts/flight_controller.gd")
+const Q3_N_FLIGHT_CC := preload("res://addons/goose-moves/scripts/q3_n_flight_controller.gd")
+const SAVE_PATH := "user://settings.cfg"
+const PRESET_SAVE_VERSION := 1
+const BUILTIN_PRESETS_DIR := "res://addons/goose-moves/data/settings_presets"
+const USER_PRESETS_DIR := "user://settings_presets"
+const DEFAULT_PRESET_ID := "default"
+const SOURCE_BUILTIN := "builtin"
+const SOURCE_USER := "user"
+const SECTION := "settings"
+const DEFAULT_MOUSE_SENSITIVITY := 0.003
+const DEFAULT_FOV := 100.0
+const Q3_N_FLIGHT_DEFAULT_FOV := 80.0
+const Q3_N_FLIGHT_DEFAULT_Q3_THIRD_PERSON := 1.0
+const Q3_N_FLIGHT_DEFAULT_FLIGHT_FIRST_PERSON := 0.0
+const Q3_N_FLIGHT_DEFAULT_MOVEMENT_MODE := Q3CC.MovementMode.WARSOW_CLASSIC
+const MIN_FOV := 60.0
+const MAX_FOV := 140.0
+const CHARACTER_Q3 := "q3"
+const CHARACTER_SPECTATOR := "spectator"
+const CHARACTER_PLATFORMER := "platformer"
+const CHARACTER_FLIGHT := "flight"
+const CHARACTER_Q3_N_FLIGHT := "q3_n_flight"
+const CONTROLLER_SECTIONS := {
+	CHARACTER_Q3: "controller_q3",
+	CHARACTER_SPECTATOR: "controller_spectator",
+	CHARACTER_PLATFORMER: "controller_platformer",
+	CHARACTER_FLIGHT: "controller_flight",
+	CHARACTER_Q3_N_FLIGHT: "controller_q3_n_flight",
+}
+const CONTROLLER_LABELS := {
+	CHARACTER_Q3: "Q3",
+	CHARACTER_SPECTATOR: "Spectator",
+	CHARACTER_PLATFORMER: "Platformer",
+	CHARACTER_FLIGHT: "Flight",
+	CHARACTER_Q3_N_FLIGHT: "Q3 + Flight",
+}
+const DEBUG_FORCE_VECTOR_SETTING_DEF := {"key": "debug_force_vectors", "label": "Debug force vectors", "default": 0.0, "min": 0.0, "max": 1.0, "step": 1.0, "control": "toggle"}
+const Q3_SETTING_DEFS: Array[Dictionary] = [
+	DEBUG_FORCE_VECTOR_SETTING_DEF,
+	{"key": "fov", "label": "Field of view", "default": DEFAULT_FOV, "min": MIN_FOV, "max": MAX_FOV, "step": 1.0, "format": "%.0f", "suffix": "°", "control": "slider"},
+	{"key": "mouse_sensitivity", "label": "Mouse sensitivity", "default": DEFAULT_MOUSE_SENSITIVITY, "min": 0.001, "max": 0.02, "step": 0.001, "format": "%.3f", "control": "slider"},
+	{"key": "movement_mode", "label": "Movement mode", "default": Q3CC.MovementMode.VQ3, "min": Q3CC.MovementMode.VQ3, "max": Q3CC.MovementMode.WARSOW_CLASSIC, "step": 1.0, "control": "option", "options": [
+		{"label": "VQ3 (current)", "value": Q3CC.MovementMode.VQ3},
+		{"label": "Warsow Classic (CPM-like)", "value": Q3CC.MovementMode.WARSOW_CLASSIC},
+	]},
+	{"key": "auto_jump", "label": "Autojump", "default": 1.0, "min": 0.0, "max": 1.0, "step": 1.0, "control": "toggle"},
+	{"key": "crouch_slide", "label": "Crouch slide", "default": 0.0, "min": 0.0, "max": 1.0, "step": 1.0, "control": "toggle"},
+	{"key": "ramp_launch", "label": "Steep-ramp launch", "default": 0.0, "min": 0.0, "max": 1.0, "step": 1.0, "control": "toggle"},
+	{"key": "wall_jump", "label": "Wall jump", "default": 0.0, "min": 0.0, "max": 1.0, "step": 1.0, "control": "toggle"},
+	{"key": "third_person", "label": "Third-person camera", "default": 0.0, "min": 0.0, "max": 1.0, "step": 1.0, "control": "toggle"},
+	{"key": "third_person_distance", "label": "Third-person distance", "default": 4.0, "min": 0.5, "max": 15.0, "step": 0.1, "format": "%.1f", "suffix": " m"},
+	{"key": "character_size_x", "label": "Character size X", "default": 30.0 * Q3CC.Q3_METERS_PER_UNIT, "min": 0.1, "max": 5.0, "step": 0.01, "format": "%.2f", "suffix": " m"},
+	{"key": "character_size_y", "label": "Character size Y", "default": Q3CC.Q3_STANDING_HULL_HEIGHT * Q3CC.Q3_METERS_PER_UNIT, "min": 0.2, "max": 5.0, "step": 0.01, "format": "%.2f", "suffix": " m"},
+	{"key": "character_size_z", "label": "Character size Z", "default": 30.0 * Q3CC.Q3_METERS_PER_UNIT, "min": 0.1, "max": 5.0, "step": 0.01, "format": "%.2f", "suffix": " m"},
+	{"key": "move_speed", "label": "Move speed", "default": Q3CC.Q3_SPEED * Q3CC.Q3_METERS_PER_UNIT, "min": 0.0, "max": 30.0, "step": 0.1, "format": "%.2f"},
+	{"key": "ground_acceleration", "label": "Ground acceleration", "default": Q3CC.Q3_GROUND_ACCELERATION, "min": 0.0, "max": 40.0, "step": 0.1, "format": "%.1f"},
+	{"key": "air_acceleration", "label": "Air acceleration", "default": Q3CC.Q3_AIR_ACCELERATION, "min": 0.0, "max": 10.0, "step": 0.1, "format": "%.1f"},
+	{"key": "friction", "label": "Friction", "default": Q3CC.Q3_FRICTION, "min": 0.0, "max": 20.0, "step": 0.1, "format": "%.1f"},
+	{"key": "stop_speed", "label": "Stop speed", "default": Q3CC.Q3_STOP_SPEED * Q3CC.Q3_METERS_PER_UNIT, "min": 0.0, "max": 15.0, "step": 0.1, "format": "%.2f"},
+	{"key": "gravity", "label": "Gravity", "default": Q3CC.Q3_GRAVITY * Q3CC.Q3_METERS_PER_UNIT, "min": 0.0, "max": 80.0, "step": 0.1, "format": "%.2f"},
+	{"key": "jump_velocity", "label": "Jump velocity", "default": Q3CC.Q3_JUMP_VELOCITY * Q3CC.Q3_METERS_PER_UNIT, "min": 0.0, "max": 30.0, "step": 0.1, "format": "%.2f"},
+	{"key": "step_height", "label": "Step height", "default": Q3CC.Q3_STEP_HEIGHT * Q3CC.Q3_METERS_PER_UNIT, "min": 0.0, "max": 2.0, "step": 0.01, "format": "%.2f"},
+	{"key": "max_slope_angle", "label": "Max slope angle", "default": Q3CC.Q3_MAX_SLOPE_ANGLE, "min": 0.0, "max": 89.0, "step": 0.1, "format": "%.1f", "suffix": "°"},
+	{"key": "crouch_speed_scale", "label": "Crouch speed scale", "default": Q3CC.Q3_CROUCH_SPEED_SCALE, "min": 0.0, "max": 1.0, "step": 0.01, "format": "%.2f"},
+	{"key": "walk_speed_scale", "label": "Walk speed scale", "default": Q3CC.Q3_WALK_COMMAND / Q3CC.Q3_RUN_COMMAND, "min": 0.0, "max": 1.0, "step": 0.01, "format": "%.2f"},
+	{"key": "swim_speed_scale", "label": "Swim speed scale", "default": Q3CC.Q3_SWIM_SCALE, "min": 0.0, "max": 1.0, "step": 0.01, "format": "%.2f"},
+	{"key": "water_acceleration", "label": "Water acceleration", "default": Q3CC.Q3_WATER_ACCELERATION, "min": 0.0, "max": 20.0, "step": 0.1, "format": "%.1f"},
+	{"key": "water_friction", "label": "Water friction", "default": Q3CC.Q3_WATER_FRICTION, "min": 0.0, "max": 20.0, "step": 0.1, "format": "%.1f"},
+	{"key": "slime_friction", "label": "Slime friction", "default": Q3CC.Q3_SLIME_FRICTION, "min": 0.0, "max": 40.0, "step": 0.1, "format": "%.1f"},
+]
+const SPECTATOR_SETTING_DEFS: Array[Dictionary] = [
+	{"key": "fov", "label": "Field of view", "default": DEFAULT_FOV, "min": MIN_FOV, "max": MAX_FOV, "step": 1.0, "format": "%.0f", "suffix": "°", "control": "slider"},
+	{"key": "mouse_sensitivity", "label": "Mouse sensitivity", "default": DEFAULT_MOUSE_SENSITIVITY, "min": 0.001, "max": 0.02, "step": 0.001, "format": "%.3f", "control": "slider"},
+	{"key": "move_speed", "label": "Move speed", "default": 12.0, "min": 0.0, "max": 50.0, "step": 0.1, "format": "%.2f"},
+]
+const PLATFORMER_SETTING_DEFS: Array[Dictionary] = [
+	DEBUG_FORCE_VECTOR_SETTING_DEF,
+	{"key": "fov", "label": "Field of view", "default": DEFAULT_FOV, "min": MIN_FOV, "max": MAX_FOV, "step": 1.0, "format": "%.0f", "suffix": "°", "control": "slider"},
+	{"key": "mouse_sensitivity", "label": "Mouse sensitivity", "default": DEFAULT_MOUSE_SENSITIVITY, "min": 0.001, "max": 0.02, "step": 0.001, "format": "%.3f", "control": "slider"},
+	{"key": "camera_distance", "label": "Camera distance", "default": 6.0, "min": 1.0, "max": 15.0, "step": 0.1, "format": "%.1f", "suffix": " m"},
+	{"key": "first_person", "label": "First-person camera", "default": 0.0, "min": 0.0, "max": 1.0, "step": 1.0, "control": "toggle"},
+	{"key": "character_radius", "label": "Character radius", "default": PLATFORMER_CC.DEFAULT_RADIUS, "min": 0.2, "max": 1.5, "step": 0.01, "format": "%.2f", "suffix": " m"},
+	{"key": "character_height", "label": "Character height", "default": PLATFORMER_CC.DEFAULT_HEIGHT, "min": 0.8, "max": 4.0, "step": 0.01, "format": "%.2f", "suffix": " m"},
+	{"key": "max_run_speed", "label": "Maximum run speed", "default": PLATFORMER_CC.DEFAULT_MAX_TARGET_SPEED, "min": 1.0, "max": 100.0, "step": 0.1, "format": "%.1f", "suffix": " u/f"},
+	{"key": "slow_surface_speed", "label": "Slow-surface speed", "default": PLATFORMER_CC.DEFAULT_SLOW_TARGET_SPEED, "min": 1.0, "max": 100.0, "step": 0.1, "format": "%.1f", "suffix": " u/f"},
+	{"key": "ground_acceleration", "label": "Ground acceleration", "default": PLATFORMER_CC.DEFAULT_GROUND_ACCELERATION, "min": 0.0, "max": 10.0, "step": 0.05, "format": "%.2f", "suffix": " u/f²"},
+	{"key": "ground_deceleration", "label": "Ground deceleration", "default": PLATFORMER_CC.DEFAULT_GROUND_DECELERATION, "min": 0.0, "max": 10.0, "step": 0.05, "format": "%.2f", "suffix": " u/f²"},
+	{"key": "turn_rate", "label": "Ground turn rate", "default": PLATFORMER_CC.DEFAULT_TURN_RATE_DEGREES, "min": 0.0, "max": 180.0, "step": 0.25, "format": "%.2f", "suffix": "°/f"},
+	{"key": "air_acceleration", "label": "Air acceleration", "default": PLATFORMER_CC.DEFAULT_AIR_ACCELERATION, "min": 0.0, "max": 10.0, "step": 0.05, "format": "%.2f", "suffix": " u/f²"},
+	{"key": "air_drag", "label": "Air drag", "default": PLATFORMER_CC.DEFAULT_AIR_DRAG, "min": 0.0, "max": 5.0, "step": 0.05, "format": "%.2f", "suffix": " u/f²"},
+	{"key": "gravity", "label": "Gravity", "default": PLATFORMER_CC.DEFAULT_GRAVITY, "min": 0.0, "max": 20.0, "step": 0.1, "format": "%.1f", "suffix": " u/f²"},
+	{"key": "jump_velocity", "label": "Base jump velocity", "default": PLATFORMER_CC.DEFAULT_JUMP_VELOCITY, "min": 0.0, "max": 100.0, "step": 0.5, "format": "%.1f", "suffix": " u/f"},
+	{"key": "swim_speed", "label": "Maximum swim speed", "default": PLATFORMER_CC.DEFAULT_SWIM_SPEED, "min": 0.0, "max": 60.0, "step": 0.5, "format": "%.1f", "suffix": " u/f"},
+	{"key": "buoyancy", "label": "Deep-water buoyancy", "default": PLATFORMER_CC.DEFAULT_BUOYANCY, "min": -20.0, "max": 20.0, "step": 0.25, "format": "%.2f", "suffix": " u/f"},
+]
+const FLIGHT_SETTING_DEFS: Array[Dictionary] = [
+	DEBUG_FORCE_VECTOR_SETTING_DEF,
+	{"key": "fov", "label": "Field of view", "default": DEFAULT_FOV, "min": MIN_FOV, "max": MAX_FOV, "step": 1.0, "format": "%.0f", "suffix": "°", "control": "slider"},
+	{"key": "mouse_sensitivity", "label": "Mouse sensitivity", "default": DEFAULT_MOUSE_SENSITIVITY, "min": 0.001, "max": 0.02, "step": 0.001, "format": "%.3f", "control": "slider"},
+	{"key": "camera_distance", "label": "Camera distance", "default": FLIGHT_CC.DEFAULT_CAMERA_DISTANCE, "min": 1.0, "max": 15.0, "step": 0.1, "format": "%.1f", "suffix": " m"},
+	{"key": "first_person", "label": "First-person camera", "default": FLIGHT_CC.DEFAULT_FIRST_PERSON_ENABLED, "min": 0.0, "max": 1.0, "step": 1.0, "control": "toggle"},
+	{"key": "gravity_scale", "label": "Gravity scale", "default": FLIGHT_CC.DEFAULT_GRAVITY_SCALE, "min": 0.0, "max": 1.0, "step": 0.01, "format": "%.2f"},
+	{"key": "mass", "label": "Mass", "default": FLIGHT_CC.DEFAULT_MASS, "min": 1.0, "max": 50000.0, "step": 50.0, "format": "%.0f", "suffix": " kg"},
+	{"key": "flap_impulse_strength", "label": "Flap impulse strength", "default": FLIGHT_CC.DEFAULT_FLAP_IMPULSE_STRENGTH, "min": 0.0, "max": 50.0, "step": 0.1, "format": "%.1f", "suffix": " m/s"},
+	{"key": "flap_impulse_angle", "label": "Flap impulse angle", "default": FLIGHT_CC.DEFAULT_FLAP_IMPULSE_ANGLE_DEGREES, "min": 0.0, "max": 90.0, "step": 1.0, "format": "%.0f", "suffix": "°"},
+	{"key": "flap_cooldown", "label": "Flap cooldown", "default": FLIGHT_CC.DEFAULT_FLAP_COOLDOWN, "min": 0.0, "max": 5.0, "step": 0.05, "format": "%.2f", "suffix": " s"},
+	{"key": "camera_fly_by_wire", "label": "Camera fly-by-wire", "default": FLIGHT_CC.DEFAULT_CAMERA_FLY_BY_WIRE_ENABLED, "min": 0.0, "max": 1.0, "step": 1.0, "control": "toggle"},
+	{"key": "camera_fly_by_wire_target_distance", "label": "FBW target distance", "default": FLIGHT_CC.DEFAULT_CAMERA_FLY_BY_WIRE_TARGET_DISTANCE, "min": 5.0, "max": 500.0, "step": 5.0, "format": "%.0f", "suffix": " m"},
+	{"key": "camera_fly_by_wire_pitch_window", "label": "FBW direct-pitch angle", "default": FLIGHT_CC.DEFAULT_CAMERA_FLY_BY_WIRE_PITCH_WINDOW_DEGREES, "min": 0.0, "max": 90.0, "step": 1.0, "format": "%.0f", "suffix": "°"},
+	{"key": "sideslip_compensation", "label": "Sideslip compensation", "default": FLIGHT_CC.DEFAULT_SIDESLIP_COMPENSATION_ENABLED, "min": 0.0, "max": 1.0, "step": 1.0, "control": "toggle"},
+	{"key": "sideslip_compensation_max_yaw", "label": "Sideslip yaw step", "default": FLIGHT_CC.DEFAULT_SIDESLIP_COMPENSATION_MAX_YAW_DEGREES, "min": 0.0, "max": 180.0, "step": 0.01, "format": "%.2f", "suffix": "°/frame"},
+	{"key": "reference_area", "label": "Reference area", "default": FLIGHT_CC.DEFAULT_REFERENCE_AREA, "min": 0.1, "max": 50.0, "step": 0.1, "format": "%.1f", "suffix": " m²"},
+	{"key": "extra_linear_drag_quadratic_coefficient", "label": "Extra quadratic drag", "default": FLIGHT_CC.DEFAULT_EXTRA_LINEAR_DRAG_QUADRATIC_COEFFICIENT, "min": 0.0, "max": 1.0, "step": 0.001, "format": "%.3f"},
+]
+var Q3_N_FLIGHT_SETTING_DEFS := [
+	{"key": "flight_hold_threshold", "label": "Hold flap for flight", "default": Q3_N_FLIGHT_CC.DEFAULT_FLIGHT_HOLD_THRESHOLD, "min": 0.0, "max": 2.0, "step": 0.05, "format": "%.2f", "suffix": " s"},
+	{"key": "flight_no_contact_threshold", "label": "Airborne time for flight", "default": Q3_N_FLIGHT_CC.DEFAULT_FLIGHT_NO_CONTACT_THRESHOLD, "min": 0.0, "max": 2.0, "step": 0.05, "format": "%.2f", "suffix": " s"},
+	{"key": "flight_min_activation_speed", "label": "Minimum flight speed", "default": Q3_N_FLIGHT_CC.DEFAULT_FLIGHT_MIN_ACTIVATION_SPEED, "min": 0.0, "max": 80.0, "step": 0.1, "format": "%.1f", "suffix": " m/s"},
+	{"key": "body_bounce", "label": "Body bounce knockdown", "default": Q3_N_FLIGHT_CC.DEFAULT_BODY_BOUNCE_ENABLED, "min": 0.0, "max": 1.0, "step": 1.0, "control": "toggle"},
+	{"key": "body_bounce_min_normal_speed", "label": "Bounce impact speed", "default": Q3_N_FLIGHT_CC.DEFAULT_BODY_BOUNCE_MIN_NORMAL_SPEED, "min": 0.0, "max": 80.0, "step": 0.1, "format": "%.1f", "suffix": " m/s"},
+	{"key": "body_bounce_knockdown_duration", "label": "Bounce knockdown time", "default": Q3_N_FLIGHT_CC.DEFAULT_BODY_BOUNCE_KNOCKDOWN_DURATION, "min": 0.0, "max": 5.0, "step": 0.05, "format": "%.2f", "suffix": " s"},
+	{"key": "body_bounce_restitution", "label": "Bounce restitution", "default": Q3_N_FLIGHT_CC.DEFAULT_BODY_BOUNCE_RESTITUTION, "min": 0.0, "max": 1.5, "step": 0.05, "format": "%.2f"},
+	{"key": "body_bounce_max_speed", "label": "Bounce speed cap", "default": Q3_N_FLIGHT_CC.DEFAULT_BODY_BOUNCE_MAX_SPEED, "min": 0.0, "max": 80.0, "step": 0.1, "format": "%.1f", "suffix": " m/s"},
+	{"key": "landing_carry", "label": "Landing carry", "default": Q3_N_FLIGHT_CC.DEFAULT_LANDING_CARRY_ENABLED, "min": 0.0, "max": 1.0, "step": 1.0, "control": "toggle"},
+	{"key": "landing_friction_multiplier", "label": "Landing friction scale", "default": Q3_N_FLIGHT_CC.DEFAULT_LANDING_FRICTION_MULTIPLIER, "min": 0.0, "max": 2.0, "step": 0.05, "format": "%.2f"},
+	{"key": "landing_carry_duration", "label": "Landing carry time", "default": Q3_N_FLIGHT_CC.DEFAULT_LANDING_CARRY_DURATION, "min": 0.0, "max": 2.0, "step": 0.05, "format": "%.2f", "suffix": " s"},
+	{"key": "landing_carry_min_speed", "label": "Landing carry min speed", "default": Q3_N_FLIGHT_CC.DEFAULT_LANDING_CARRY_MIN_SPEED, "min": 0.0, "max": 80.0, "step": 0.1, "format": "%.1f", "suffix": " m/s"},
+	{"key": "hard_landing_vertical_speed", "label": "Hard landing speed", "default": Q3_N_FLIGHT_CC.DEFAULT_HARD_LANDING_VERTICAL_SPEED, "min": 0.0, "max": 80.0, "step": 0.1, "format": "%.1f", "suffix": " m/s"},
+] + Q3_SETTING_DEFS + [
+	{"key": "camera_distance", "label": "Flight camera distance", "default": FLIGHT_CC.DEFAULT_CAMERA_DISTANCE, "min": 1.0, "max": 15.0, "step": 0.1, "format": "%.1f", "suffix": " m"},
+	{"key": "first_person", "label": "Flight first-person camera", "default": FLIGHT_CC.DEFAULT_FIRST_PERSON_ENABLED, "min": 0.0, "max": 1.0, "step": 1.0, "control": "toggle"},
+	{"key": "gravity_scale", "label": "Flight gravity scale", "default": FLIGHT_CC.DEFAULT_GRAVITY_SCALE, "min": 0.0, "max": 1.0, "step": 0.01, "format": "%.2f"},
+	{"key": "mass", "label": "Flight mass", "default": FLIGHT_CC.DEFAULT_MASS, "min": 1.0, "max": 50000.0, "step": 50.0, "format": "%.0f", "suffix": " kg"},
+	{"key": "flap_impulse_strength", "label": "Flap impulse strength", "default": FLIGHT_CC.DEFAULT_FLAP_IMPULSE_STRENGTH, "min": 0.0, "max": 50.0, "step": 0.1, "format": "%.1f", "suffix": " m/s"},
+	{"key": "flap_impulse_angle", "label": "Flap impulse angle", "default": FLIGHT_CC.DEFAULT_FLAP_IMPULSE_ANGLE_DEGREES, "min": 0.0, "max": 90.0, "step": 1.0, "format": "%.0f", "suffix": "°"},
+	{"key": "flap_cooldown", "label": "Flap cooldown", "default": FLIGHT_CC.DEFAULT_FLAP_COOLDOWN, "min": 0.0, "max": 5.0, "step": 0.05, "format": "%.2f", "suffix": " s"},
+	{"key": "camera_fly_by_wire", "label": "Camera fly-by-wire", "default": FLIGHT_CC.DEFAULT_CAMERA_FLY_BY_WIRE_ENABLED, "min": 0.0, "max": 1.0, "step": 1.0, "control": "toggle"},
+	{"key": "camera_fly_by_wire_target_distance", "label": "FBW target distance", "default": FLIGHT_CC.DEFAULT_CAMERA_FLY_BY_WIRE_TARGET_DISTANCE, "min": 5.0, "max": 500.0, "step": 5.0, "format": "%.0f", "suffix": " m"},
+	{"key": "camera_fly_by_wire_pitch_window", "label": "FBW direct-pitch angle", "default": FLIGHT_CC.DEFAULT_CAMERA_FLY_BY_WIRE_PITCH_WINDOW_DEGREES, "min": 0.0, "max": 90.0, "step": 1.0, "format": "%.0f", "suffix": "°"},
+	{"key": "sideslip_compensation", "label": "Sideslip compensation", "default": FLIGHT_CC.DEFAULT_SIDESLIP_COMPENSATION_ENABLED, "min": 0.0, "max": 1.0, "step": 1.0, "control": "toggle"},
+	{"key": "sideslip_compensation_max_yaw", "label": "Sideslip yaw step", "default": FLIGHT_CC.DEFAULT_SIDESLIP_COMPENSATION_MAX_YAW_DEGREES, "min": 0.0, "max": 180.0, "step": 0.01, "format": "%.2f", "suffix": "°/frame"},
+	{"key": "reference_area", "label": "Reference area", "default": FLIGHT_CC.DEFAULT_REFERENCE_AREA, "min": 0.1, "max": 50.0, "step": 0.1, "format": "%.1f", "suffix": " m²"},
+	{"key": "extra_linear_drag_quadratic_coefficient", "label": "Extra quadratic drag", "default": FLIGHT_CC.DEFAULT_EXTRA_LINEAR_DRAG_QUADRATIC_COEFFICIENT, "min": 0.0, "max": 1.0, "step": 0.001, "format": "%.3f"},
+]
+
+var fullscreen := false
+var character_controller := CHARACTER_Q3
+var controller_settings: Dictionary = {}
+var selected_presets: Dictionary = {}
+
+
+func _ready() -> void:
+	load_settings()
+
+
+func load_settings() -> void:
+	fullscreen = false
+	character_controller = CHARACTER_Q3
+	_reset_controller_settings()
+	_reset_selected_presets()
+	var config := ConfigFile.new()
+	if config.load(SAVE_PATH) == OK:
+		fullscreen = bool(config.get_value(SECTION, "fullscreen", false))
+		character_controller = _normalize_character_controller(str(config.get_value(SECTION, "character_controller", CHARACTER_Q3)))
+		_load_controller_settings(config)
+		_load_selected_presets(config)
+	apply_window_mode()
+
+
+func set_controller_setting(key: String, value: float, controller_id := "") -> void:
+	var controller := _resolve_controller(controller_id)
+	if _is_q3_n_flight_fixed_size_key(controller, key):
+		return
+	var def := _get_setting_def(controller, key)
+	if def.is_empty():
+		return
+	var settings := controller_settings[controller] as Dictionary
+	settings[key] = clampf(value, float(def["min"]), float(def["max"]))
+	save_settings()
+	settings_changed.emit()
+
+
+func get_controller_setting(key: String, controller_id := "") -> float:
+	var controller := _resolve_controller(controller_id)
+	if _is_q3_n_flight_fixed_size_key(controller, key):
+		return _get_q3_n_flight_fixed_size_value(key)
+	var settings := controller_settings.get(controller, {}) as Dictionary
+	var def := _get_setting_def(controller, key)
+	return float(settings.get(key, def.get("default", 0.0)))
+
+
+func get_controller_setting_defs(controller_id := "") -> Array:
+	var controller := _resolve_controller(controller_id)
+	if controller == CHARACTER_SPECTATOR:
+		return SPECTATOR_SETTING_DEFS
+	if controller == CHARACTER_PLATFORMER:
+		return PLATFORMER_SETTING_DEFS
+	if controller == CHARACTER_FLIGHT:
+		return FLIGHT_SETTING_DEFS
+	if controller == CHARACTER_Q3_N_FLIGHT:
+		return _get_q3_n_flight_setting_defs()
+	return Q3_SETTING_DEFS
+
+
+func get_character_label(controller_id := "") -> String:
+	return str(CONTROLLER_LABELS[_resolve_controller(controller_id)])
+
+
+func _get_q3_n_flight_setting_defs() -> Array:
+	var defs := []
+	for def in Q3_N_FLIGHT_SETTING_DEFS:
+		var key := str(def["key"])
+		if _is_q3_n_flight_fixed_size_key(CHARACTER_Q3_N_FLIGHT, key):
+			continue
+		var hybrid_def := (def as Dictionary).duplicate(true)
+		_apply_q3_n_flight_default_overrides(hybrid_def)
+		defs.append(hybrid_def)
+	return defs
+
+
+func _apply_q3_n_flight_default_overrides(def: Dictionary) -> void:
+	match str(def["key"]):
+		"fov":
+			def["default"] = Q3_N_FLIGHT_DEFAULT_FOV
+		"movement_mode":
+			def["default"] = Q3_N_FLIGHT_DEFAULT_MOVEMENT_MODE
+		"third_person":
+			def["default"] = Q3_N_FLIGHT_DEFAULT_Q3_THIRD_PERSON
+		"first_person":
+			def["default"] = Q3_N_FLIGHT_DEFAULT_FLIGHT_FIRST_PERSON
+
+
+func _is_q3_n_flight_fixed_size_key(controller_id: String, key: String) -> bool:
+	return (
+		controller_id == CHARACTER_Q3_N_FLIGHT
+		and (
+			key == "character_size_x"
+			or key == "character_size_y"
+			or key == "character_size_z"
+		)
+	)
+
+
+func _get_q3_n_flight_fixed_size_value(key: String) -> float:
+	match key:
+		"character_size_x":
+			return Q3_N_FLIGHT_CC.FLIGHT_COLLISION_SIZE.x
+		"character_size_y":
+			return Q3_N_FLIGHT_CC.FLIGHT_COLLISION_SIZE.y
+		"character_size_z":
+			return Q3_N_FLIGHT_CC.FLIGHT_COLLISION_SIZE.z
+	return 0.0
+
+
+func preset_path(source: String, id: String, controller_id := "") -> String:
+	var root_dir := BUILTIN_PRESETS_DIR if source == SOURCE_BUILTIN else USER_PRESETS_DIR
+	return "%s/%s/%s.json" % [root_dir, _resolve_controller(controller_id), id]
+
+
+func list_presets(controller_id := "") -> Array[Dictionary]:
+	var controller := _resolve_controller(controller_id)
+	var entries: Array[Dictionary] = []
+	_append_preset_entries(entries, SOURCE_BUILTIN, "%s/%s" % [BUILTIN_PRESETS_DIR, controller], controller)
+	_append_preset_entries(entries, SOURCE_USER, "%s/%s" % [USER_PRESETS_DIR, controller], controller)
+	return entries
+
+
+func load_preset(source: String, id: String, controller_id := "") -> Dictionary:
+	return _read_preset_json(preset_path(source, id, controller_id))
+
+
+func apply_preset_entry(source: String, id: String, controller_id := "") -> bool:
+	var controller := _resolve_controller(controller_id)
+	var payload := load_preset(source, id, controller)
+	if payload.is_empty() or not _apply_preset_values(payload, controller):
+		return false
+	selected_presets[controller] = {
+		"source": source,
+		"id": id,
+	}
+	save_settings()
+	settings_changed.emit()
+	return true
+
+
+func get_selected_preset(controller_id := "") -> Dictionary:
+	return (selected_presets.get(_resolve_controller(controller_id), {}) as Dictionary).duplicate(true)
+
+
+func current_preset_payload(display_name := "Custom", controller_id := "") -> Dictionary:
+	var controller := _resolve_controller(controller_id)
+	var values := {}
+	var settings := controller_settings[controller] as Dictionary
+	for def in get_controller_setting_defs(controller):
+		var key := str(def["key"])
+		values[key] = float(settings[key])
+	return {
+		"version": PRESET_SAVE_VERSION,
+		"name": display_name,
+		"controller": controller,
+		"settings": values,
+		"keybindings": KeybindingsSettings.get_bindings_payload(controller),
+	}
+
+
+func save_user_preset(display_name: String, controller_id := "") -> Dictionary:
+	var controller := _resolve_controller(controller_id)
+	var clean_name := display_name.strip_edges()
+	var id := sanitize_preset_id(clean_name)
+	if id.is_empty():
+		push_error("Cannot save settings preset with empty name.")
+		return {}
+
+	_ensure_user_preset_dir(controller)
+	var payload := current_preset_payload(clean_name, controller)
+	var file := FileAccess.open(preset_path(SOURCE_USER, id, controller), FileAccess.WRITE)
+	if file == null:
+		push_error("Could not save settings preset %s (error %s)." % [id, FileAccess.get_open_error()])
+		return {}
+	file.store_string(JSON.stringify(payload, "\t"))
+	selected_presets[controller] = {
+		"source": SOURCE_USER,
+		"id": id,
+	}
+	save_settings()
+	return {"source": SOURCE_USER, "id": id, "name": clean_name, "controller": controller}
+
+
+func delete_user_preset(id: String, controller_id := "") -> Error:
+	var controller := _resolve_controller(controller_id)
+	var path := preset_path(SOURCE_USER, id, controller)
+	if not FileAccess.file_exists(path):
+		return ERR_FILE_NOT_FOUND
+	var error := DirAccess.remove_absolute(path)
+	if error == OK:
+		var selected := selected_presets.get(controller, {}) as Dictionary
+		if selected.get("source", "") == SOURCE_USER and selected.get("id", "") == id:
+			selected_presets[controller] = {
+				"source": SOURCE_BUILTIN,
+				"id": DEFAULT_PRESET_ID,
+			}
+			save_settings()
+	return error
+
+
+func sanitize_preset_id(preset_name: String) -> String:
+	var id := ""
+	for character in preset_name.strip_edges().to_lower():
+		if (character >= "a" and character <= "z") or (character >= "0" and character <= "9"):
+			id += character
+		elif character == " " or character == "-" or character == "_":
+			id += "_"
+	while id.contains("__"):
+		id = id.replace("__", "_")
+	return id.lstrip("_").rstrip("_")
+
+
+func set_fullscreen(value: bool) -> void:
+	fullscreen = value
+	apply_window_mode()
+	save_settings()
+	settings_changed.emit()
+
+
+func set_character_controller(value: String) -> void:
+	var normalized := _normalize_character_controller(value)
+	if character_controller == normalized:
+		return
+	character_controller = normalized
+	save_settings()
+	settings_changed.emit()
+
+
+func save_settings() -> void:
+	var config := ConfigFile.new()
+	config.set_value(SECTION, "fullscreen", fullscreen)
+	config.set_value(SECTION, "character_controller", character_controller)
+	for controller_id in CONTROLLER_SECTIONS:
+		var section := str(CONTROLLER_SECTIONS[controller_id])
+		var selected := selected_presets.get(controller_id, {}) as Dictionary
+		config.set_value(section, "preset_source", str(selected.get("source", SOURCE_BUILTIN)))
+		config.set_value(section, "preset_id", str(selected.get("id", DEFAULT_PRESET_ID)))
+		var settings := controller_settings[controller_id] as Dictionary
+		for def in get_controller_setting_defs(controller_id):
+			var key := str(def["key"])
+			config.set_value(section, key, settings[key])
+	var error := config.save(SAVE_PATH)
+	if error != OK:
+		push_warning("Unable to save settings: %s" % error_string(error))
+
+
+func apply_window_mode() -> void:
+	if DisplayServer.get_name() == "headless":
+		return
+	var window_mode := DisplayServer.WINDOW_MODE_FULLSCREEN if fullscreen else DisplayServer.WINDOW_MODE_WINDOWED
+	DisplayServer.window_set_mode(window_mode)
+
+
+func _normalize_character_controller(value: String) -> String:
+	if value == CHARACTER_SPECTATOR:
+		return CHARACTER_SPECTATOR
+	if value == CHARACTER_PLATFORMER:
+		return CHARACTER_PLATFORMER
+	if value == CHARACTER_FLIGHT:
+		return CHARACTER_FLIGHT
+	if value == CHARACTER_Q3_N_FLIGHT:
+		return CHARACTER_Q3_N_FLIGHT
+	return CHARACTER_Q3
+
+
+func _resolve_controller(controller_id: String) -> String:
+	return _normalize_character_controller(character_controller if controller_id.is_empty() else controller_id)
+
+
+func _reset_controller_settings() -> void:
+	controller_settings = {}
+	for controller_id in CONTROLLER_SECTIONS:
+		var settings := {}
+		for def in get_controller_setting_defs(controller_id):
+			settings[str(def["key"])] = float(def["default"])
+		controller_settings[controller_id] = settings
+
+
+func _reset_selected_presets() -> void:
+	selected_presets = {}
+	for controller_id in CONTROLLER_SECTIONS:
+		selected_presets[controller_id] = {
+			"source": SOURCE_BUILTIN,
+			"id": DEFAULT_PRESET_ID,
+		}
+
+
+func _load_controller_settings(config: ConfigFile) -> void:
+	for controller_id in CONTROLLER_SECTIONS:
+		var section := str(CONTROLLER_SECTIONS[controller_id])
+		var settings := controller_settings[controller_id] as Dictionary
+		for def in get_controller_setting_defs(controller_id):
+			var key := str(def["key"])
+			if config.has_section_key(section, key):
+				settings[key] = clampf(float(config.get_value(section, key, def["default"])), float(def["min"]), float(def["max"]))
+
+
+func _load_selected_presets(config: ConfigFile) -> void:
+	for controller_id in CONTROLLER_SECTIONS:
+		var section := str(CONTROLLER_SECTIONS[controller_id])
+		var source := str(config.get_value(section, "preset_source", SOURCE_BUILTIN))
+		if source != SOURCE_USER:
+			source = SOURCE_BUILTIN
+		var id := str(config.get_value(section, "preset_id", DEFAULT_PRESET_ID))
+		if id.is_empty():
+			id = DEFAULT_PRESET_ID
+		selected_presets[controller_id] = {
+			"source": source,
+			"id": id,
+		}
+
+
+func _apply_preset_values(payload: Dictionary, controller_id: String) -> bool:
+	if _normalize_character_controller(str(payload.get("controller", ""))) != controller_id:
+		return false
+	var raw_settings: Variant = payload.get("settings", {})
+	if not raw_settings is Dictionary:
+		return false
+	var settings := controller_settings[controller_id] as Dictionary
+	var values := raw_settings as Dictionary
+	for def in get_controller_setting_defs(controller_id):
+		var key := str(def["key"])
+		if values.has(key) and _is_numeric(values[key]):
+			settings[key] = clampf(float(values[key]), float(def["min"]), float(def["max"]))
+	var keybindings: Variant = payload.get("keybindings", {})
+	if keybindings is Dictionary:
+		KeybindingsSettings.apply_bindings_payload(keybindings as Dictionary, controller_id)
+	return true
+
+
+func _get_setting_def(controller_id: String, key: String) -> Dictionary:
+	for def in get_controller_setting_defs(controller_id):
+		if str(def["key"]) == key:
+			return def
+	return {}
+
+
+func _append_preset_entries(entries: Array[Dictionary], source: String, dir_path: String, controller_id: String) -> void:
+	var dir := DirAccess.open(dir_path)
+	if dir == null:
+		return
+	var file_names := dir.get_files()
+	file_names.sort()
+	for file_name in file_names:
+		if not file_name.ends_with(".json"):
+			continue
+		var id := file_name.get_basename()
+		var payload := _read_preset_json("%s/%s" % [dir_path, file_name])
+		if payload.is_empty():
+			continue
+		entries.append({
+			"source": source,
+			"id": id,
+			"name": str(payload.get("name", id)),
+			"controller": str(payload.get("controller", controller_id)),
+		})
+
+
+func _read_preset_json(path: String) -> Dictionary:
+	if not FileAccess.file_exists(path):
+		return {}
+	var file := FileAccess.open(path, FileAccess.READ)
+	if file == null:
+		push_error("Could not open settings preset %s (error %s)." % [path, FileAccess.get_open_error()])
+		return {}
+	var parsed: Variant = JSON.parse_string(file.get_as_text())
+	if not parsed is Dictionary:
+		push_error("Settings preset is not a Dictionary JSON payload: %s." % path)
+		return {}
+	return (parsed as Dictionary).duplicate(true)
+
+
+func _ensure_user_preset_dir(controller_id: String) -> void:
+	var dir := "%s/%s" % [USER_PRESETS_DIR, controller_id]
+	if not DirAccess.dir_exists_absolute(dir):
+		DirAccess.make_dir_recursive_absolute(dir)
+
+
+func _is_numeric(value: Variant) -> bool:
+	return value is int or value is float
