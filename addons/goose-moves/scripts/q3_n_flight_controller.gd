@@ -387,6 +387,7 @@ func _get_movement_state_snapshot() -> Dictionary:
 		"mode": mode_name,
 		"position": global_position,
 		"velocity": velocity,
+		"body_basis": global_basis,
 		"facing_direction": -global_basis.z,
 		"intended_movement_direction": q3_motor.intended_movement_direction if mode == Mode.Q3 else Vector3.ZERO,
 		"intended_movement_magnitude": q3_motor.intended_movement_magnitude if mode == Mode.Q3 else 0.0,

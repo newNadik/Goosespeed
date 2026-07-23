@@ -18,8 +18,10 @@ func _ready() -> void:
 	movement_state_bridge.set_controller(active_movement_controller)
 	goose_visual.set_state_bridge(movement_state_bridge)
 	_apply_backend_debug_visibility()
+	_apply_visual_settings()
 	_sync_first_person_camera_visibility()
 	call_deferred("_apply_backend_debug_visibility")
+	call_deferred("_apply_visual_settings")
 	call_deferred("_sync_first_person_camera_visibility")
 
 
@@ -57,6 +59,15 @@ func _connect_settings_changed() -> void:
 
 func _on_settings_changed() -> void:
 	_apply_backend_debug_visibility()
+	_apply_visual_settings()
+
+
+func _apply_visual_settings() -> void:
+	var game_settings := get_node_or_null("/root/GooseGameSettings")
+	if game_settings == null or goose_visual == null:
+		return
+	goose_visual.flight_orientation_intensity = float(game_settings.get("flight_orientation_intensity"))
+	goose_visual.flight_orientation_slerp_rate = float(game_settings.get("flight_orientation_slerp_rate"))
 
 
 func _configure_goose_visual_render_layer() -> void:

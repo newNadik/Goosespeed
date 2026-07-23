@@ -155,6 +155,7 @@ func build_state(snapshot: Dictionary) -> Dictionary:
 		"mode": str(snapshot.get("mode", snapshot.get("controller", ""))),
 		"position": snapshot.get("position", Vector3.ZERO),
 		"velocity": velocity,
+		"body_basis": snapshot.get("body_basis", Basis.IDENTITY),
 		"horizontal_speed": horizontal_velocity.length(),
 		"vertical_speed": velocity.y,
 		"facing_direction": facing_direction,

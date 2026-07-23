@@ -218,6 +218,7 @@ func _direct_transitions() -> void:
 	check("direct transition enters flight mode", c.mode == c.Mode.FLIGHT)
 	check("movement state reports flight mode", flight_entry_state["mode"] == "flight")
 	check("movement state reports just-entered-flight", flight_entry_state["just_entered_flight"])
+	check_vec3("movement state exposes flight body basis", (flight_entry_state["body_basis"] as Basis).z, c.global_basis.z, 0.001)
 	check_vec3("Q3 -> flight preserves velocity", c.velocity, Vector3(3, 4, -5), 0.001)
 	var saved_flap_cooldown := c.flight_motor.flap_cooldown
 	var saved_flap_cooldown_remaining := c.flight_motor.flap_cooldown_remaining

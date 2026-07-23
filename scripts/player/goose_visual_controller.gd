@@ -52,6 +52,8 @@ const LOOPING_ANIMATIONS := [
 @export var ground_input_turn_rate := 7.0
 @export var default_turn_rate := 14.0
 @export var input_facing_commit_time := 0.14
+@export_range(0.0, 1.0, 0.05) var flight_orientation_intensity := 0.65
+@export var flight_orientation_slerp_rate := 7.0
 
 @onready var animation_player: AnimationPlayer = get_node_or_null("AnimationPlayer") as AnimationPlayer
 
@@ -87,14 +89,22 @@ func _process(delta: float) -> void:
 	_update_intended_movement_turn_state(delta)
 
 	global_position = global_position.lerp(latest_state.position, minf(delta * 20.0, 1.0))
-	var visual_facing_direction := _get_visual_facing_direction(latest_state)
-	if not visual_facing_direction.is_zero_approx():
-		var target_yaw := atan2(-visual_facing_direction.x, -visual_facing_direction.z)
-		global_rotation.y = lerp_angle(
-			global_rotation.y,
-			target_yaw,
-			minf(delta * _get_visual_turn_rate(latest_state), 1.0),
-		)
+	if _uses_full_flight_orientation(latest_state):
+		global_basis = global_basis.slerp(
+			_get_flight_visual_target_basis(latest_state),
+			minf(delta * flight_orientation_slerp_rate, 1.0),
+		).orthonormalized()
+	else:
+		var visual_facing_direction := _get_visual_facing_direction(latest_state)
+		if not visual_facing_direction.is_zero_approx():
+			var target_yaw := atan2(-visual_facing_direction.x, -visual_facing_direction.z)
+			global_rotation.y = lerp_angle(
+				global_rotation.y,
+				target_yaw,
+				minf(delta * _get_visual_turn_rate(latest_state), 1.0),
+			)
+			global_rotation.x = lerp_angle(global_rotation.x, 0.0, minf(delta * default_turn_rate, 1.0))
+			global_rotation.z = lerp_angle(global_rotation.z, 0.0, minf(delta * default_turn_rate, 1.0))
 
 	_update_animation()
 	previous_grounded = latest_state.grounded
@@ -114,6 +124,28 @@ func _get_visual_facing_direction(state: RefCounted) -> Vector3:
 	if _should_face_intended_movement(state):
 		return _horizontal_direction(state.intended_movement_direction)
 	return _horizontal_direction(state.facing_direction)
+
+
+func _uses_full_flight_orientation(state: RefCounted) -> bool:
+	return state.mode == &"flight"
+
+
+func _get_flight_visual_target_basis(state: RefCounted) -> Basis:
+	var full_basis: Basis = (state.body_basis as Basis).orthonormalized()
+	var upright_basis := _get_upright_basis_for_direction(-full_basis.z)
+	return upright_basis.slerp(full_basis, clampf(flight_orientation_intensity, 0.0, 1.0)).orthonormalized()
+
+
+func _get_upright_basis_for_direction(direction: Vector3) -> Basis:
+	var forward := Vector3(direction.x, 0.0, direction.z)
+	if forward.length_squared() <= 0.0001:
+		forward = _horizontal_direction(latest_state.facing_direction)
+	if forward.length_squared() <= 0.0001:
+		forward = Vector3.FORWARD
+	forward = forward.normalized()
+	var right := forward.cross(Vector3.UP).normalized()
+	var up := right.cross(forward).normalized()
+	return Basis(right, up, -forward).orthonormalized()
 
 
 func _update_intended_movement_turn_state(delta: float) -> void:

@@ -5,13 +5,27 @@ const SETTINGS_OVERLAY_SCENE := preload("res://scenes/ui/goose_settings_overlay.
 
 func _ready() -> void:
 	var original_debug_visible: bool = GooseGameSettings.debug_hud_visible
+	var original_flight_orientation_intensity: float = GooseGameSettings.flight_orientation_intensity
+	var original_flight_orientation_slerp_rate: float = GooseGameSettings.flight_orientation_slerp_rate
 
 	GooseGameSettings.debug_hud_visible = false
+	GooseGameSettings.flight_orientation_intensity = 0.35
+	GooseGameSettings.flight_orientation_slerp_rate = 9.5
 	GooseGameSettings.save_settings()
 	GooseGameSettings.debug_hud_visible = true
+	GooseGameSettings.flight_orientation_intensity = 0.9
+	GooseGameSettings.flight_orientation_slerp_rate = 2.0
 	GooseGameSettings.load_settings()
 	if GooseGameSettings.debug_hud_visible:
 		push_error("Saved debug HUD visibility did not load")
+		get_tree().quit(1)
+		return
+	if not is_equal_approx(GooseGameSettings.flight_orientation_intensity, 0.35):
+		push_error("Saved flight visual intensity did not load")
+		get_tree().quit(1)
+		return
+	if not is_equal_approx(GooseGameSettings.flight_orientation_slerp_rate, 9.5):
+		push_error("Saved flight visual smoothness did not load")
 		get_tree().quit(1)
 		return
 
@@ -22,11 +36,19 @@ func _ready() -> void:
 		return
 
 	if not await _settings_overlay_is_valid():
-		_restore_settings(original_debug_visible)
+		_restore_settings(
+			original_debug_visible,
+			original_flight_orientation_intensity,
+			original_flight_orientation_slerp_rate,
+		)
 		get_tree().quit(1)
 		return
 
-	_restore_settings(original_debug_visible)
+	_restore_settings(
+		original_debug_visible,
+		original_flight_orientation_intensity,
+		original_flight_orientation_slerp_rate,
+	)
 	print("Goose game settings OK")
 	get_tree().quit(0)
 
@@ -66,6 +88,28 @@ func _settings_overlay_is_valid() -> bool:
 		push_error("Settings overlay did not expose key bindings")
 		overlay.queue_free()
 		return false
+	var visual_settings := overlay.find_child("GooseVisualSettings", true, false) as VBoxContainer
+	if visual_settings == null:
+		push_error("Settings overlay did not expose GooseSpeed visual settings")
+		overlay.queue_free()
+		return false
+	var intensity_slider := overlay.find_child("FlightTiltIntensitySlider", true, false) as HSlider
+	var slerp_slider := overlay.find_child("FlightTiltSlerpRateSlider", true, false) as HSlider
+	if intensity_slider == null or slerp_slider == null:
+		push_error("Settings overlay did not expose flight visual sliders")
+		overlay.queue_free()
+		return false
+	intensity_slider.value = 0.5
+	slerp_slider.value = 12.0
+	await get_tree().process_frame
+	if not is_equal_approx(GooseGameSettings.flight_orientation_intensity, 0.5):
+		push_error("Flight visual intensity slider did not update settings")
+		overlay.queue_free()
+		return false
+	if not is_equal_approx(GooseGameSettings.flight_orientation_slerp_rate, 12.0):
+		push_error("Flight visual smoothness slider did not update settings")
+		overlay.queue_free()
+		return false
 	overlay.hide_settings()
 	await get_tree().process_frame
 	if overlay.visible:
@@ -76,6 +120,12 @@ func _settings_overlay_is_valid() -> bool:
 	return true
 
 
-func _restore_settings(debug_visible: bool) -> void:
+func _restore_settings(
+	debug_visible: bool,
+	flight_orientation_intensity: float,
+	flight_orientation_slerp_rate: float,
+) -> void:
 	GooseGameSettings.debug_hud_visible = debug_visible
+	GooseGameSettings.flight_orientation_intensity = flight_orientation_intensity
+	GooseGameSettings.flight_orientation_slerp_rate = flight_orientation_slerp_rate
 	GooseGameSettings.save_settings()

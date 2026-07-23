@@ -248,11 +248,20 @@ func _expect_visual_facing_direction(failures: Array[String], visual: Node) -> v
 		"mode": &"flight",
 		"grounded": false,
 		"facing_direction": Vector3.FORWARD,
+		"body_basis": Basis(Vector3.FORWARD, deg_to_rad(35.0)).orthonormalized(),
 		"intended_movement_direction": Vector3.RIGHT,
 		"intended_movement_magnitude": 1.0,
 	})
-	if visual._get_visual_facing_direction(flight_state).distance_to(Vector3.FORWARD) > 0.001:
-		failures.append("flight should ignore ground intended movement facing")
+	if not visual._uses_full_flight_orientation(flight_state):
+		failures.append("flight should use full backend body orientation")
+	visual.flight_orientation_intensity = 0.0
+	var upright_basis: Basis = visual._get_flight_visual_target_basis(flight_state)
+	if absf(upright_basis.y.dot(Vector3.UP) - 1.0) > 0.001:
+		failures.append("zero flight orientation intensity should keep goose upright")
+	visual.flight_orientation_intensity = 1.0
+	var full_basis: Basis = visual._get_flight_visual_target_basis(flight_state)
+	if full_basis.z.distance_to((flight_state.body_basis as Basis).z) > 0.001:
+		failures.append("full flight orientation intensity should match backend basis")
 
 
 func _expect_transition_mapping(failures: Array[String], visual: Node) -> void:

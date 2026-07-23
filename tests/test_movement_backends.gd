@@ -33,6 +33,9 @@ func _ready() -> void:
 		push_error("Q3 + Flight does not use an addon camera")
 		get_tree().quit(1)
 		return
+	if not _goose_visual_settings_are_applied(player):
+		get_tree().quit(1)
+		return
 	if not await _first_person_camera_hides_goose_visual(player, controller):
 		get_tree().quit(1)
 		return
@@ -74,6 +77,23 @@ func _backend_hud_is_visible(controller: Node) -> bool:
 		if backend_hud != null and backend_hud.visible:
 			return true
 	return false
+
+
+func _goose_visual_settings_are_applied(player: Node) -> bool:
+	var goose_visual := player.get_node("GooseVisual")
+	if not is_equal_approx(
+		float(goose_visual.get("flight_orientation_intensity")),
+		GooseGameSettings.flight_orientation_intensity,
+	):
+		push_error("Goose visual did not apply flight orientation intensity setting")
+		return false
+	if not is_equal_approx(
+		float(goose_visual.get("flight_orientation_slerp_rate")),
+		GooseGameSettings.flight_orientation_slerp_rate,
+	):
+		push_error("Goose visual did not apply flight orientation smoothness setting")
+		return false
+	return true
 
 
 func _first_person_camera_hides_goose_visual(player: Node, controller: Node) -> bool:

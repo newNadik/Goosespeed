@@ -3,6 +3,7 @@ extends RefCounted
 
 var position := Vector3.ZERO
 var velocity := Vector3.ZERO
+var body_basis := Basis.IDENTITY
 var horizontal_speed := 0.0
 var vertical_speed := 0.0
 var facing_direction := Vector3.FORWARD
@@ -51,6 +52,7 @@ var landing_surface_type: StringName = &""
 func copy_from(other) -> void:
 	position = _read(other, "position", position) as Vector3
 	velocity = _read(other, "velocity", velocity) as Vector3
+	body_basis = _read(other, "body_basis", body_basis) as Basis
 	horizontal_speed = float(_read(other, "horizontal_speed", Vector2(velocity.x, velocity.z).length()))
 	vertical_speed = float(_read(other, "vertical_speed", velocity.y))
 	facing_direction = _read(other, "facing_direction", facing_direction) as Vector3
