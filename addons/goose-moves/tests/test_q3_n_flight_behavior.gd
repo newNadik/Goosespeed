@@ -169,7 +169,7 @@ func _direct_transitions() -> void:
 	c.flight_motor.first_person_enabled = false
 	c._set_flight_visuals()
 	check("hybrid flight third-person camera becomes active again", c.get_view_camera() == c.flight_camera)
-	check("hybrid flight body shows in third person", c.flight_body_mesh.visible)
+	check("hybrid flight body stays hidden in third person", not c.flight_body_mesh.visible)
 
 	var flight_view_transform := c.get_view_camera().global_transform
 	var flight_view_fov := c.get_view_camera().fov
@@ -178,6 +178,7 @@ func _direct_transitions() -> void:
 	check("direct transition returns to Q3 mode", c.mode == c.Mode.Q3)
 	check("movement state reports Q3 mode", q3_entry_state["mode"] == "q3")
 	check("movement state reports just-exited-flight", q3_entry_state["just_exited_flight"])
+	check("hybrid Q3 collider stays hidden after flight exit", not c.character_collider_visual.visible)
 	check_vec3("flight -> Q3 preserves velocity", c.velocity, Vector3(3, 4, -5), 0.001)
 	check_approx("flight -> Q3 snaps pitch upright", c.rotation.x, 0.0, 0.001)
 	check_approx("flight -> Q3 snaps roll upright", c.rotation.z, 0.0, 0.001)

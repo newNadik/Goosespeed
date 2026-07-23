@@ -2,6 +2,7 @@ extends Node
 
 signal settings_changed
 
+const GooseMovesRuntimeScript := preload("res://scripts/player/goose_moves_runtime.gd")
 const SAVE_PATH := "user://goosespeed_settings.cfg"
 const SECTION := "goosespeed"
 const MOVEMENT_Q3_FLIGHT := "q3_n_flight"
@@ -58,8 +59,4 @@ func normalize_camera_mode(value: String) -> String:
 
 
 func _lock_goose_moves_backend() -> void:
-	var prototype_settings := get_node_or_null("/root/Settings")
-	if prototype_settings != null and str(prototype_settings.get("character_controller")) != MOVEMENT_Q3_FLIGHT:
-		prototype_settings.set("character_controller", MOVEMENT_Q3_FLIGHT)
-		if prototype_settings.has_signal("settings_changed"):
-			prototype_settings.emit_signal("settings_changed")
+	GooseMovesRuntimeScript.lock_settings_backend(get_node_or_null("/root/Settings"))

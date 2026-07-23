@@ -231,6 +231,7 @@ var camera_yaw := 0.0
 var camera_pitch := deg_to_rad(-15.0)
 var pitch_control_input := 0.0
 var roll_control_input := 0.0
+var body_mesh_visible := true
 
 
 func setup(
@@ -244,6 +245,7 @@ func setup(
 	force_vector_debug = FORCE_VECTOR_DEBUG_ADAPTER.new(body, settings_controller_id)
 	collision_shape = refs.get("collision_shape") as CollisionShape3D
 	body_mesh = refs.get("body_mesh") as MeshInstance3D
+	body_mesh_visible = bool(refs.get("body_mesh_visible", true))
 	camera_rig = refs.get("camera_rig") as Node3D
 	camera = refs.get("camera") as Camera3D
 	first_person_camera = refs.get("first_person_camera") as Camera3D
@@ -759,4 +761,4 @@ func _apply_visual_state() -> void:
 	if first_person_camera != null:
 		first_person_camera.current = view_active and first_person_enabled
 	if body_mesh != null:
-		body_mesh.visible = view_active and not first_person_enabled
+		body_mesh.visible = body_mesh_visible and view_active and not first_person_enabled

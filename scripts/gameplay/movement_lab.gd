@@ -50,16 +50,16 @@ func _on_volume_body_entered(body: Node3D, area: Area3D) -> void:
 	if body != player.get_active_controller():
 		return
 	var medium := StringName(area.get_meta("platformer_medium", area.get_meta("q3_volume_type", "air")))
-	if medium == &"water" and player.get_active_controller().has_method("set_medium"):
-		player.get_active_controller().set_medium(&"water")
+	if medium == &"water":
+		player.set_medium(&"water")
 
 
 func _on_volume_body_exited(body: Node3D, area: Area3D) -> void:
 	if body != player.get_active_controller():
 		return
 	var medium := StringName(area.get_meta("platformer_medium", area.get_meta("q3_volume_type", "air")))
-	if medium == &"water" and player.get_active_controller().has_method("set_medium"):
-		player.get_active_controller().set_medium(&"air")
+	if medium == &"water":
+		player.set_medium(&"air")
 
 
 func _on_finish_body_entered(body: Node3D) -> void:

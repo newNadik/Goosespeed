@@ -79,6 +79,7 @@ func _ready() -> void:
 		"first_person_camera": flight_first_person_camera,
 		"spring_arm": flight_spring_arm,
 		"status_label": flight_status_label,
+		"body_mesh_visible": false,
 	}, Settings.CHARACTER_Q3_N_FLIGHT, false)
 	q3_motor.setup(self, {
 		"head": head,
@@ -87,6 +88,7 @@ func _ready() -> void:
 		"third_person_camera": third_person_camera,
 		"collision_shape": collision_shape,
 		"character_collider_visual": character_collider_visual,
+		"character_collider_visible": false,
 		"hud": q3_hud,
 	}, Settings.CHARACTER_Q3_N_FLIGHT)
 	_sync_q3_body_size_to_flight()
@@ -502,7 +504,7 @@ func _set_q3_visuals() -> void:
 	flight_motor.set_view_active(false)
 	flight_hud.visible = false
 	_get_q3_view_camera().current = true
-	character_collider_visual.visible = q3_motor.third_person_enabled
+	character_collider_visual.visible = q3_motor.character_collider_visible and q3_motor.third_person_enabled
 	_update_knockdown_hud()
 
 

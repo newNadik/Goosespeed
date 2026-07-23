@@ -16,7 +16,7 @@ extends Node3D
 @onready var first_person_camera: Camera3D = $YawPivot/PitchPivot/FirstPersonCamera
 
 var state_bridge: Node
-var active_backend: Node
+var goose_moves_runtime: Node
 var yaw := 0.0
 var pitch := deg_to_rad(-15.0)
 var first_person_enabled := false
@@ -61,10 +61,10 @@ func set_state_bridge(value: Node) -> void:
 		_align_behind_facing()
 
 
-func set_active_backend(value: Node) -> void:
-	active_backend = value
-	_disable_backend_cameras()
-	call_deferred("_disable_backend_cameras")
+func set_goose_moves_runtime(value: Node) -> void:
+	goose_moves_runtime = value
+	_disable_goose_moves_cameras()
+	call_deferred("_disable_goose_moves_cameras")
 	_sync_from_backend_if_available()
 
 
@@ -102,46 +102,25 @@ func _apply_camera_mode() -> void:
 	first_person_camera.current = first_person_enabled
 
 
-func _disable_backend_cameras() -> void:
-	if active_backend == null:
+func _disable_goose_moves_cameras() -> void:
+	if goose_moves_runtime == null:
 		return
-	for camera in _find_backend_cameras(active_backend):
-		(camera as Camera3D).current = false
+	goose_moves_runtime.disable_backend_cameras()
 	_apply_camera_mode()
 
 
-func _find_backend_cameras(root: Node) -> Array[Camera3D]:
-	var cameras: Array[Camera3D] = []
-	if root is Camera3D:
-		cameras.append(root as Camera3D)
-	for child in root.get_children():
-		cameras.append_array(_find_backend_cameras(child))
-	return cameras
-
-
 func _sync_from_backend_if_available() -> void:
-	if active_backend == null:
+	if goose_moves_runtime == null:
 		return
-	var backend_yaw = active_backend.get("camera_yaw")
-	if backend_yaw != null:
-		yaw = float(backend_yaw)
-	var backend_pitch = active_backend.get("camera_pitch")
-	if backend_pitch != null:
-		pitch = float(backend_pitch)
+	var camera_state: Vector2 = goose_moves_runtime.sync_camera_from_backend(yaw, pitch)
+	yaw = camera_state.x
+	pitch = camera_state.y
 
 
 func _sync_backend_camera_state() -> void:
-	if active_backend == null:
+	if goose_moves_runtime == null:
 		return
-	if active_backend.get("camera_yaw") != null:
-		active_backend.set("camera_yaw", yaw)
-	if active_backend.get("camera_pitch") != null:
-		active_backend.set("camera_pitch", pitch)
-	if active_backend.get("yaw") != null:
-		active_backend.set("yaw", yaw)
-	var head := active_backend.get_node_or_null("Head") as Node3D
-	if head:
-		head.rotation.x = pitch
+	goose_moves_runtime.sync_camera_to_backend(yaw, pitch)
 
 
 func _apply_saved_camera_mode() -> void:

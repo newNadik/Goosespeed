@@ -246,6 +246,7 @@ var body_mesh: BoxMesh
 var water_level := 0
 var water_type: StringName
 var water_jump_time_remaining := 0.0
+var character_collider_visible := true
 
 
 func setup(
@@ -263,6 +264,7 @@ func setup(
 	third_person_camera = refs.get("third_person_camera") as Camera3D
 	collision_shape = refs.get("collision_shape") as CollisionShape3D
 	character_collider_visual = refs.get("character_collider_visual") as MeshInstance3D
+	character_collider_visible = bool(refs.get("character_collider_visible", true))
 	hud = refs.get("hud") as Q3_MOVEMENT_HUD
 	_apply_controller_settings()
 	floor_max_angle = deg_to_rad(max_slope_angle)
@@ -1084,7 +1086,7 @@ func _apply_controller_settings() -> void:
 	)
 	camera.current = not third_person_enabled
 	third_person_camera.current = third_person_enabled
-	character_collider_visual.visible = third_person_enabled
+	character_collider_visual.visible = character_collider_visible and third_person_enabled
 	if body_shape != null:
 		_set_stance_geometry(is_crouching)
 	floor_max_angle = deg_to_rad(max_slope_angle)
