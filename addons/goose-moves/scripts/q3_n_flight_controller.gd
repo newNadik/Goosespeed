@@ -117,6 +117,8 @@ func _physics_process(delta: float) -> void:
 			return
 		var flight_impact_velocity := velocity
 		flight_motor.physics_tick(delta)
+		if flight_motor.consume_flap_impulse_fired():
+			movement_state.record_flap()
 		var flight_bounce_impact := _get_body_bounce_impact(flight_impact_velocity)
 		if not flight_bounce_impact.is_empty():
 			var bounced_velocity := _get_body_bounce_velocity(
@@ -188,6 +190,17 @@ func get_view_camera() -> Camera3D:
 
 func get_movement_state() -> Dictionary:
 	return movement_state.build_state(_get_movement_state_snapshot())
+
+
+func get_flight_debug_state() -> Dictionary:
+	var debug_state := flight_motor.get_debug_state()
+	debug_state["mode"] = "flight" if mode == Mode.FLIGHT else "q3"
+	return debug_state
+
+
+func _try_flap_impulse() -> void:
+	if mode == Mode.FLIGHT and flight_motor._try_flap_impulse():
+		movement_state.record_flap()
 
 
 func set_spawn_transform(value: Transform3D) -> void:
@@ -308,23 +321,28 @@ func _apply_controller_settings() -> void:
 
 func _get_movement_state_snapshot() -> Dictionary:
 	var mode_name := "flight" if mode == Mode.FLIGHT else "q3"
+	var grounded := is_on_floor()
+	var horizontal_speed := Vector2(velocity.x, velocity.z).length()
+	var slick_sliding: bool = mode == Mode.Q3 and grounded and q3_motor.floor_is_slick and horizontal_speed > 0.05
 	return {
 		"controller": mode_name,
 		"mode": mode_name,
 		"position": global_position,
 		"velocity": velocity,
 		"facing_direction": -global_basis.z,
-		"grounded": is_on_floor(),
+		"grounded": grounded,
 		"swimming": q3_motor.water_level > 1,
 		"water_level": q3_motor.water_level,
 		"water_type": q3_motor.water_type,
 		"crouching": q3_motor.is_crouching,
 		"crouch_sliding": q3_motor.is_crouch_sliding,
+		"sliding": q3_motor.is_crouch_sliding or slick_sliding,
 		"wall_contact": is_on_wall(),
 		"ceiling_contact": is_on_ceiling(),
 		"flight_activation_charging": mode == Mode.Q3 and flap_hold_time > 0.0,
 		"flight_activation_charge": flap_hold_time,
 		"flight_activation_threshold": flight_hold_threshold,
+		"gliding": mode == Mode.FLIGHT,
 		"knocked_down": _is_knocked_down(),
 		"crash_recovery_time_remaining": knockdown_time_remaining,
 	}
@@ -456,6 +474,7 @@ func _enter_flight() -> void:
 	var preserved_position := global_position
 	var view_transform := previous_view_transform
 	var flight_basis := _get_takeoff_flight_basis(view_transform.basis, preserved_velocity)
+	var entering_from_flap_hold := Input.is_action_pressed("player_flap")
 	var view_euler := view_transform.basis.get_euler()
 	if _body_would_overlap_with_basis(flight_basis):
 		flight_basis = Basis(Vector3.UP, view_euler.y).orthonormalized()
@@ -477,6 +496,8 @@ func _enter_flight() -> void:
 	flight_motor._update_aero_angles()
 	_set_flight_visuals()
 	_begin_camera_transition(previous_view_transform, previous_view_fov, flight_motor.get_view_camera())
+	if entering_from_flap_hold:
+		Input.action_release("player_flap")
 
 
 func _get_takeoff_flight_basis(view_basis: Basis, takeoff_velocity: Vector3) -> Basis:

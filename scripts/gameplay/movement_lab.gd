@@ -5,6 +5,7 @@ const PAUSE_MENU_SCENE := preload("res://scenes/ui/pause_menu.tscn")
 @onready var level: Node3D = $PrimitiveTestLevel
 @onready var player: Node = $GoosePlayerRoot
 @onready var game_hud = $GooseGameHud
+@onready var visual_debug = $GooseVisualDebugOverlay
 @onready var finish_area: Area3D = $FinishTrigger
 
 var elapsed_time := 0.0
@@ -16,6 +17,7 @@ func _ready() -> void:
 	finish_area.body_entered.connect(_on_finish_body_entered)
 	player.set_spawn_transform(player.get_active_controller().global_transform)
 	game_hud.set_player(player)
+	visual_debug.set_player(player)
 	add_child(PAUSE_MENU_SCENE.instantiate())
 	_update_hud()
 

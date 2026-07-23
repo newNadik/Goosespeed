@@ -142,6 +142,28 @@ func _direct_transitions() -> void:
 	check("movement state reports flight mode", flight_entry_state["mode"] == "flight")
 	check("movement state reports just-entered-flight", flight_entry_state["just_entered_flight"])
 	check_vec3("Q3 -> flight preserves velocity", c.velocity, Vector3(3, 4, -5), 0.001)
+	var saved_flap_cooldown := c.flight_motor.flap_cooldown
+	var saved_flap_cooldown_remaining := c.flight_motor.flap_cooldown_remaining
+	var saved_flap_feedback_remaining := c.flight_motor.flap_feedback_remaining
+	var saved_flapping_time_remaining := c.movement_state.flapping_time_remaining
+	c.flight_motor.flap_cooldown = 0.5
+	c.flight_motor.flap_cooldown_remaining = 0.0
+	c.flight_motor.flap_feedback_remaining = 0.0
+	c._try_flap_impulse()
+	var flap_state: Dictionary = c.get_movement_state()
+	var flap_debug_state: Dictionary = c.get_flight_debug_state()
+	var post_flap_velocity := c.flight_motor.velocity
+	check("hybrid movement state reports active flap feedback", flap_state["flapping"])
+	check("hybrid movement state suppresses gliding during flap", not flap_state["gliding"])
+	check("hybrid flight debug reports active flap cooldown", float(flap_debug_state["flap_cooldown_remaining"]) > 0.0)
+	c._try_flap_impulse()
+	check_vec3("hybrid flap cooldown blocks repeated impulse", c.flight_motor.velocity, post_flap_velocity, 0.001)
+	c.flight_motor.flap_cooldown = saved_flap_cooldown
+	c.flight_motor.flap_cooldown_remaining = saved_flap_cooldown_remaining
+	c.flight_motor.flap_feedback_remaining = saved_flap_feedback_remaining
+	c.movement_state.flapping_time_remaining = saved_flapping_time_remaining
+	c.velocity = Vector3(3, 4, -5)
+	c.flight_motor.velocity = c.velocity
 	check("Q3 -> flight starts camera blend", c.camera_transition_active)
 	check("Q3 -> flight uses transition camera during blend", c.transition_camera.current)
 	check_vec3("Q3 -> flight camera blend starts at Q3 view", c.transition_camera.global_position, q3_view_transform.origin, 0.001)
@@ -268,6 +290,8 @@ func _low_hold_to_flight() -> void:
 	check("low transition observed no-contact gate", checked_no_contact_gate)
 	check("low jump plus held flap enters flight", c.mode == c.Mode.FLIGHT)
 	check("low Q3 -> flight does not teleport", c.global_position.distance_to(last_q3_position) < 0.35)
+	check("held activation does not fire flight flap impulse", not c.flight_motor.is_flapping())
+	check_approx("held activation leaves flight flap cooldown ready", c.flight_motor.flap_cooldown_remaining, 0.0, 0.001)
 	Input.action_release("player_jump")
 	Input.action_release("player_flap")
 	c._enter_q3(true)
@@ -408,6 +432,7 @@ func _slick_landing() -> void:
 		return
 	var state := c.get_movement_state()
 	check("movement state reports slick landing surface", state["landing_surface_type"] == &"slick")
+	check("movement state reports slick sliding after landing", state["sliding"])
 	check_approx("slick landing preserves horizontal velocity initially", _horizontal_speed(), 8.0, 0.05)
 	_goto("slick_landing_carry")
 

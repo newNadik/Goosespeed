@@ -2,6 +2,8 @@ class_name FlightMovementMotor
 extends RefCounted
 
 const FORCE_VECTOR_DEBUG_ADAPTER := preload("res://addons/goose-moves/scripts/force_vector_debug_adapter.gd")
+const FLAP_FEEDBACK_DURATION := 0.18
+const MIN_ACTIVE_FLAP_COOLDOWN := 0.18
 const DEFAULT_CAMERA_DISTANCE := 5.0
 const DEFAULT_CAMERA_HEIGHT := 1.6
 const DEFAULT_GRAVITY_SCALE := 0.15
@@ -207,6 +209,8 @@ var status_label: Label
 
 var view_active := true
 var flap_cooldown_remaining := 0.0
+var flap_feedback_remaining := 0.0
+var flap_impulse_fired_this_tick := false
 var aoa_deg := 0.0
 var sideslip_deg := 0.0
 var _positive_max_lift_aoa_deg := 15.0
@@ -276,7 +280,9 @@ func process_tick(_delta: float) -> void:
 
 
 func physics_tick(delta: float) -> void:
+	flap_impulse_fired_this_tick = false
 	flap_cooldown_remaining = maxf(flap_cooldown_remaining - delta, 0.0)
+	flap_feedback_remaining = maxf(flap_feedback_remaining - delta, 0.0)
 	_collect_inputs(delta)
 	_update_aero_angles()
 	var gravity_force := _get_gravity_force()
@@ -370,11 +376,36 @@ func _get_gravity_force() -> Vector3:
 	return gravity_direction * gravity_magnitude * gravity_scale * mass
 
 
-func _try_flap_impulse() -> void:
+func _try_flap_impulse() -> bool:
 	if flap_cooldown_remaining > 0.0 or flap_impulse_strength <= 0.0:
-		return
+		return false
 	velocity += _get_flap_impulse_axis() * flap_impulse_strength
-	flap_cooldown_remaining = maxf(flap_cooldown, 0.0)
+	flap_cooldown_remaining = maxf(flap_cooldown, MIN_ACTIVE_FLAP_COOLDOWN)
+	flap_feedback_remaining = FLAP_FEEDBACK_DURATION
+	flap_impulse_fired_this_tick = true
+	return true
+
+
+func consume_flap_impulse_fired() -> bool:
+	var fired := flap_impulse_fired_this_tick
+	flap_impulse_fired_this_tick = false
+	return fired
+
+
+func is_flapping() -> bool:
+	return flap_feedback_remaining > 0.0
+
+
+func get_debug_state() -> Dictionary:
+	return {
+		"flap_cooldown_remaining": flap_cooldown_remaining,
+		"flap_cooldown": flap_cooldown,
+		"flap_feedback_remaining": flap_feedback_remaining,
+		"aoa_deg": aoa_deg,
+		"sideslip_deg": sideslip_deg,
+		"pitch_control_input": pitch_control_input,
+		"roll_control_input": roll_control_input,
+	}
 
 
 func _get_flap_impulse_axis() -> Vector3:

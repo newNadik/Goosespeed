@@ -33,6 +33,9 @@ func _ready() -> void:
 		push_error("Q3 + Flight does not use an addon camera")
 		get_tree().quit(1)
 		return
+	if not await _bridge_preserves_backend_flap_state(player, controller):
+		get_tree().quit(1)
+		return
 
 	print("Q3 + Flight backend OK")
 	get_tree().quit(0)
@@ -68,6 +71,26 @@ func _backend_hud_is_visible(controller: Node) -> bool:
 		if backend_hud != null and backend_hud.visible:
 			return true
 	return false
+
+
+func _bridge_preserves_backend_flap_state(player: Node, controller: Node) -> bool:
+	controller._enter_flight()
+	await get_tree().process_frame
+	controller.flight_motor.flap_cooldown = 0.5
+	controller.flight_motor.flap_cooldown_remaining = 0.0
+	controller.flight_motor.flap_feedback_remaining = 0.0
+	controller._try_flap_impulse()
+	await get_tree().process_frame
+	var bridge: Node = player.get_node("MovementStateBridge")
+	var visual: Node = player.get_node("GooseVisual")
+	var state: RefCounted = bridge.get_state()
+	if not state.flapping:
+		push_error("MovementStateBridge dropped backend flap state")
+		return false
+	if visual.visual_state_for_state(state) != &"flight_flap":
+		push_error("Goose visual state did not use bridged backend flap state")
+		return false
+	return true
 
 
 func _find_cameras(root: Node) -> Array[Camera3D]:

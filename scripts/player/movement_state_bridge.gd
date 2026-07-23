@@ -16,7 +16,7 @@ func _ready() -> void:
 
 func _process(_delta: float) -> void:
 	if controller and not controller.has_signal("movement_state_changed"):
-		_on_controller_state_changed(_capture_controller_state())
+		_on_controller_state_changed(_get_controller_state())
 
 
 func set_controller(value: Node) -> void:
@@ -42,7 +42,7 @@ func _connect_controller() -> void:
 	):
 		controller.connect("movement_state_changed", _on_controller_state_changed)
 	current_state = _normalize_state(
-		controller.get_movement_state() if controller.has_method("get_movement_state") else _capture_controller_state()
+		_get_controller_state()
 	)
 
 
@@ -76,6 +76,12 @@ func _capture_controller_state() -> RefCounted:
 	result.surface_type = StringName(controller_surface) if controller_surface != null else &"default"
 	result.medium_type = &"water" if result.swimming else &"air"
 	return result
+
+
+func _get_controller_state():
+	if controller != null and controller.has_method("get_movement_state"):
+		return controller.get_movement_state()
+	return _capture_controller_state()
 
 
 func _normalize_state(state) -> RefCounted:

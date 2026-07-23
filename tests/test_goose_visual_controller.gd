@@ -76,6 +76,48 @@ func _initialize() -> void:
 		VisualControllerScript.ANIM_FLY_GLIDE,
 		"fall glide",
 	)
+	_expect_visual_state(
+		failures,
+		visual,
+		_state({"grounded": true, "horizontal_speed": 0.0}),
+		&"idle",
+		"idle visual state",
+	)
+	_expect_visual_state(
+		failures,
+		visual,
+		_state({"grounded": true, "horizontal_speed": 3.0}),
+		&"walk",
+		"walk visual state",
+	)
+	_expect_visual_state(
+		failures,
+		visual,
+		_state({"grounded": true, "horizontal_speed": 6.0}),
+		&"run",
+		"run visual state",
+	)
+	_expect_visual_state(
+		failures,
+		visual,
+		_state({"mode": &"flight", "grounded": false, "flapping": true}),
+		&"flight_flap",
+		"flight flap visual state",
+	)
+	_expect_visual_state(
+		failures,
+		visual,
+		_state({"mode": &"flight", "grounded": false, "just_entered_flight": true, "flapping": true}),
+		&"flight_flap",
+		"flight flap beats entry visual state",
+	)
+	_expect_visual_state(
+		failures,
+		visual,
+		_state({"grounded": false, "falling": true, "vertical_speed": -12.0}),
+		&"prelanding",
+		"prelanding visual state",
+	)
 
 	visual.free()
 
@@ -103,6 +145,18 @@ func _expect_animation(
 	label: String
 ) -> void:
 	var actual: StringName = visual.animation_for_state(state)
+	if actual != expected:
+		failures.append("%s selected %s, expected %s" % [label, actual, expected])
+
+
+func _expect_visual_state(
+	failures: Array[String],
+	visual: Node,
+	state: RefCounted,
+	expected: StringName,
+	label: String
+) -> void:
+	var actual: StringName = visual.visual_state_for_state(state)
 	if actual != expected:
 		failures.append("%s selected %s, expected %s" % [label, actual, expected])
 
@@ -176,8 +230,15 @@ func _expect_transition_mapping(failures: Array[String], visual: Node) -> void:
 		failures,
 		visual,
 		_state({"grounded": false, "just_entered_flight": true, "velocity": Vector3.UP * 8.0}),
-		VisualControllerScript.ANIM_FLY_FLAP,
+		VisualControllerScript.ANIM_TAKEOFF_BOUNCE,
 		"flight entry",
+	)
+	_expect_animation(
+		failures,
+		visual,
+		_state({"mode": &"flight", "grounded": false, "just_entered_flight": true, "flapping": true}),
+		VisualControllerScript.ANIM_FLY_FLAP,
+		"flight flap beats entry animation",
 	)
 	_expect_animation(
 		failures,
@@ -200,15 +261,20 @@ func _expect_transition_mapping(failures: Array[String], visual: Node) -> void:
 		VisualControllerScript.ANIM_FLY_FLAP,
 		"explicit flight flap",
 	)
-	visual.flap_hold_remaining = visual.flap_hold_time
 	_expect_animation(
 		failures,
 		visual,
 		_state({"mode": &"flight", "grounded": false, "velocity": Vector3.UP * 4.0}),
-		VisualControllerScript.ANIM_FLY_FLAP,
-		"flight input flap pulse",
+		VisualControllerScript.ANIM_FLY_GLIDE,
+		"flight ignores missing backend flap flag",
 	)
-	visual.flap_hold_remaining = 0.0
+	_expect_animation(
+		failures,
+		visual,
+		_state({"grounded": false, "velocity": Vector3.UP * 4.0}),
+		VisualControllerScript.ANIM_FLY_GLIDE,
+		"airborne ignores missing backend flap flag",
+	)
 	_expect_animation(
 		failures,
 		visual,

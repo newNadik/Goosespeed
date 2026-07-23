@@ -1,9 +1,10 @@
-[gd_scene load_steps=7 format=3 uid="uid://brvg005717pgx"]
+[gd_scene load_steps=8 format=3 uid="uid://brvg005717pgx"]
 
 [ext_resource type="Script" uid="uid://ce3jxljvtb5x5" path="res://scripts/gameplay/movement_lab.gd" id="1_spawner"]
 [ext_resource type="PackedScene" path="res://addons/goose-moves/scenes/primitive_test_level.tscn" id="2_level"]
 [ext_resource type="PackedScene" path="res://scenes/player/goose_player_root.tscn" id="3_player"]
 [ext_resource type="PackedScene" path="res://scenes/ui/goose_game_hud.tscn" id="4_hud"]
+[ext_resource type="PackedScene" path="res://scenes/debug/goose_visual_debug_overlay.tscn" id="5_debug"]
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_finish"]
 size = Vector3(12, 6, 2)
@@ -32,3 +33,5 @@ size = Vector3(12, 6, 0.3)
 material = SubResource("StandardMaterial_finish")
 
 [node name="GooseGameHud" parent="." instance=ExtResource("4_hud")]
+
+[node name="GooseVisualDebugOverlay" parent="." instance=ExtResource("5_debug")]

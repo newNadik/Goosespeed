@@ -338,18 +338,22 @@ func on_settings_changed() -> void:
 
 
 func get_movement_state() -> Dictionary:
+	var grounded := is_on_floor()
+	var horizontal_speed := Vector2(velocity.x, velocity.z).length()
+	var slick_sliding: bool = grounded and floor_is_slick and horizontal_speed > 0.05
 	return movement_state.build_state({
 		"controller": "q3",
 		"mode": "q3",
 		"position": global_position,
 		"velocity": velocity,
 		"facing_direction": -global_basis.z,
-		"grounded": is_on_floor(),
+		"grounded": grounded,
 		"swimming": water_level > 1,
 		"water_level": water_level,
 		"water_type": water_type,
 		"crouching": is_crouching,
 		"crouch_sliding": is_crouch_sliding,
+		"sliding": is_crouch_sliding or slick_sliding,
 		"wall_contact": is_on_wall(),
 		"ceiling_contact": is_on_ceiling(),
 	})

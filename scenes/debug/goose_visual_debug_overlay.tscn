@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3 uid="uid://bksw8d5n5qsrj"]
+
+[ext_resource type="Script" path="res://scripts/debug/goose_visual_debug_overlay.gd" id="1_debug"]
+
+[node name="GooseVisualDebugOverlay" type="Node3D"]
+script = ExtResource("1_debug")

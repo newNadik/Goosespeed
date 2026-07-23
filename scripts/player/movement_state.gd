@@ -59,8 +59,8 @@ func copy_from(other) -> void:
 	crouching = bool(_read(other, "crouching", crouching))
 	crouch_sliding = bool(_read(other, "crouch_sliding", _read(other, "sliding", crouch_sliding)))
 	sliding = bool(_read(other, "sliding", crouch_sliding))
-	gliding = bool(_read(other, "gliding", _read(other, "mode", mode) == "flight"))
-	flapping = bool(_read(other, "flapping", _read(other, "just_entered_flight", false)))
+	flapping = bool(_read(other, "flapping", flapping))
+	gliding = bool(_read(other, "gliding", _read(other, "mode", mode) == "flight")) and not flapping
 	falling = bool(_read(other, "falling", not grounded and vertical_speed < -0.2))
 	wall_contact = bool(_read(other, "wall_contact", wall_contact))
 	ceiling_contact = bool(_read(other, "ceiling_contact", ceiling_contact))
@@ -97,7 +97,7 @@ func copy_from(other) -> void:
 		medium_type = water_type
 	if landing_surface_type != &"":
 		surface_type = landing_surface_type
-	if mode == &"flight":
+	if mode == &"flight" and not flapping:
 		gliding = true
 	airborne = not grounded
 

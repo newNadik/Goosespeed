@@ -65,6 +65,12 @@ var flap_cooldown_remaining:
 	set(value):
 		motor.flap_cooldown_remaining = value
 
+var flap_feedback_remaining:
+	get:
+		return motor.flap_feedback_remaining
+	set(value):
+		motor.flap_feedback_remaining = value
+
 var aoa_deg:
 	get:
 		return motor.aoa_deg
@@ -238,6 +244,8 @@ func _physics_process(delta: float) -> void:
 	var was_grounded := is_on_floor()
 	var impact_velocity := velocity
 	motor.physics_tick(delta)
+	if motor.consume_flap_impulse_fired():
+		movement_state.record_flap()
 	if not was_grounded and is_on_floor() and impact_velocity.y <= 0.0:
 		var impact := movement_state.get_floor_collision_impact(
 			self,
@@ -283,7 +291,20 @@ func get_movement_state() -> Dictionary:
 		"grounded": is_on_floor(),
 		"wall_contact": is_on_wall(),
 		"ceiling_contact": is_on_ceiling(),
+		"gliding": true,
 	})
+
+
+func is_flapping() -> bool:
+	return motor.is_flapping()
+
+
+func get_flight_debug_state() -> Dictionary:
+	return motor.get_debug_state()
+
+
+func get_debug_state() -> Dictionary:
+	return motor.get_debug_state()
 
 func _collect_inputs(delta: float) -> void:
 	motor._collect_inputs(delta)
@@ -295,7 +316,8 @@ func _get_gravity_force() -> Vector3:
 	return motor._get_gravity_force()
 
 func _try_flap_impulse() -> void:
-	motor._try_flap_impulse()
+	if motor._try_flap_impulse():
+		movement_state.record_flap()
 
 func _get_flap_impulse_axis() -> Vector3:
 	return motor._get_flap_impulse_axis()

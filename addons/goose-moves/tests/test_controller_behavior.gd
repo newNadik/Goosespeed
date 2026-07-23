@@ -169,6 +169,9 @@ func _slick_flat() -> void:
 	check("no friction on slick: speed did not decay", horizontal_speed >= 4.99)
 	check("slick speed bounded (no runaway gain)", horizontal_speed <= 5.3)
 	check("flat slick holds speed exactly", absf(horizontal_speed - 5.0) <= 0.01)
+	var state: Dictionary = c.get_movement_state()
+	check("movement state reports slick sliding", state["sliding"])
+	check("movement state keeps crouch slide separate on slick", not state["crouch_sliding"])
 	Input.action_press("player_jump")
 	_goto("slick_jump")
 

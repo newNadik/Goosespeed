@@ -409,6 +409,8 @@ func _check_flap_impulse() -> void:
 	var saved_angle: float = c.flap_impulse_angle_rad
 	var saved_cooldown: float = c.flap_cooldown
 	var saved_cooldown_remaining: float = c.flap_cooldown_remaining
+	var saved_feedback_remaining: float = c.flap_feedback_remaining
+	var saved_flapping_time_remaining: float = c.movement_state.flapping_time_remaining
 	c.global_basis = Basis.IDENTITY
 	c.velocity = Vector3.ZERO
 	c.flap_impulse_strength = 10.0
@@ -424,16 +426,39 @@ func _check_flap_impulse() -> void:
 		0.001
 	)
 	check_approx("flap impulse starts cooldown", c.flap_cooldown_remaining, 0.5)
+	check("flap impulse starts feedback flag", c.is_flapping())
+	var movement_state_after_flap: Dictionary = c.get_movement_state()
+	check("flap impulse records movement flapping state", movement_state_after_flap["flapping"])
+	check("flap impulse suppresses gliding state", not movement_state_after_flap["gliding"])
+	check_approx(
+		"flap debug state reports cooldown",
+		float(c.get_debug_state()["flap_cooldown_remaining"]),
+		0.5,
+		0.0001
+	)
 	var velocity_after_first: Vector3 = c.velocity
 	c._try_flap_impulse()
 	check_vec3("flap cooldown blocks repeated impulse", c.velocity, velocity_after_first, 0.001)
+	c.flap_cooldown = 0.0
 	c.flap_cooldown_remaining = 0.0
+	c._try_flap_impulse()
+	var velocity_after_zero_cooldown: Vector3 = c.velocity
+	check_approx(
+		"zero flap cooldown setting still starts active cooldown",
+		c.flap_cooldown_remaining,
+		0.18,
+		0.0001
+	)
+	c._try_flap_impulse()
+	check_vec3("active minimum flap cooldown blocks spam", c.velocity, velocity_after_zero_cooldown, 0.001)
+	c.flap_cooldown_remaining = 0.0
+	c.flap_cooldown = 0.5
 	c.flap_impulse_angle_rad = deg_to_rad(90.0)
 	c._try_flap_impulse()
 	check_vec3(
 		"straight-up flap impulse uses local up",
 		c.velocity,
-		velocity_after_first + Vector3.UP * 10.0,
+		velocity_after_zero_cooldown + Vector3.UP * 10.0,
 		0.001
 	)
 	c.global_basis = saved_basis
@@ -442,6 +467,8 @@ func _check_flap_impulse() -> void:
 	c.flap_impulse_angle_rad = saved_angle
 	c.flap_cooldown = saved_cooldown
 	c.flap_cooldown_remaining = saved_cooldown_remaining
+	c.flap_feedback_remaining = saved_feedback_remaining
+	c.movement_state.flapping_time_remaining = saved_flapping_time_remaining
 	c._update_aero_angles()
 
 

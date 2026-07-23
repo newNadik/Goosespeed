@@ -47,8 +47,6 @@ const LOOPING_ANIMATIONS := [
 @export var locomotion_min_hold_time := 0.1
 @export var locomotion_blend_time := 0.08
 @export var run_fast_blend_time := 0.05
-@export var airborne_flap_speed := 1.0
-@export var flap_hold_time := 0.28
 @export var landing_hold_time := 0.22
 @export var prelanding_vertical_speed := -8.0
 
@@ -57,7 +55,6 @@ const LOOPING_ANIMATIONS := [
 var state_bridge: Node
 var latest_state := MovementStateScript.new()
 var previous_grounded := true
-var flap_hold_remaining := 0.0
 var landing_hold_remaining := 0.0
 var active_locomotion_animation: StringName = &""
 var run_fast_hold_remaining := 0.0
@@ -79,14 +76,9 @@ func set_state_bridge(value: Node) -> void:
 
 
 func _process(delta: float) -> void:
-	flap_hold_remaining = maxf(flap_hold_remaining - delta, 0.0)
 	landing_hold_remaining = maxf(landing_hold_remaining - delta, 0.0)
 	run_fast_hold_remaining = maxf(run_fast_hold_remaining - delta, 0.0)
 	locomotion_hold_remaining = maxf(locomotion_hold_remaining - delta, 0.0)
-	if Input.is_action_just_pressed(&"player_flap") and _flap_input_can_animate():
-		flap_hold_remaining = flap_hold_time
-	if latest_state.just_entered_flight:
-		flap_hold_remaining = flap_hold_time
 
 	global_position = global_position.lerp(latest_state.position, minf(delta * 20.0, 1.0))
 	if not latest_state.facing_direction.is_zero_approx():
@@ -111,6 +103,36 @@ func animation_for_state(state: RefCounted) -> StringName:
 	return _animation_for_state(state, false)
 
 
+func visual_state_for_state(state: RefCounted) -> StringName:
+	if state.crashed or state.knocked_down or state.hard_landed or state.just_landed:
+		return &"landing"
+	if state.swimming:
+		if state.horizontal_speed >= _run_slow_speed():
+			return &"swim_fast"
+		if state.horizontal_speed >= _walk_medium_speed():
+			return &"swim"
+		return &"swim_idle"
+	if state.flight_activation_charging and state.grounded:
+		return &"takeoff_charge"
+	if state.mode == &"flight":
+		return &"flight_flap" if state.flapping else &"flight_glide"
+	if not state.grounded:
+		if state.flapping:
+			return &"air_flap"
+		if state.just_entered_flight:
+			return &"takeoff"
+		if state.falling and state.vertical_speed <= prelanding_vertical_speed:
+			return &"prelanding"
+		return &"air_glide"
+	if state.crouch_sliding or state.sliding:
+		return &"slide"
+	if state.horizontal_speed < idle_speed_threshold:
+		return &"idle"
+	if state.horizontal_speed < q3_run_slow_speed:
+		return &"walk"
+	return &"run"
+
+
 func _animation_for_state(state: RefCounted, use_ground_stability: bool) -> StringName:
 	if state.crashed or state.knocked_down or state.hard_landed or state.just_landed:
 		if use_ground_stability:
@@ -131,23 +153,20 @@ func _animation_for_state(state: RefCounted, use_ground_stability: bool) -> Stri
 			_clear_ground_locomotion()
 		return _first_available([ANIM_TAKEOFF_RUNUP, ANIM_RUN_FAST, ANIM_WALK_FAST])
 
-	if state.just_entered_flight:
-		if use_ground_stability:
-			_clear_ground_locomotion()
-		return _first_available([ANIM_FLY_FLAP, ANIM_TAKEOFF_BOUNCE, ANIM_FLY_GLIDE])
-
 	if state.mode == &"flight":
 		if use_ground_stability:
 			_clear_ground_locomotion()
-		if state.flapping or flap_hold_remaining > 0.0:
+		if state.flapping:
 			return _first_available([ANIM_FLY_FLAP, ANIM_FLY_GLIDE])
 		return _first_available([ANIM_FLY_GLIDE, ANIM_FLY_FLAP])
 
 	if not state.grounded:
 		if use_ground_stability:
 			_clear_ground_locomotion()
-		if state.flapping or flap_hold_remaining > 0.0:
+		if state.flapping:
 			return _first_available([ANIM_FLY_FLAP, ANIM_FLY_GLIDE])
+		if state.just_entered_flight:
+			return _first_available([ANIM_TAKEOFF_BOUNCE, ANIM_FLY_GLIDE])
 		if state.falling and state.vertical_speed <= prelanding_vertical_speed:
 			return _first_available([ANIM_PRE_LAND, ANIM_FLY_GLIDE])
 		return _first_available([ANIM_FLY_GLIDE, ANIM_FLY_FLAP])
@@ -312,10 +331,6 @@ func _run_slow_speed() -> float:
 
 func _run_fast_exit_speed() -> float:
 	return q3_run_fast_exit_speed
-
-
-func _flap_input_can_animate() -> bool:
-	return latest_state.mode == &"flight" or not latest_state.grounded
 
 
 func _first_available(animation_names: Array) -> StringName:

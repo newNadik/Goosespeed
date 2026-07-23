@@ -2,11 +2,13 @@ class_name MovementStateTracker
 extends RefCounted
 
 const EVENT_DURATION := 0.12
+const FLAP_EVENT_DURATION := 0.22
 
 var just_landed_time_remaining := 0.0
 var just_took_off_time_remaining := 0.0
 var just_entered_flight_time_remaining := 0.0
 var just_exited_flight_time_remaining := 0.0
+var flapping_time_remaining := 0.0
 var hard_landed_time_remaining := 0.0
 var crashed_time_remaining := 0.0
 var landing_carry_time_remaining := 0.0
@@ -27,6 +29,7 @@ func physics_tick(delta: float) -> void:
 	just_took_off_time_remaining = maxf(just_took_off_time_remaining - delta, 0.0)
 	just_entered_flight_time_remaining = maxf(just_entered_flight_time_remaining - delta, 0.0)
 	just_exited_flight_time_remaining = maxf(just_exited_flight_time_remaining - delta, 0.0)
+	flapping_time_remaining = maxf(flapping_time_remaining - delta, 0.0)
 	hard_landed_time_remaining = maxf(hard_landed_time_remaining - delta, 0.0)
 	crashed_time_remaining = maxf(crashed_time_remaining - delta, 0.0)
 
@@ -62,6 +65,10 @@ func record_entered_flight() -> void:
 
 func record_exited_flight() -> void:
 	just_exited_flight_time_remaining = EVENT_DURATION
+
+
+func record_flap() -> void:
+	flapping_time_remaining = FLAP_EVENT_DURATION
 
 
 func record_crash(impact: Dictionary) -> void:
@@ -135,6 +142,8 @@ func build_state(snapshot: Dictionary) -> Dictionary:
 	facing_direction = facing_direction.normalized()
 
 	var grounded := bool(snapshot.get("grounded", false))
+	var is_flapping := flapping_time_remaining > 0.0
+	var is_gliding := bool(snapshot.get("gliding", false)) and not is_flapping
 	return {
 		"controller": str(snapshot.get("controller", snapshot.get("mode", ""))),
 		"mode": str(snapshot.get("mode", snapshot.get("controller", ""))),
@@ -150,11 +159,15 @@ func build_state(snapshot: Dictionary) -> Dictionary:
 		"water_type": StringName(snapshot.get("water_type", &"")),
 		"crouching": bool(snapshot.get("crouching", false)),
 		"crouch_sliding": bool(snapshot.get("crouch_sliding", false)),
+		"sliding": bool(snapshot.get("sliding", false)),
 		"wall_contact": bool(snapshot.get("wall_contact", false)),
 		"ceiling_contact": bool(snapshot.get("ceiling_contact", false)),
 		"flight_activation_charging": bool(snapshot.get("flight_activation_charging", false)),
 		"flight_activation_charge": float(snapshot.get("flight_activation_charge", 0.0)),
 		"flight_activation_threshold": float(snapshot.get("flight_activation_threshold", 0.0)),
+		"gliding": is_gliding,
+		"flapping": is_flapping,
+		"falling": bool(snapshot.get("falling", false)),
 		"just_landed": just_landed_time_remaining > 0.0,
 		"just_took_off": just_took_off_time_remaining > 0.0,
 		"just_entered_flight": just_entered_flight_time_remaining > 0.0,
