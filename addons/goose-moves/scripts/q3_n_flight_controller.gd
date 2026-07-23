@@ -388,6 +388,8 @@ func _get_movement_state_snapshot() -> Dictionary:
 		"position": global_position,
 		"velocity": velocity,
 		"facing_direction": -global_basis.z,
+		"intended_movement_direction": q3_motor.intended_movement_direction if mode == Mode.Q3 else Vector3.ZERO,
+		"intended_movement_magnitude": q3_motor.intended_movement_magnitude if mode == Mode.Q3 else 0.0,
 		"grounded": grounded,
 		"swimming": q3_motor.water_level > 1,
 		"water_level": q3_motor.water_level,

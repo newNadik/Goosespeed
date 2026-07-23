@@ -39,6 +39,7 @@ func _initialize() -> void:
 	_expect_sticky_run(failures, visual)
 	_expect_locomotion_hold(failures, visual)
 	_expect_q3_speed_scale(failures, visual)
+	_expect_visual_facing_direction(failures, visual)
 	_expect_transition_mapping(failures, visual)
 	_expect_locomotion_phase_preserved(failures)
 	_expect_animation(
@@ -216,6 +217,42 @@ func _expect_q3_speed_scale(failures: Array[String], visual: Node) -> void:
 	var walk_scale: float = visual._animation_speed_scale(VisualControllerScript.ANIM_RUN_FAST)
 	if walk_scale < 1.0:
 		failures.append("q3 shift walk speed scale %.3f should keep feet moving" % walk_scale)
+
+
+func _expect_visual_facing_direction(failures: Array[String], visual: Node) -> void:
+	var input_state := _state({
+		"grounded": true,
+		"facing_direction": Vector3.FORWARD,
+		"intended_movement_direction": Vector3.RIGHT,
+		"intended_movement_magnitude": 1.0,
+	})
+	visual.latest_state = input_state
+	visual._update_intended_movement_turn_state(0.04)
+	if visual._get_visual_facing_direction(input_state).distance_to(Vector3.FORWARD) > 0.001:
+		failures.append("short ground input tap should not immediately redirect visual facing")
+	visual._update_intended_movement_turn_state(visual.input_facing_commit_time)
+	if visual._get_visual_facing_direction(input_state).distance_to(Vector3.RIGHT) > 0.001:
+		failures.append("held ground input should drive visual facing toward intended direction")
+
+	var slide_state := _state({
+		"grounded": true,
+		"sliding": true,
+		"facing_direction": Vector3.FORWARD,
+		"intended_movement_direction": Vector3.ZERO,
+		"intended_movement_magnitude": 0.0,
+	})
+	if visual._get_visual_facing_direction(slide_state).distance_to(Vector3.FORWARD) > 0.001:
+		failures.append("no-input slide should keep visual facing stable")
+
+	var flight_state := _state({
+		"mode": &"flight",
+		"grounded": false,
+		"facing_direction": Vector3.FORWARD,
+		"intended_movement_direction": Vector3.RIGHT,
+		"intended_movement_magnitude": 1.0,
+	})
+	if visual._get_visual_facing_direction(flight_state).distance_to(Vector3.FORWARD) > 0.001:
+		failures.append("flight should ignore ground intended movement facing")
 
 
 func _expect_transition_mapping(failures: Array[String], visual: Node) -> void:

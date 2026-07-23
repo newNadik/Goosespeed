@@ -140,6 +140,12 @@ func build_state(snapshot: Dictionary) -> Dictionary:
 	if facing_direction.length_squared() <= 0.0001:
 		facing_direction = Vector3.FORWARD
 	facing_direction = facing_direction.normalized()
+	var intended_movement_direction := snapshot.get("intended_movement_direction", Vector3.ZERO) as Vector3
+	intended_movement_direction.y = 0.0
+	if intended_movement_direction.length_squared() > 0.0001:
+		intended_movement_direction = intended_movement_direction.normalized()
+	else:
+		intended_movement_direction = Vector3.ZERO
 
 	var grounded := bool(snapshot.get("grounded", false))
 	var is_flapping := flapping_time_remaining > 0.0
@@ -152,6 +158,8 @@ func build_state(snapshot: Dictionary) -> Dictionary:
 		"horizontal_speed": horizontal_velocity.length(),
 		"vertical_speed": velocity.y,
 		"facing_direction": facing_direction,
+		"intended_movement_direction": intended_movement_direction,
+		"intended_movement_magnitude": float(snapshot.get("intended_movement_magnitude", 0.0)),
 		"grounded": grounded,
 		"airborne": not grounded,
 		"swimming": bool(snapshot.get("swimming", false)),

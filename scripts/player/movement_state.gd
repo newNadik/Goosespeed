@@ -6,6 +6,8 @@ var velocity := Vector3.ZERO
 var horizontal_speed := 0.0
 var vertical_speed := 0.0
 var facing_direction := Vector3.FORWARD
+var intended_movement_direction := Vector3.ZERO
+var intended_movement_magnitude := 0.0
 var grounded := false
 var airborne := true
 var swimming := false
@@ -52,6 +54,8 @@ func copy_from(other) -> void:
 	horizontal_speed = float(_read(other, "horizontal_speed", Vector2(velocity.x, velocity.z).length()))
 	vertical_speed = float(_read(other, "vertical_speed", velocity.y))
 	facing_direction = _read(other, "facing_direction", facing_direction) as Vector3
+	intended_movement_direction = _read(other, "intended_movement_direction", intended_movement_direction) as Vector3
+	intended_movement_magnitude = float(_read(other, "intended_movement_magnitude", intended_movement_magnitude))
 	grounded = bool(_read(other, "grounded", grounded))
 	airborne = bool(_read(other, "airborne", not grounded))
 	swimming = bool(_read(other, "swimming", swimming))

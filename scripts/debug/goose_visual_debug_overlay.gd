@@ -2,6 +2,7 @@ class_name GooseVisualDebugOverlay
 extends Node3D
 
 const FACING_COLOR := Color(0.2, 0.55, 1.0, 1.0)
+const INTENDED_COLOR := Color(1.0, 0.55, 0.1, 1.0)
 const VELOCITY_COLOR := Color(0.1, 0.95, 0.35, 1.0)
 
 @export var vertical_offset := 1.25
@@ -14,8 +15,10 @@ var state_bridge: Node
 var visual_controller: Node
 var label: RichTextLabel
 var facing_arrow: MeshInstance3D
+var intended_arrow: MeshInstance3D
 var velocity_arrow: MeshInstance3D
 var facing_material := StandardMaterial3D.new()
+var intended_material := StandardMaterial3D.new()
 var velocity_material := StandardMaterial3D.new()
 
 
@@ -43,6 +46,7 @@ func _process(_delta: float) -> void:
 
 func _setup_materials() -> void:
 	_configure_material(facing_material, FACING_COLOR)
+	_configure_material(intended_material, INTENDED_COLOR)
 	_configure_material(velocity_material, VELOCITY_COLOR)
 
 
@@ -91,6 +95,7 @@ func _setup_canvas() -> void:
 
 func _setup_arrows() -> void:
 	facing_arrow = _create_arrow("FacingArrow", facing_material)
+	intended_arrow = _create_arrow("IntendedArrow", intended_material)
 	velocity_arrow = _create_arrow("VelocityArrow", velocity_material)
 
 
@@ -123,7 +128,7 @@ func _update_label(state: RefCounted) -> void:
 			&"flapping",
 			&"falling",
 		]),
-		"[center]flap cd %s   [color=#338cff]blue facing[/color]   [color=#1df05a]green velocity[/color][/center]" % _format_flap_cooldown(flight_debug),
+		"[center]flap cd %s   [color=#338cff]blue facing[/color]   [color=#ff8c1a]orange input[/color]   [color=#1df05a]green velocity[/color][/center]" % _format_flap_cooldown(flight_debug),
 	])
 
 
@@ -131,6 +136,10 @@ func _update_arrows(state: RefCounted) -> void:
 	var origin: Vector3 = state.position + Vector3.UP * vertical_offset
 	var facing_direction := _horizontal_direction(state.facing_direction as Vector3)
 	_set_arrow(facing_arrow, origin, facing_direction, facing_arrow_length)
+
+	var intended_direction := _horizontal_direction(state.intended_movement_direction as Vector3)
+	var intended_length: float = facing_arrow_length * clampf(float(state.intended_movement_magnitude), 0.0, 1.0)
+	_set_arrow(intended_arrow, origin + Vector3.UP * 0.09, intended_direction, intended_length)
 
 	var velocity_direction := _velocity_direction(state)
 	var velocity_length := _velocity_length(state)

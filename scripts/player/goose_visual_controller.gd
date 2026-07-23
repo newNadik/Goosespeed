@@ -49,6 +49,9 @@ const LOOPING_ANIMATIONS := [
 @export var run_fast_blend_time := 0.05
 @export var landing_hold_time := 0.22
 @export var prelanding_vertical_speed := -8.0
+@export var ground_input_turn_rate := 7.0
+@export var default_turn_rate := 14.0
+@export var input_facing_commit_time := 0.14
 
 @onready var animation_player: AnimationPlayer = get_node_or_null("AnimationPlayer") as AnimationPlayer
 
@@ -59,6 +62,8 @@ var landing_hold_remaining := 0.0
 var active_locomotion_animation: StringName = &""
 var run_fast_hold_remaining := 0.0
 var locomotion_hold_remaining := 0.0
+var intended_movement_time := 0.0
+var tracked_intended_movement_direction := Vector3.ZERO
 
 
 func _ready() -> void:
@@ -79,11 +84,17 @@ func _process(delta: float) -> void:
 	landing_hold_remaining = maxf(landing_hold_remaining - delta, 0.0)
 	run_fast_hold_remaining = maxf(run_fast_hold_remaining - delta, 0.0)
 	locomotion_hold_remaining = maxf(locomotion_hold_remaining - delta, 0.0)
+	_update_intended_movement_turn_state(delta)
 
 	global_position = global_position.lerp(latest_state.position, minf(delta * 20.0, 1.0))
-	if not latest_state.facing_direction.is_zero_approx():
-		var target_yaw := atan2(-latest_state.facing_direction.x, -latest_state.facing_direction.z)
-		global_rotation.y = lerp_angle(global_rotation.y, target_yaw, minf(delta * 14.0, 1.0))
+	var visual_facing_direction := _get_visual_facing_direction(latest_state)
+	if not visual_facing_direction.is_zero_approx():
+		var target_yaw := atan2(-visual_facing_direction.x, -visual_facing_direction.z)
+		global_rotation.y = lerp_angle(
+			global_rotation.y,
+			target_yaw,
+			minf(delta * _get_visual_turn_rate(latest_state), 1.0),
+		)
 
 	_update_animation()
 	previous_grounded = latest_state.grounded
@@ -97,6 +108,51 @@ func _connect_bridge() -> void:
 
 func _on_state_changed(state: RefCounted) -> void:
 	latest_state = state
+
+
+func _get_visual_facing_direction(state: RefCounted) -> Vector3:
+	if _should_face_intended_movement(state):
+		return _horizontal_direction(state.intended_movement_direction)
+	return _horizontal_direction(state.facing_direction)
+
+
+func _update_intended_movement_turn_state(delta: float) -> void:
+	if not _has_ground_intended_movement(latest_state):
+		intended_movement_time = 0.0
+		tracked_intended_movement_direction = Vector3.ZERO
+		return
+
+	var intended_direction := _horizontal_direction(latest_state.intended_movement_direction)
+	if (
+		tracked_intended_movement_direction.is_zero_approx()
+		or tracked_intended_movement_direction.dot(intended_direction) < 0.94
+	):
+		tracked_intended_movement_direction = intended_direction
+		intended_movement_time = 0.0
+	intended_movement_time += delta
+
+
+func _should_face_intended_movement(state: RefCounted) -> bool:
+	return _has_ground_intended_movement(state) and intended_movement_time >= input_facing_commit_time
+
+
+func _has_ground_intended_movement(state: RefCounted) -> bool:
+	return (
+		state.mode != &"flight"
+		and state.grounded
+		and not state.swimming
+		and state.intended_movement_magnitude > 0.05
+		and not state.intended_movement_direction.is_zero_approx()
+	)
+
+
+func _get_visual_turn_rate(state: RefCounted) -> float:
+	return ground_input_turn_rate if _should_face_intended_movement(state) else default_turn_rate
+
+
+func _horizontal_direction(value: Vector3) -> Vector3:
+	var result := Vector3(value.x, 0.0, value.z)
+	return result.normalized() if not result.is_zero_approx() else Vector3.ZERO
 
 
 func animation_for_state(state: RefCounted) -> StringName:

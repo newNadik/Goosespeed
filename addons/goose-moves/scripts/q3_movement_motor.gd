@@ -248,6 +248,8 @@ var water_level := 0
 var water_type: StringName
 var water_jump_time_remaining := 0.0
 var character_collider_visible := true
+var intended_movement_direction := Vector3.ZERO
+var intended_movement_magnitude := 0.0
 
 
 func setup(
@@ -351,6 +353,7 @@ func physics_tick(delta: float) -> void:
 
 	var wish_direction := _get_wish_direction(movement_input, floor_normal if grounded else Vector3.UP)
 	var wish_speed := _get_wish_speed(movement_input)
+	_update_intended_movement(wish_direction, movement_input)
 	if grounded:
 		if water_level > 0:
 			var wade_scale := 1.0 - ((1.0 - swim_speed_scale) * (water_level / 3.0))
@@ -411,6 +414,14 @@ func _get_wish_direction(movement_input: Vector2, ground_normal: Vector3) -> Vec
 	right = right.normalized()
 	var wish_direction := (right * movement_input.x) + (forward * movement_input.y)
 	return wish_direction.slide(ground_normal).normalized()
+
+
+func _update_intended_movement(wish_direction: Vector3, movement_input: Vector2) -> void:
+	intended_movement_magnitude = minf(movement_input.length(), 1.0)
+	if intended_movement_magnitude <= 0.001 or wish_direction.is_zero_approx():
+		intended_movement_direction = Vector3.ZERO
+		return
+	intended_movement_direction = wish_direction.normalized()
 
 
 func _get_wish_speed(movement_input: Vector2) -> float:

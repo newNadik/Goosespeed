@@ -377,8 +377,11 @@ func _check_idle_camera_orbit() -> void:
 	c.q3_motor.yaw = -1.2
 	c.q3_motor._apply_view_rotation(true)
 	c.q3_motor._sync_body_yaw_for_movement(Vector2(0.0, 1.0), true)
+	c.q3_motor._update_intended_movement(Vector3.RIGHT, Vector2.RIGHT)
 	check_approx("movement input reattaches body yaw to view", c.rotation.y, c.q3_motor.yaw, 0.001)
 	check_approx("movement input clears orbit head yaw", c.head.rotation.y, 0.0, 0.001)
+	check_vec3("movement state exposes intended input direction", c.get_movement_state()["intended_movement_direction"], Vector3.RIGHT, 0.001)
+	check_approx("movement state exposes intended input magnitude", c.get_movement_state()["intended_movement_magnitude"], 1.0, 0.001)
 	c._apply_shared_camera_mode(false)
 	c._set_q3_visuals()
 	c.toggle_camera_mode()
