@@ -181,6 +181,7 @@ func _bridge_preserves_backend_flap_state(player: Node, controller: Node) -> boo
 	controller.flight_motor.flap_cooldown_remaining = 0.0
 	controller.flight_motor.flap_feedback_remaining = 0.0
 	controller._try_flap_impulse()
+	await get_tree().physics_frame
 	await get_tree().process_frame
 	var bridge: Node = player.get_node("MovementStateBridge")
 	var visual: Node = player.get_node("GooseVisual")

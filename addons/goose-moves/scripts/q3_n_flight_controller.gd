@@ -1,6 +1,8 @@
 class_name Q3NFlightController
 extends CharacterBody3D
 
+signal movement_state_changed(state)
+
 const DEFAULT_FLIGHT_HOLD_THRESHOLD := 0.3
 const DEFAULT_FLIGHT_NO_CONTACT_THRESHOLD := 0.3
 const DEFAULT_FLIGHT_MIN_ACTIVATION_SPEED := 12.0
@@ -117,6 +119,7 @@ func _physics_process(delta: float) -> void:
 	if mode == Mode.FLIGHT:
 		if Input.is_action_pressed("player_crouch"):
 			_enter_q3(true)
+			_emit_movement_state_changed()
 			return
 		var flight_impact_velocity := velocity
 		flight_motor.physics_tick(delta)
@@ -136,6 +139,7 @@ func _physics_process(delta: float) -> void:
 			var flight_landing_impact := _get_floor_impact(flight_impact_velocity)
 			_enter_q3(true)
 			_record_landing_and_preserve(flight_impact_velocity, flight_landing_impact)
+		_emit_movement_state_changed()
 		return
 
 	q3_motor.control_enabled = not _is_knocked_down()
@@ -160,6 +164,7 @@ func _physics_process(delta: float) -> void:
 	_update_no_surface_contact_time(delta)
 	if _can_activate_flight():
 		_enter_flight()
+	_emit_movement_state_changed()
 
 
 func _input(event: InputEvent) -> void:
@@ -195,6 +200,10 @@ func get_movement_state() -> Dictionary:
 	return movement_state.build_state(_get_movement_state_snapshot())
 
 
+func _emit_movement_state_changed() -> void:
+	movement_state_changed.emit(get_movement_state())
+
+
 func get_flight_debug_state() -> Dictionary:
 	var debug_state := flight_motor.get_debug_state()
 	debug_state["mode"] = "flight" if mode == Mode.FLIGHT else "q3"
@@ -204,7 +213,6 @@ func get_flight_debug_state() -> Dictionary:
 func _try_flap_impulse() -> void:
 	if mode == Mode.FLIGHT and flight_motor._try_flap_impulse():
 		movement_state.record_flap()
-		flight_motor.consume_flap_impulse_fired()
 
 
 func set_spawn_transform(value: Transform3D) -> void:

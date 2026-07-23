@@ -63,6 +63,7 @@ const LOOPING_ANIMATIONS := [
 
 var state_bridge: Node
 var latest_state := MovementStateScript.new()
+var previous_state := MovementStateScript.new()
 var previous_grounded := true
 var landing_hold_remaining := 0.0
 var active_locomotion_animation: StringName = &""
@@ -94,12 +95,13 @@ func _process(delta: float) -> void:
 	locomotion_hold_remaining = maxf(locomotion_hold_remaining - delta, 0.0)
 	_update_intended_movement_turn_state(delta)
 
-	global_position = global_position.lerp(latest_state.position, minf(delta * 20.0, 1.0))
+	var render_weight := _get_physics_render_weight()
+	global_position = previous_state.position.lerp(latest_state.position, render_weight)
 	if _uses_full_flight_orientation(latest_state):
 		global_basis = _slerp_rotation_basis(
-			global_basis,
+			_get_flight_visual_target_basis(previous_state),
 			_get_flight_visual_target_basis(latest_state),
-			minf(delta * flight_orientation_slerp_rate, 1.0),
+			render_weight,
 		)
 	else:
 		var visual_facing_direction := _get_visual_facing_direction(latest_state)
@@ -122,10 +124,19 @@ func _connect_bridge() -> void:
 	if not state_bridge.state_changed.is_connected(_on_state_changed):
 		state_bridge.state_changed.connect(_on_state_changed)
 	latest_state = state_bridge.get_state()
+	previous_state = latest_state.duplicate_state()
+	global_position = latest_state.position
+	if _uses_full_flight_orientation(latest_state):
+		global_basis = _get_flight_visual_target_basis(latest_state)
 
 
 func _on_state_changed(state: RefCounted) -> void:
-	latest_state = state
+	previous_state = latest_state.duplicate_state()
+	latest_state = state.duplicate_state()
+
+
+func _get_physics_render_weight() -> float:
+	return clampf(Engine.get_physics_interpolation_fraction(), 0.0, 1.0)
 
 
 func _get_visual_facing_direction(state: RefCounted) -> Vector3:
