@@ -67,8 +67,10 @@ var camera_transition_elapsed := 0.0
 var camera_transition_from_transform := Transform3D.IDENTITY
 var camera_transition_from_fov := 100.0
 var camera_transition_target: Camera3D
+var first_person_camera_enabled := false
 var presentation_enabled := true
 var debug_hud_visible := true
+var player_body_render_layer := 0
 
 
 func _ready() -> void:
@@ -100,6 +102,7 @@ func _ready() -> void:
 
 
 func _process(delta: float) -> void:
+	_handle_camera_actions()
 	if mode == Mode.FLIGHT:
 		flight_motor.process_tick(delta)
 	else:
@@ -241,16 +244,47 @@ func get_view_angles() -> Vector2:
 func set_view_angles(view_yaw: float, view_pitch: float) -> void:
 	q3_motor.yaw = view_yaw
 	q3_motor.pitch = clampf(view_pitch, deg_to_rad(-89.0), deg_to_rad(89.0))
-	rotation.y = q3_motor.yaw
-	head.rotation.x = q3_motor.pitch
+	q3_motor._apply_view_rotation(false)
 	flight_motor.camera_yaw = view_yaw
 	flight_motor.camera_pitch = clampf(view_pitch, deg_to_rad(-75.0), deg_to_rad(60.0))
 	flight_motor._apply_camera_rotation()
 
 
+func recenter_camera() -> void:
+	if mode == Mode.FLIGHT:
+		flight_motor.camera_yaw = _get_upright_yaw()
+		flight_motor._apply_camera_rotation()
+		return
+	q3_motor.recenter_camera()
+
+
+func toggle_camera_mode() -> void:
+	var new_first_person := not first_person_camera_enabled
+	Settings.set_controller_setting(
+		"third_person",
+		0.0 if new_first_person else 1.0,
+		Settings.CHARACTER_Q3_N_FLIGHT,
+	)
+	Settings.set_controller_setting(
+		"first_person",
+		1.0 if new_first_person else 0.0,
+		Settings.CHARACTER_Q3_N_FLIGHT,
+	)
+	_apply_shared_camera_mode(new_first_person)
+	if mode == Mode.FLIGHT:
+		_set_flight_visuals()
+	else:
+		_set_q3_visuals()
+
+
 func disable_internal_cameras() -> void:
 	for camera_node in _find_cameras(self):
 		camera_node.clear_current(false)
+
+
+func set_player_body_render_layer(value: int) -> void:
+	player_body_render_layer = value
+	_apply_player_body_cull_masks()
 
 
 func on_settings_changed() -> void:
@@ -317,6 +351,29 @@ func _apply_controller_settings() -> void:
 		"hard_landing_vertical_speed",
 		Settings.CHARACTER_Q3_N_FLIGHT,
 	)
+	var settings_first_person := Settings.get_controller_setting(
+		"first_person",
+		Settings.CHARACTER_Q3_N_FLIGHT,
+	) >= 0.5
+	var settings_third_person := Settings.get_controller_setting(
+		"third_person",
+		Settings.CHARACTER_Q3_N_FLIGHT,
+	) >= 0.5
+	_apply_shared_camera_mode(settings_first_person or not settings_third_person)
+
+
+func _apply_shared_camera_mode(first_person: bool) -> void:
+	first_person_camera_enabled = first_person
+	q3_motor.third_person_enabled = not first_person
+	flight_motor.first_person_enabled = first_person
+	_apply_player_body_cull_masks()
+
+
+func _handle_camera_actions() -> void:
+	if KeybindingsSettings.is_action_just_pressed(&"player_reset_camera"):
+		recenter_camera()
+	if KeybindingsSettings.is_action_just_pressed(&"player_toggle_camera"):
+		toggle_camera_mode()
 
 
 func _get_movement_state_snapshot() -> Dictionary:
@@ -615,6 +672,7 @@ func _begin_camera_transition(from_transform: Transform3D, from_fov: float, targ
 	camera_transition_active = true
 	transition_camera.global_transform = from_transform
 	transition_camera.fov = from_fov
+	_apply_player_body_cull_mask(transition_camera)
 	transition_camera.current = true
 
 
@@ -691,3 +749,16 @@ func _append_cameras(root: Node, cameras: Array[Camera3D]) -> void:
 		cameras.append(root as Camera3D)
 	for child in root.get_children():
 		_append_cameras(child, cameras)
+
+
+func _apply_player_body_cull_mask(target_camera: Camera3D) -> void:
+	if target_camera == null or player_body_render_layer <= 0:
+		return
+	target_camera.set_cull_mask_value(player_body_render_layer, not first_person_camera_enabled)
+
+
+func _apply_player_body_cull_masks() -> void:
+	if player_body_render_layer <= 0:
+		return
+	for target_camera in _find_cameras(self):
+		_apply_player_body_cull_mask(target_camera)

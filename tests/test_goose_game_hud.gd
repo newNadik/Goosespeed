@@ -29,6 +29,8 @@ func _ready() -> void:
 		"Space  Jump / Hold Flight",
 		"Ctrl  Crouch / Exit Flight",
 		"Q  Honk",
+		"C  Recenter Camera",
+		"V  Toggle Camera",
 	]:
 		if not _hints_contain(hud, hint):
 			push_error("HUD hints are missing %s" % hint)

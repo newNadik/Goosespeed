@@ -202,6 +202,7 @@ var crouch_slide_enabled := false
 var ramp_launch_enabled := false
 var wall_jump_enabled := false
 var third_person_enabled := false
+var idle_camera_orbit_enabled := false
 var control_enabled := true
 var character_size := Vector3(
 	30.0 * Q3_METERS_PER_UNIT,
@@ -329,6 +330,7 @@ func physics_tick(delta: float) -> void:
 				apply_floor_snap()
 	var slick := grounded and floor_is_slick
 	var movement_input := _get_movement_input()
+	_sync_body_yaw_for_movement(movement_input, grounded)
 	_update_crouch_slide(delta, grounded)
 	if water_jump_time_remaining > 0.0:
 		_water_jump_move(delta)
@@ -401,10 +403,10 @@ func _get_wish_direction(movement_input: Vector2, ground_normal: Vector3) -> Vec
 	if movement_input.is_zero_approx():
 		return Vector3.ZERO
 
-	var forward := -global_transform.basis.z
+	var forward := _get_flat_view_forward()
 	forward.y = 0.0
 	forward = forward.normalized()
-	var right := global_transform.basis.x
+	var right := _get_flat_view_right()
 	right.y = 0.0
 	right = right.normalized()
 	var wish_direction := (right * movement_input.x) + (forward * movement_input.y)
@@ -690,7 +692,7 @@ func _try_water_jump() -> bool:
 	if not control_enabled or water_level != 2:
 		return false
 
-	var flat_forward := -global_transform.basis.z
+	var flat_forward := _get_flat_view_forward()
 	flat_forward.y = 0.0
 	if flat_forward.is_zero_approx():
 		return false
@@ -739,7 +741,7 @@ func _get_swim_wish_velocity(movement_input: Vector2) -> Vector3:
 	var total_move := sqrt((forward_move * forward_move) + (right_move * right_move) + (vertical_input * vertical_input))
 	var command_scale := move_speed * maximum_move / total_move
 	var forward := -head.global_transform.basis.z
-	var right := global_transform.basis.x
+	var right := _get_flat_view_right()
 	return ((forward * forward_move) + (right * right_move) + (Vector3.UP * vertical_input)) * command_scale
 
 
@@ -995,8 +997,12 @@ func handle_unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
 		yaw -= event.relative.x * mouse_sensitivity
 		pitch = clampf(pitch - (event.relative.y * mouse_sensitivity), deg_to_rad(-89.0), deg_to_rad(89.0))
-		rotation.y = yaw
-		head.rotation.x = pitch
+		_apply_view_rotation(_idle_camera_orbit_is_active(_get_movement_input(), is_on_floor()))
+
+
+func recenter_camera() -> void:
+	yaw = rotation.y
+	_apply_view_rotation(false)
 
 
 func on_settings_changed() -> void:
@@ -1051,6 +1057,7 @@ func _apply_controller_settings() -> void:
 	ramp_launch_enabled = Settings.get_controller_setting("ramp_launch", settings_controller_id) >= 0.5
 	wall_jump_enabled = Settings.get_controller_setting("wall_jump", settings_controller_id) >= 0.5
 	third_person_enabled = Settings.get_controller_setting("third_person", settings_controller_id) >= 0.5
+	idle_camera_orbit_enabled = Settings.get_controller_setting("idle_camera_orbit", settings_controller_id) >= 0.5
 	character_size = Vector3(
 		Settings.get_controller_setting("character_size_x", settings_controller_id),
 		Settings.get_controller_setting("character_size_y", settings_controller_id),
@@ -1091,3 +1098,38 @@ func _apply_controller_settings() -> void:
 		_set_stance_geometry(is_crouching)
 	floor_max_angle = deg_to_rad(max_slope_angle)
 	floor_snap_length = step_height
+
+
+func _sync_body_yaw_for_movement(movement_input: Vector2, grounded: bool) -> void:
+	if _idle_camera_orbit_is_active(movement_input, grounded):
+		_apply_view_rotation(true)
+		return
+	rotation.y = yaw
+	_apply_view_rotation(false)
+
+
+func _idle_camera_orbit_is_active(movement_input: Vector2, grounded: bool) -> bool:
+	return (
+		idle_camera_orbit_enabled
+		and third_person_enabled
+		and grounded
+		and water_level <= 1
+		and movement_input.is_zero_approx()
+		and Vector2(velocity.x, velocity.z).length_squared() < 0.0025
+	)
+
+
+func _apply_view_rotation(orbit_body: bool) -> void:
+	if orbit_body:
+		head.rotation = Vector3(pitch, wrapf(yaw - rotation.y, -PI, PI), 0.0)
+		return
+	rotation.y = yaw
+	head.rotation = Vector3(pitch, 0.0, 0.0)
+
+
+func _get_flat_view_forward() -> Vector3:
+	return Vector3(-sin(yaw), 0.0, -cos(yaw)).normalized()
+
+
+func _get_flat_view_right() -> Vector3:
+	return Vector3(cos(yaw), 0.0, -sin(yaw)).normalized()

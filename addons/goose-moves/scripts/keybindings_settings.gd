@@ -68,6 +68,8 @@ const Q3_N_FLIGHT_ACTIONS: Array[String] = [
 	"player_crouch",
 	"player_special",
 	"player_walk",
+	"player_reset_camera",
+	"player_toggle_camera",
 ]
 const Q3_ACTION_LABELS := {
 	"player_forward": "Move Forward",
@@ -78,6 +80,8 @@ const Q3_ACTION_LABELS := {
 	"player_crouch": "Crouch",
 	"player_special": "Special / Wall Jump",
 	"player_walk": "Slow Walk",
+	"player_reset_camera": "Recenter Camera",
+	"player_toggle_camera": "Toggle Camera",
 }
 const SPECTATOR_ACTION_LABELS := {
 	"player_forward": "Move Forward",
@@ -124,6 +128,8 @@ const DEFAULT_BINDINGS := {
 	"player_crouch": [KEY_CTRL, -1],
 	"player_special": [KEY_E, -1],
 	"player_walk": [KEY_SHIFT, -1],
+	"player_reset_camera": [KEY_C, -1],
+	"player_toggle_camera": [KEY_V, -1],
 }
 
 var bindings_by_controller: Dictionary = {}

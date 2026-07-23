@@ -67,6 +67,7 @@ func _control_hints() -> Array[String]:
 		"Q  Honk",
 		"R  Restart",
 		"C  Recenter Camera",
+		"V  Toggle Camera",
 		"Esc  Pause",
 	]
 

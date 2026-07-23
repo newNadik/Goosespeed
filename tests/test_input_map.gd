@@ -10,6 +10,8 @@ const REQUIRED_ACTIONS := [
 	&"player_crouch",
 	&"player_special",
 	&"player_walk",
+	&"player_reset_camera",
+	&"player_toggle_camera",
 	&"player_honk",
 	&"player_restart",
 	&"ui_cancel",

@@ -48,6 +48,10 @@ func _hybrid_setting_default(key: String) -> float:
 	return -1.0
 
 
+func _has_hybrid_action(action: String) -> bool:
+	return action in KeybindingsSettings.get_actions(Settings.CHARACTER_Q3_N_FLIGHT)
+
+
 func _get_pitch_axis_from_view(view_basis: Basis) -> Vector3:
 	var horizontal_forward := -view_basis.orthonormalized().z
 	horizontal_forward.y = 0.0
@@ -65,6 +69,9 @@ func _direct_transitions() -> void:
 	check("hybrid settings expose no-contact flight gate", _has_hybrid_setting("flight_no_contact_threshold"))
 	check("hybrid settings expose flight speed gate", _has_hybrid_setting("flight_min_activation_speed"))
 	check("hybrid settings expose flight first-person camera", _has_hybrid_setting("first_person"))
+	check("hybrid settings expose idle camera orbit", _has_hybrid_setting("idle_camera_orbit"))
+	check("hybrid keybindings expose camera recenter", _has_hybrid_action("player_reset_camera"))
+	check("hybrid keybindings expose camera toggle", _has_hybrid_action("player_toggle_camera"))
 	check("hybrid settings expose FBW direct-pitch angle", _has_hybrid_setting("camera_fly_by_wire_pitch_window"))
 	check("hybrid settings expose body bounce toggle", _has_hybrid_setting("body_bounce"))
 	check("hybrid settings expose body bounce impact speed", _has_hybrid_setting("body_bounce_min_normal_speed"))
@@ -90,6 +97,7 @@ func _direct_transitions() -> void:
 		0.001,
 	)
 	check_approx("hybrid Q3 defaults to third-person", _hybrid_setting_default("third_person"), 1.0, 0.001)
+	check_approx("hybrid idle camera orbit defaults enabled", _hybrid_setting_default("idle_camera_orbit"), 1.0, 0.001)
 	check_approx(
 		"hybrid flight defaults to third-person",
 		_hybrid_setting_default("first_person"),
@@ -181,6 +189,24 @@ func _direct_transitions() -> void:
 		_project_onto_pitch_plane(c.velocity, takeoff_pitch_axis).normalized(),
 		0.001,
 	)
+	c._apply_shared_camera_mode(false)
+	c.toggle_camera_mode()
+	check("toggle camera enters shared first-person in flight", c.first_person_camera_enabled)
+	check("toggle camera sets Q3 first-person preference", not c.q3_motor.third_person_enabled)
+	check("toggle camera sets flight first-person preference", c.flight_motor.first_person_enabled)
+	check("toggle camera uses flight first-person view", c.get_view_camera() == c.flight_first_person_camera)
+	c._enter_q3(true)
+	check("shared first-person persists when returning to ground", c.first_person_camera_enabled)
+	c._update_camera_transition(c.CAMERA_TRANSITION_DURATION)
+	check("shared first-person uses Q3 first-person view after flight exit", c.get_view_camera() == c.camera)
+	c._enter_flight()
+	c._update_camera_transition(c.CAMERA_TRANSITION_DURATION)
+	check("shared first-person persists when re-entering flight", c.get_view_camera() == c.flight_first_person_camera)
+	c.toggle_camera_mode()
+	check("toggle camera returns to shared third-person", not c.first_person_camera_enabled)
+	check("toggle camera restores Q3 third-person preference", c.q3_motor.third_person_enabled)
+	check("toggle camera restores flight third-person preference", not c.flight_motor.first_person_enabled)
+	check("toggle camera uses flight third-person view", c.get_view_camera() == c.flight_camera)
 	c.flight_motor.first_person_enabled = true
 	c._set_flight_visuals()
 	c.flight_motor._apply_camera_rotation()
@@ -241,9 +267,58 @@ func _direct_transitions() -> void:
 func _ground_gate_settle() -> void:
 	if not c.is_on_floor():
 		return
+	_check_idle_camera_orbit()
 	Input.action_press("player_flap")
 	Input.action_press("player_crouch")
 	_goto("ground_gate_blocks_flight")
+
+
+func _check_idle_camera_orbit() -> void:
+	Input.action_release("player_forward")
+	Input.action_release("player_back")
+	Input.action_release("player_left")
+	Input.action_release("player_right")
+	c.mode = c.Mode.Q3
+	c.velocity = Vector3.ZERO
+	c.rotation = Vector3.ZERO
+	c.head.rotation = Vector3.ZERO
+	c.q3_motor.yaw = 0.0
+	c.q3_motor.pitch = 0.0
+	c.q3_motor.idle_camera_orbit_enabled = true
+	c.q3_motor.third_person_enabled = true
+	c.q3_motor.control_enabled = true
+	c.q3_motor.yaw = -1.2
+	c.q3_motor._apply_view_rotation(true)
+	check("idle camera orbit test moved view yaw", absf(c.q3_motor.yaw) > 0.1)
+	check_approx("idle camera orbit leaves body yaw fixed", c.rotation.y, 0.0, 0.001)
+	check_approx("idle camera orbit stores look yaw on head", c.head.rotation.y, c.q3_motor.yaw, 0.001)
+	check_vec3("idle camera orbit keeps movement facing stable", c.get_movement_state()["facing_direction"], Vector3.FORWARD, 0.001)
+	c.q3_motor.third_person_enabled = false
+	c.q3_motor.yaw = -0.8
+	c.q3_motor._sync_body_yaw_for_movement(Vector2.ZERO, true)
+	check_approx("first-person idle look turns body yaw", c.rotation.y, c.q3_motor.yaw, 0.001)
+	check_approx("first-person idle look clears orbit head yaw", c.head.rotation.y, 0.0, 0.001)
+	c.q3_motor.third_person_enabled = true
+	c.q3_motor.yaw = -1.2
+	c.q3_motor._apply_view_rotation(true)
+	c.recenter_camera()
+	check_approx("recenter camera clears idle orbit yaw", c.q3_motor.yaw, c.rotation.y, 0.001)
+	check_approx("recenter camera clears orbit head yaw", c.head.rotation.y, 0.0, 0.001)
+	c.q3_motor.yaw = -1.2
+	c.q3_motor._apply_view_rotation(true)
+	c.q3_motor._sync_body_yaw_for_movement(Vector2(0.0, 1.0), true)
+	check_approx("movement input reattaches body yaw to view", c.rotation.y, c.q3_motor.yaw, 0.001)
+	check_approx("movement input clears orbit head yaw", c.head.rotation.y, 0.0, 0.001)
+	c._apply_shared_camera_mode(false)
+	c._set_q3_visuals()
+	c.toggle_camera_mode()
+	check("toggle camera enters shared first-person on ground", c.first_person_camera_enabled)
+	check("toggle camera sets ground first-person", not c.q3_motor.third_person_enabled)
+	check("toggle camera uses Q3 first-person view", c.get_view_camera() == c.camera)
+	c.toggle_camera_mode()
+	check("toggle camera returns to shared third-person on ground", not c.first_person_camera_enabled)
+	check("toggle camera sets ground third-person", c.q3_motor.third_person_enabled)
+	check("toggle camera uses Q3 third-person view", c.get_view_camera() == c.third_person_camera)
 
 
 func _ground_gate_blocks_flight() -> void:

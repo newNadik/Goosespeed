@@ -103,7 +103,11 @@ text = "R  Restart"
 
 [node name="CameraLabel" type="Label" parent="Root/HintsPanel/Margin/HintsList"]
 layout_mode = 2
-text = "C  Reset Camera"
+text = "C  Recenter Camera"
+
+[node name="CameraModeLabel" type="Label" parent="Root/HintsPanel/Margin/HintsList"]
+layout_mode = 2
+text = "V  Toggle Camera"
 
 [node name="PauseLabel" type="Label" parent="Root/HintsPanel/Margin/HintsList"]
 layout_mode = 2

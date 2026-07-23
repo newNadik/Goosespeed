@@ -385,6 +385,8 @@ func _settings_presets() -> void:
 		_preset_matches_defaults(hybrid_default_payload))
 	check("built-in Q3 + Flight default preset includes flap binding",
 		(hybrid_default_payload.get("keybindings", {}) as Dictionary).has("player_flap"))
+	check("built-in Q3 + Flight default preset includes camera toggle binding",
+		(hybrid_default_payload.get("keybindings", {}) as Dictionary).has("player_toggle_camera"))
 	var hybrid_menu := SETTINGS_MENU_SCENE.instantiate()
 	add_child(hybrid_menu)
 	hybrid_menu.sync_from_settings()
