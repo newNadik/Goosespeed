@@ -17,6 +17,7 @@ func _ready() -> void:
 	_connect_settings_changed()
 	movement_state_bridge.set_controller(active_movement_controller)
 	goose_visual.set_state_bridge(movement_state_bridge)
+	goose_visual.set_transform_source(active_movement_controller as Node3D)
 	_apply_backend_debug_visibility()
 	_apply_visual_settings()
 	_sync_first_person_camera_visibility()

@@ -311,7 +311,6 @@ func handle_input(event: InputEvent) -> void:
 			deg_to_rad(-75.0),
 			deg_to_rad(60.0),
 		)
-		_apply_camera_rotation()
 
 
 func _apply_camera_rotation() -> void:

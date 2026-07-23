@@ -62,8 +62,8 @@ const LOOPING_ANIMATIONS := [
 @onready var animation_player: AnimationPlayer = get_node_or_null("AnimationPlayer") as AnimationPlayer
 
 var state_bridge: Node
+var transform_source: Node3D
 var latest_state := MovementStateScript.new()
-var previous_state := MovementStateScript.new()
 var previous_grounded := true
 var landing_hold_remaining := 0.0
 var active_locomotion_animation: StringName = &""
@@ -89,20 +89,23 @@ func set_state_bridge(value: Node) -> void:
 		_connect_bridge()
 
 
+func set_transform_source(value: Node3D) -> void:
+	transform_source = value
+	if transform_source != null:
+		global_position = transform_source.global_position
+		if _uses_full_flight_orientation(latest_state):
+			global_basis = _get_flight_visual_target_basis_for_basis(transform_source.global_basis)
+
+
 func _process(delta: float) -> void:
 	landing_hold_remaining = maxf(landing_hold_remaining - delta, 0.0)
 	run_fast_hold_remaining = maxf(run_fast_hold_remaining - delta, 0.0)
 	locomotion_hold_remaining = maxf(locomotion_hold_remaining - delta, 0.0)
 	_update_intended_movement_turn_state(delta)
 
-	var render_weight := _get_physics_render_weight()
-	global_position = previous_state.position.lerp(latest_state.position, render_weight)
+	global_position = _get_root_position()
 	if _uses_full_flight_orientation(latest_state):
-		global_basis = _slerp_rotation_basis(
-			_get_flight_visual_target_basis(previous_state),
-			_get_flight_visual_target_basis(latest_state),
-			render_weight,
-		)
+		global_basis = _get_flight_visual_target_basis_for_basis(_get_root_basis())
 	else:
 		var visual_facing_direction := _get_visual_facing_direction(latest_state)
 		if not visual_facing_direction.is_zero_approx():
@@ -124,19 +127,13 @@ func _connect_bridge() -> void:
 	if not state_bridge.state_changed.is_connected(_on_state_changed):
 		state_bridge.state_changed.connect(_on_state_changed)
 	latest_state = state_bridge.get_state()
-	previous_state = latest_state.duplicate_state()
 	global_position = latest_state.position
 	if _uses_full_flight_orientation(latest_state):
 		global_basis = _get_flight_visual_target_basis(latest_state)
 
 
 func _on_state_changed(state: RefCounted) -> void:
-	previous_state = latest_state.duplicate_state()
 	latest_state = state.duplicate_state()
-
-
-func _get_physics_render_weight() -> float:
-	return clampf(Engine.get_physics_interpolation_fraction(), 0.0, 1.0)
 
 
 func _get_visual_facing_direction(state: RefCounted) -> Vector3:
@@ -150,13 +147,29 @@ func _uses_full_flight_orientation(state: RefCounted) -> bool:
 
 
 func _get_flight_visual_target_basis(state: RefCounted) -> Basis:
-	var full_basis: Basis = (state.body_basis as Basis).orthonormalized()
+	return _get_flight_visual_target_basis_for_basis(state.body_basis as Basis)
+
+
+func _get_flight_visual_target_basis_for_basis(source_basis: Basis) -> Basis:
+	var full_basis := source_basis.orthonormalized()
 	var upright_basis := _get_upright_basis_for_direction(-full_basis.z)
 	return _slerp_rotation_basis(
 		upright_basis,
 		full_basis,
 		clampf(flight_orientation_intensity, 0.0, 1.0),
 	)
+
+
+func _get_root_position() -> Vector3:
+	if transform_source != null:
+		return transform_source.global_position
+	return latest_state.position
+
+
+func _get_root_basis() -> Basis:
+	if transform_source != null:
+		return transform_source.global_basis
+	return latest_state.body_basis as Basis
 
 
 func _slerp_rotation_basis(from_basis: Basis, to_basis: Basis, weight: float) -> Basis:
