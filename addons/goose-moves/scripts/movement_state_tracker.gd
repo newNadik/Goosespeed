@@ -140,6 +140,10 @@ func build_state(snapshot: Dictionary) -> Dictionary:
 	if facing_direction.length_squared() <= 0.0001:
 		facing_direction = Vector3.FORWARD
 	facing_direction = facing_direction.normalized()
+	var look_direction := snapshot.get("look_direction", facing_direction) as Vector3
+	if look_direction.length_squared() <= 0.0001:
+		look_direction = facing_direction
+	look_direction = look_direction.normalized()
 	var intended_movement_direction := snapshot.get("intended_movement_direction", Vector3.ZERO) as Vector3
 	intended_movement_direction.y = 0.0
 	if intended_movement_direction.length_squared() > 0.0001:
@@ -159,6 +163,7 @@ func build_state(snapshot: Dictionary) -> Dictionary:
 		"horizontal_speed": horizontal_velocity.length(),
 		"vertical_speed": velocity.y,
 		"facing_direction": facing_direction,
+		"look_direction": look_direction,
 		"intended_movement_direction": intended_movement_direction,
 		"intended_movement_magnitude": float(snapshot.get("intended_movement_magnitude", 0.0)),
 		"grounded": grounded,

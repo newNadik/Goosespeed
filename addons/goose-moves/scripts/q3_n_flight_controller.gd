@@ -242,6 +242,16 @@ func get_view_angles() -> Vector2:
 	return Vector2(q3_motor.yaw, q3_motor.pitch)
 
 
+func get_view_direction() -> Vector3:
+	var view_angles := get_view_angles()
+	var pitch_scale := cos(view_angles.y)
+	return Vector3(
+		-sin(view_angles.x) * pitch_scale,
+		sin(view_angles.y),
+		-cos(view_angles.x) * pitch_scale,
+	).normalized()
+
+
 func set_view_angles(view_yaw: float, view_pitch: float) -> void:
 	q3_motor.yaw = view_yaw
 	q3_motor.pitch = clampf(view_pitch, deg_to_rad(-89.0), deg_to_rad(89.0))
@@ -389,6 +399,7 @@ func _get_movement_state_snapshot() -> Dictionary:
 		"velocity": velocity,
 		"body_basis": global_basis,
 		"facing_direction": -global_basis.z,
+		"look_direction": get_view_direction(),
 		"intended_movement_direction": q3_motor.intended_movement_direction if mode == Mode.Q3 else Vector3.ZERO,
 		"intended_movement_magnitude": q3_motor.intended_movement_magnitude if mode == Mode.Q3 else 0.0,
 		"grounded": grounded,

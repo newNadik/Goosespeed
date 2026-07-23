@@ -2,6 +2,7 @@ class_name GooseVisualController
 extends Node3D
 
 const MovementStateScript := preload("res://scripts/player/movement_state.gd")
+const HeadLookControllerScript := preload("res://scripts/player/goose_head_look_controller.gd")
 
 const ANIM_IDLE := &"Goose|A A_StandStraight_Idle1"
 const ANIM_IDLE_ALT := &"Goose|A_StandStraight_Breathing"
@@ -54,6 +55,9 @@ const LOOPING_ANIMATIONS := [
 @export var input_facing_commit_time := 0.14
 @export_range(0.0, 1.0, 0.05) var flight_orientation_intensity := 0.65
 @export var flight_orientation_slerp_rate := 7.0
+@export var head_look_enabled := true
+@export_range(0.0, 1.0, 0.05) var head_look_intensity := 0.65
+@export var head_look_smoothness := 10.0
 
 @onready var animation_player: AnimationPlayer = get_node_or_null("AnimationPlayer") as AnimationPlayer
 
@@ -66,10 +70,12 @@ var run_fast_hold_remaining := 0.0
 var locomotion_hold_remaining := 0.0
 var intended_movement_time := 0.0
 var tracked_intended_movement_direction := Vector3.ZERO
+var head_look_controller: Node
 
 
 func _ready() -> void:
 	_configure_animation_player()
+	_ensure_head_look_controller()
 	if state_bridge:
 		_connect_bridge()
 
@@ -90,10 +96,11 @@ func _process(delta: float) -> void:
 
 	global_position = global_position.lerp(latest_state.position, minf(delta * 20.0, 1.0))
 	if _uses_full_flight_orientation(latest_state):
-		global_basis = global_basis.slerp(
+		global_basis = _slerp_rotation_basis(
+			global_basis,
 			_get_flight_visual_target_basis(latest_state),
 			minf(delta * flight_orientation_slerp_rate, 1.0),
-		).orthonormalized()
+		)
 	else:
 		var visual_facing_direction := _get_visual_facing_direction(latest_state)
 		if not visual_facing_direction.is_zero_approx():
@@ -107,6 +114,7 @@ func _process(delta: float) -> void:
 			global_rotation.z = lerp_angle(global_rotation.z, 0.0, minf(delta * default_turn_rate, 1.0))
 
 	_update_animation()
+	_update_head_look(delta)
 	previous_grounded = latest_state.grounded
 
 
@@ -133,7 +141,35 @@ func _uses_full_flight_orientation(state: RefCounted) -> bool:
 func _get_flight_visual_target_basis(state: RefCounted) -> Basis:
 	var full_basis: Basis = (state.body_basis as Basis).orthonormalized()
 	var upright_basis := _get_upright_basis_for_direction(-full_basis.z)
-	return upright_basis.slerp(full_basis, clampf(flight_orientation_intensity, 0.0, 1.0)).orthonormalized()
+	return _slerp_rotation_basis(
+		upright_basis,
+		full_basis,
+		clampf(flight_orientation_intensity, 0.0, 1.0),
+	)
+
+
+func _slerp_rotation_basis(from_basis: Basis, to_basis: Basis, weight: float) -> Basis:
+	var clean_from := from_basis.orthonormalized()
+	var clean_to := to_basis.orthonormalized()
+	if not _basis_is_finite(clean_from):
+		clean_from = Basis.IDENTITY
+	if not _basis_is_finite(clean_to):
+		clean_to = clean_from
+	return clean_from.slerp(clean_to, clampf(weight, 0.0, 1.0)).orthonormalized()
+
+
+func _basis_is_finite(value: Basis) -> bool:
+	return (
+		is_finite(value.x.x)
+		and is_finite(value.x.y)
+		and is_finite(value.x.z)
+		and is_finite(value.y.x)
+		and is_finite(value.y.y)
+		and is_finite(value.y.z)
+		and is_finite(value.z.x)
+		and is_finite(value.z.y)
+		and is_finite(value.z.z)
+	)
 
 
 func _get_upright_basis_for_direction(direction: Vector3) -> Basis:
@@ -358,6 +394,26 @@ func _play_animation(animation_name: StringName, speed_scale: float) -> void:
 	if preserve_locomotion_phase:
 		var animation := animation_player.get_animation(animation_name)
 		animation_player.seek(animation.length * locomotion_phase, true)
+
+
+func _ensure_head_look_controller() -> void:
+	head_look_controller = get_node_or_null("GooseHeadLookController")
+	if head_look_controller == null:
+		head_look_controller = HeadLookControllerScript.new()
+		head_look_controller.name = "GooseHeadLookController"
+		add_child(head_look_controller)
+	head_look_controller.setup(self)
+
+
+func _update_head_look(_delta: float) -> void:
+	if head_look_controller == null:
+		return
+	head_look_controller.enabled = head_look_enabled
+	if not head_look_enabled:
+		return
+	head_look_controller.intensity = head_look_intensity
+	head_look_controller.smoothness = head_look_smoothness
+	head_look_controller.queue_look(latest_state, global_basis, get_viewport().get_camera_3d())
 
 
 func _animation_speed_scale(animation_name: StringName) -> float:

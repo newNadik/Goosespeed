@@ -14,6 +14,11 @@ var flight_orientation_intensity_slider: HSlider
 var flight_orientation_intensity_value: Label
 var flight_orientation_slerp_slider: HSlider
 var flight_orientation_slerp_value: Label
+var head_look_toggle: CheckButton
+var head_look_intensity_slider: HSlider
+var head_look_intensity_value: Label
+var head_look_smoothness_slider: HSlider
+var head_look_smoothness_value: Label
 
 
 func _ready() -> void:
@@ -162,6 +167,29 @@ func _ensure_visual_settings_controls() -> void:
 		0.5,
 		_on_flight_orientation_slerp_changed,
 	))
+	section.add_child(_create_visual_toggle_row(
+		"Head look",
+		"HeadLookToggle",
+		_on_head_look_enabled_changed,
+	))
+	section.add_child(_create_visual_slider_row(
+		"Head look intensity",
+		"HeadLookIntensitySlider",
+		"HeadLookIntensityValue",
+		0.0,
+		1.0,
+		0.05,
+		_on_head_look_intensity_changed,
+	))
+	section.add_child(_create_visual_slider_row(
+		"Head look smoothness",
+		"HeadLookSmoothnessSlider",
+		"HeadLookSmoothnessValue",
+		1.0,
+		20.0,
+		0.5,
+		_on_head_look_smoothness_changed,
+	))
 
 	settings_box.add_child(section)
 	_bind_visual_settings_controls(section)
@@ -203,6 +231,24 @@ func _create_visual_slider_row(
 	return row
 
 
+func _create_visual_toggle_row(label_text: String, toggle_name: String, callback: Callable) -> HBoxContainer:
+	var row := HBoxContainer.new()
+	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_theme_constant_override("separation", 12)
+
+	var label := Label.new()
+	label.text = label_text
+	label.custom_minimum_size = Vector2(150.0, 0.0)
+	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(label)
+
+	var toggle := CheckButton.new()
+	toggle.name = toggle_name
+	toggle.toggled.connect(callback)
+	row.add_child(toggle)
+	return row
+
+
 func _bind_visual_settings_controls(section: Node) -> void:
 	flight_orientation_intensity_slider = section.find_child(
 		"FlightTiltIntensitySlider",
@@ -224,14 +270,48 @@ func _bind_visual_settings_controls(section: Node) -> void:
 		true,
 		false,
 	) as Label
+	head_look_toggle = section.find_child(
+		"HeadLookToggle",
+		true,
+		false,
+	) as CheckButton
+	head_look_intensity_slider = section.find_child(
+		"HeadLookIntensitySlider",
+		true,
+		false,
+	) as HSlider
+	head_look_intensity_value = section.find_child(
+		"HeadLookIntensityValue",
+		true,
+		false,
+	) as Label
+	head_look_smoothness_slider = section.find_child(
+		"HeadLookSmoothnessSlider",
+		true,
+		false,
+	) as HSlider
+	head_look_smoothness_value = section.find_child(
+		"HeadLookSmoothnessValue",
+		true,
+		false,
+	) as Label
 
 
 func _sync_visual_settings_controls() -> void:
-	if flight_orientation_intensity_slider == null or flight_orientation_slerp_slider == null:
+	if (
+		flight_orientation_intensity_slider == null
+		or flight_orientation_slerp_slider == null
+		or head_look_toggle == null
+		or head_look_intensity_slider == null
+		or head_look_smoothness_slider == null
+	):
 		return
 	syncing_visual_settings_controls = true
 	flight_orientation_intensity_slider.set_value_no_signal(GooseGameSettings.flight_orientation_intensity)
 	flight_orientation_slerp_slider.set_value_no_signal(GooseGameSettings.flight_orientation_slerp_rate)
+	head_look_toggle.set_pressed_no_signal(GooseGameSettings.head_look_enabled)
+	head_look_intensity_slider.set_value_no_signal(GooseGameSettings.head_look_intensity)
+	head_look_smoothness_slider.set_value_no_signal(GooseGameSettings.head_look_smoothness)
 	syncing_visual_settings_controls = false
 	_update_visual_settings_value_labels()
 
@@ -241,6 +321,10 @@ func _update_visual_settings_value_labels() -> void:
 		flight_orientation_intensity_value.text = "%.2f" % GooseGameSettings.flight_orientation_intensity
 	if flight_orientation_slerp_value != null:
 		flight_orientation_slerp_value.text = "%.1f" % GooseGameSettings.flight_orientation_slerp_rate
+	if head_look_intensity_value != null:
+		head_look_intensity_value.text = "%.2f" % GooseGameSettings.head_look_intensity
+	if head_look_smoothness_value != null:
+		head_look_smoothness_value.text = "%.1f" % GooseGameSettings.head_look_smoothness
 
 
 func _on_flight_orientation_intensity_changed(value: float) -> void:
@@ -254,4 +338,25 @@ func _on_flight_orientation_slerp_changed(value: float) -> void:
 	if syncing_visual_settings_controls:
 		return
 	GooseGameSettings.set_flight_orientation_slerp_rate(value)
+	_update_visual_settings_value_labels()
+
+
+func _on_head_look_enabled_changed(enabled: bool) -> void:
+	if syncing_visual_settings_controls:
+		return
+	GooseGameSettings.set_head_look_enabled(enabled)
+	_update_visual_settings_value_labels()
+
+
+func _on_head_look_intensity_changed(value: float) -> void:
+	if syncing_visual_settings_controls:
+		return
+	GooseGameSettings.set_head_look_intensity(value)
+	_update_visual_settings_value_labels()
+
+
+func _on_head_look_smoothness_changed(value: float) -> void:
+	if syncing_visual_settings_controls:
+		return
+	GooseGameSettings.set_head_look_smoothness(value)
 	_update_visual_settings_value_labels()

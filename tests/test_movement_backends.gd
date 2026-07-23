@@ -93,6 +93,29 @@ func _goose_visual_settings_are_applied(player: Node) -> bool:
 	):
 		push_error("Goose visual did not apply flight orientation smoothness setting")
 		return false
+	if bool(goose_visual.get("head_look_enabled")) != GooseGameSettings.head_look_enabled:
+		push_error("Goose visual did not apply head-look enabled setting")
+		return false
+	if not is_equal_approx(
+		float(goose_visual.get("head_look_intensity")),
+		GooseGameSettings.head_look_intensity,
+	):
+		push_error("Goose visual did not apply head-look intensity setting")
+		return false
+	if not is_equal_approx(
+		float(goose_visual.get("head_look_smoothness")),
+		GooseGameSettings.head_look_smoothness,
+	):
+		push_error("Goose visual did not apply head-look smoothness setting")
+		return false
+	if goose_visual.get_node_or_null("GooseHeadLookController") == null:
+		push_error("Goose visual did not create a head-look controller")
+		return false
+	var animation_player := goose_visual.get_node_or_null("AnimationPlayer") as AnimationPlayer
+	var head_look := goose_visual.get_node_or_null("GooseHeadLookController")
+	if animation_player == null or head_look == null or head_look.get_index() <= animation_player.get_index():
+		push_error("Goose head-look controller does not run after AnimationPlayer")
+		return false
 	return true
 
 

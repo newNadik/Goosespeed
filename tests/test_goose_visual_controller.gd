@@ -2,6 +2,7 @@ extends SceneTree
 
 const MovementStateScript := preload("res://scripts/player/movement_state.gd")
 const VisualControllerScript := preload("res://scripts/player/goose_visual_controller.gd")
+const HeadLookControllerScript := preload("res://scripts/player/goose_head_look_controller.gd")
 
 
 func _initialize() -> void:
@@ -40,6 +41,7 @@ func _initialize() -> void:
 	_expect_locomotion_hold(failures, visual)
 	_expect_q3_speed_scale(failures, visual)
 	_expect_visual_facing_direction(failures, visual)
+	_expect_head_look_angles(failures)
 	_expect_transition_mapping(failures, visual)
 	_expect_locomotion_phase_preserved(failures)
 	_expect_animation(
@@ -262,6 +264,70 @@ func _expect_visual_facing_direction(failures: Array[String], visual: Node) -> v
 	var full_basis: Basis = visual._get_flight_visual_target_basis(flight_state)
 	if full_basis.z.distance_to((flight_state.body_basis as Basis).z) > 0.001:
 		failures.append("full flight orientation intensity should match backend basis")
+	var scaled_basis := Basis.IDENTITY.scaled(Vector3(1.001, 1.0, 0.999))
+	var clean_basis: Basis = visual._slerp_rotation_basis(scaled_basis, flight_state.body_basis, 0.5)
+	if not _basis_is_normalized(clean_basis):
+		failures.append("flight orientation slerp should return a normalized rotation basis")
+
+
+func _expect_head_look_angles(failures: Array[String]) -> void:
+	var head_look := HeadLookControllerScript.new()
+	head_look.max_yaw = deg_to_rad(30.0)
+	head_look.max_pitch = deg_to_rad(20.0)
+	head_look.intensity = 1.0
+	var flight_state := _state({
+		"mode": &"flight",
+		"grounded": false,
+		"body_basis": Basis.IDENTITY,
+	})
+	var right_angles: Vector2 = head_look._target_angles(
+		flight_state,
+		Basis.IDENTITY,
+		null,
+	)
+	if absf(right_angles.x) > 0.001 or absf(right_angles.y) > 0.001:
+		failures.append("default flight head look should align with body forward")
+
+	flight_state.body_basis = Basis.IDENTITY
+	var target_state := _state({
+		"mode": &"ground",
+		"grounded": true,
+		"facing_direction": Vector3.RIGHT,
+		"look_direction": Vector3.RIGHT,
+	})
+	var ground_angles: Vector2 = head_look._target_angles(
+		target_state,
+		Basis.IDENTITY,
+		null,
+	)
+	if absf(ground_angles.x - head_look.max_yaw) > 0.001:
+		failures.append("ground head look yaw %.3f should clamp to max yaw" % ground_angles.x)
+
+	var pitch_state := _state({
+		"mode": &"ground",
+		"grounded": true,
+		"facing_direction": Vector3(0.0, 1.0, -1.0).normalized(),
+		"look_direction": Vector3(0.0, 1.0, -1.0).normalized(),
+	})
+	var pitch_angles: Vector2 = head_look._target_angles(
+		pitch_state,
+		Basis.IDENTITY,
+		null,
+	)
+	if absf(pitch_angles.y - head_look.max_pitch) > 0.001:
+		failures.append("head look pitch %.3f should clamp to max pitch" % pitch_angles.y)
+	head_look.free()
+
+
+func _basis_is_normalized(value: Basis) -> bool:
+	return (
+		absf(value.x.length() - 1.0) <= 0.001
+		and absf(value.y.length() - 1.0) <= 0.001
+		and absf(value.z.length() - 1.0) <= 0.001
+		and absf(value.x.dot(value.y)) <= 0.001
+		and absf(value.x.dot(value.z)) <= 0.001
+		and absf(value.y.dot(value.z)) <= 0.001
+	)
 
 
 func _expect_transition_mapping(failures: Array[String], visual: Node) -> void:
