@@ -67,6 +67,8 @@ var camera_transition_elapsed := 0.0
 var camera_transition_from_transform := Transform3D.IDENTITY
 var camera_transition_from_fov := 100.0
 var camera_transition_target: Camera3D
+var presentation_enabled := true
+var debug_hud_visible := true
 
 
 func _ready() -> void:
@@ -188,6 +190,56 @@ func get_movement_state() -> Dictionary:
 	return movement_state.build_state(_get_movement_state_snapshot())
 
 
+func set_spawn_transform(value: Transform3D) -> void:
+	set_meta("spawn_transform", value)
+
+
+func reset_to_spawn() -> void:
+	var spawn_transform: Transform3D = get_meta("spawn_transform", Transform3D.IDENTITY)
+	global_transform = spawn_transform
+	velocity = Vector3.ZERO
+	mode = Mode.Q3
+	motion_mode = CharacterBody3D.MOTION_MODE_GROUNDED
+	knockdown_time_remaining = 0.0
+	flap_hold_time = 0.0
+	no_surface_contact_time = 0.0
+	movement_state = MOVEMENT_STATE_TRACKER.new()
+	var euler := spawn_transform.basis.get_euler()
+	set_view_angles(euler.y, euler.x)
+	_set_q3_visuals()
+
+
+func set_presentation_enabled(value: bool) -> void:
+	presentation_enabled = value
+	_apply_presentation_state()
+
+
+func set_debug_hud_visible(value: bool) -> void:
+	debug_hud_visible = value
+	_apply_debug_hud_visibility()
+
+
+func get_view_angles() -> Vector2:
+	if mode == Mode.FLIGHT:
+		return Vector2(flight_motor.camera_yaw, flight_motor.camera_pitch)
+	return Vector2(q3_motor.yaw, q3_motor.pitch)
+
+
+func set_view_angles(view_yaw: float, view_pitch: float) -> void:
+	q3_motor.yaw = view_yaw
+	q3_motor.pitch = clampf(view_pitch, deg_to_rad(-89.0), deg_to_rad(89.0))
+	rotation.y = q3_motor.yaw
+	head.rotation.x = q3_motor.pitch
+	flight_motor.camera_yaw = view_yaw
+	flight_motor.camera_pitch = clampf(view_pitch, deg_to_rad(-75.0), deg_to_rad(60.0))
+	flight_motor._apply_camera_rotation()
+
+
+func disable_internal_cameras() -> void:
+	for camera_node in _find_cameras(self):
+		camera_node.clear_current(false)
+
+
 func on_settings_changed() -> void:
 	q3_motor.on_settings_changed()
 	_sync_q3_body_size_to_flight()
@@ -195,6 +247,8 @@ func on_settings_changed() -> void:
 	_apply_controller_settings()
 	if mode == Mode.Q3:
 		_set_q3_visuals()
+	_apply_presentation_state()
+	_apply_debug_hud_visibility()
 
 
 func _apply_controller_settings() -> void:
@@ -506,6 +560,8 @@ func _set_q3_visuals() -> void:
 	_get_q3_view_camera().current = true
 	character_collider_visual.visible = q3_motor.character_collider_visible and q3_motor.third_person_enabled
 	_update_knockdown_hud()
+	_apply_presentation_state()
+	_apply_debug_hud_visibility()
 
 
 func _set_flight_visuals() -> void:
@@ -516,6 +572,8 @@ func _set_flight_visuals() -> void:
 	q3_motor.set_force_vector_debug_active(false)
 	flight_motor.set_view_active(true)
 	character_collider_visual.visible = false
+	_apply_presentation_state()
+	_apply_debug_hud_visibility()
 
 
 func _get_q3_view_camera() -> Camera3D:
@@ -583,3 +641,32 @@ func _get_q3_eye_height() -> float:
 		* Q3_MOVEMENT_MOTOR.Q3_STANDING_EYE_HEIGHT
 		/ Q3_MOVEMENT_MOTOR.Q3_STANDING_HULL_HEIGHT
 	)
+
+
+func _apply_presentation_state() -> void:
+	if presentation_enabled:
+		return
+	character_collider_visual.visible = false
+	flight_body_mesh.visible = false
+	disable_internal_cameras()
+
+
+func _apply_debug_hud_visibility() -> void:
+	q3_hud.visible = debug_hud_visible
+	if mode == Mode.FLIGHT:
+		flight_hud.visible = debug_hud_visible
+	else:
+		flight_hud.visible = false
+
+
+func _find_cameras(root: Node) -> Array[Camera3D]:
+	var cameras: Array[Camera3D] = []
+	_append_cameras(root, cameras)
+	return cameras
+
+
+func _append_cameras(root: Node, cameras: Array[Camera3D]) -> void:
+	if root is Camera3D:
+		cameras.append(root as Camera3D)
+	for child in root.get_children():
+		_append_cameras(child, cameras)

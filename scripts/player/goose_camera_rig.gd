@@ -16,7 +16,6 @@ extends Node3D
 @onready var first_person_camera: Camera3D = $YawPivot/PitchPivot/FirstPersonCamera
 
 var state_bridge: Node
-var goose_moves_runtime: Node
 var yaw := 0.0
 var pitch := deg_to_rad(-15.0)
 var first_person_enabled := false
@@ -38,10 +37,8 @@ func _ready() -> void:
 func _process(delta: float) -> void:
 	if Input.is_action_just_pressed(&"player_reset_camera"):
 		_align_behind_facing()
-	_sync_from_backend_if_available()
 	_follow_target(delta)
 	_apply_rotation()
-	_sync_backend_camera_state()
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -61,11 +58,11 @@ func set_state_bridge(value: Node) -> void:
 		_align_behind_facing()
 
 
-func set_goose_moves_runtime(value: Node) -> void:
-	goose_moves_runtime = value
-	_disable_goose_moves_cameras()
-	call_deferred("_disable_goose_moves_cameras")
-	_sync_from_backend_if_available()
+func deactivate() -> void:
+	set_process(false)
+	set_process_unhandled_input(false)
+	third_person_camera.clear_current(false)
+	first_person_camera.clear_current(false)
 
 
 func set_camera_mode(value: String) -> void:
@@ -100,27 +97,6 @@ func _apply_rotation() -> void:
 func _apply_camera_mode() -> void:
 	third_person_camera.current = not first_person_enabled
 	first_person_camera.current = first_person_enabled
-
-
-func _disable_goose_moves_cameras() -> void:
-	if goose_moves_runtime == null:
-		return
-	goose_moves_runtime.disable_backend_cameras()
-	_apply_camera_mode()
-
-
-func _sync_from_backend_if_available() -> void:
-	if goose_moves_runtime == null:
-		return
-	var camera_state: Vector2 = goose_moves_runtime.sync_camera_from_backend(yaw, pitch)
-	yaw = camera_state.x
-	pitch = camera_state.y
-
-
-func _sync_backend_camera_state() -> void:
-	if goose_moves_runtime == null:
-		return
-	goose_moves_runtime.sync_camera_to_backend(yaw, pitch)
 
 
 func _apply_saved_camera_mode() -> void:

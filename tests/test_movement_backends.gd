@@ -32,26 +32,14 @@ func _ready() -> void:
 		push_error("Debug HUD is hidden")
 		get_tree().quit(1)
 		return
-	if not _goosespeed_camera_mode_is_current(player, GooseGameSettings.CAMERA_THIRD_PERSON):
-		push_error("Q3 + Flight does not use GooseSpeed current camera")
-		get_tree().quit(1)
-		return
-	GooseGameSettings.set_camera_mode(GooseGameSettings.CAMERA_FIRST_PERSON)
-	await get_tree().process_frame
-	if not _goosespeed_camera_mode_is_current(player, GooseGameSettings.CAMERA_FIRST_PERSON):
-		push_error("Q3 + Flight does not switch to first-person GooseSpeed camera")
-		get_tree().quit(1)
-		return
-	GooseGameSettings.set_camera_mode(GooseGameSettings.CAMERA_THIRD_PERSON)
-	await get_tree().process_frame
-	if not _goosespeed_camera_mode_is_current(player, GooseGameSettings.CAMERA_THIRD_PERSON):
-		push_error("Q3 + Flight does not switch back to third-person GooseSpeed camera")
-		get_tree().quit(1)
-		return
-	if not _backend_cameras_are_disabled(controller):
-		push_error("Q3 + Flight has a current backend camera")
-		get_tree().quit(1)
-		return
+		if not _goosespeed_cameras_are_disabled(player):
+			push_error("GooseSpeed camera is current while addon camera is authoritative")
+			get_tree().quit(1)
+			return
+		if not _backend_camera_is_current(controller):
+			push_error("Q3 + Flight does not use an addon camera")
+			get_tree().quit(1)
+			return
 
 	GooseGameSettings.camera_mode = original_camera_mode
 	print("Q3 + Flight backend OK")
@@ -66,7 +54,7 @@ func _prototype_visuals_are_hidden(controller: Node) -> bool:
 	return true
 
 
-func _goosespeed_camera_mode_is_current(player: Node, camera_mode: String) -> bool:
+func _goosespeed_cameras_are_disabled(player: Node) -> bool:
 	var third_person_camera := player.get_node_or_null(
 		"GooseCameraRig/YawPivot/PitchPivot/SpringArm3D/ThirdPersonCamera"
 	) as Camera3D
@@ -75,16 +63,14 @@ func _goosespeed_camera_mode_is_current(player: Node, camera_mode: String) -> bo
 	) as Camera3D
 	if third_person_camera == null or first_person_camera == null:
 		return false
-	if camera_mode == GooseGameSettings.CAMERA_FIRST_PERSON:
-		return first_person_camera.current and not third_person_camera.current
-	return third_person_camera.current and not first_person_camera.current
+	return not third_person_camera.current and not first_person_camera.current
 
 
-func _backend_cameras_are_disabled(controller: Node) -> bool:
+func _backend_camera_is_current(controller: Node) -> bool:
 	for camera in _find_cameras(controller):
 		if camera.current:
-			return false
-	return true
+			return true
+	return false
 
 
 func _backend_hud_is_visible(controller: Node) -> bool:

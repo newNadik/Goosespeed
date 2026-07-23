@@ -170,6 +170,13 @@ func _direct_transitions() -> void:
 	c._set_flight_visuals()
 	check("hybrid flight third-person camera becomes active again", c.get_view_camera() == c.flight_camera)
 	check("hybrid flight body stays hidden in third person", not c.flight_body_mesh.visible)
+	c.set_debug_hud_visible(false)
+	check("hybrid debug HUD can be hidden", not c.q3_hud.visible and not c.flight_hud.visible)
+	c.set_debug_hud_visible(true)
+	check("hybrid debug HUD can be restored", c.q3_hud.visible and c.flight_hud.visible)
+	c.set_presentation_enabled(false)
+	check("hybrid presentation mode disables internal cameras", not c.flight_camera.current and not c.camera.current and not c.third_person_camera.current)
+	c.set_presentation_enabled(true)
 
 	var flight_view_transform := c.get_view_camera().global_transform
 	var flight_view_fov := c.get_view_camera().fov

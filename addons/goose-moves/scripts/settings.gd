@@ -378,6 +378,14 @@ func set_character_controller(value: String) -> void:
 	settings_changed.emit()
 
 
+func set_character_controller_runtime(value: String) -> void:
+	var normalized := _normalize_character_controller(value)
+	if character_controller == normalized:
+		return
+	character_controller = normalized
+	settings_changed.emit()
+
+
 func save_settings() -> void:
 	var config := ConfigFile.new()
 	config.set_value(SECTION, "fullscreen", fullscreen)
