@@ -52,16 +52,6 @@ func _has_hybrid_action(action: String) -> bool:
 	return action in KeybindingsSettings.get_actions(Settings.CHARACTER_Q3_N_FLIGHT)
 
 
-func _get_pitch_axis_from_view(view_basis: Basis) -> Vector3:
-	var horizontal_forward := -view_basis.orthonormalized().z
-	horizontal_forward.y = 0.0
-	return horizontal_forward.normalized().cross(Vector3.UP).normalized()
-
-
-func _project_onto_pitch_plane(direction: Vector3, pitch_axis: Vector3) -> Vector3:
-	return direction - (pitch_axis * direction.dot(pitch_axis))
-
-
 func _tick_flight_input_for_test(delta: float) -> void:
 	c.flight_motor.physics_tick(delta)
 	if c.flight_motor.consume_flap_impulse_fired():
@@ -212,7 +202,15 @@ func _direct_transitions() -> void:
 	var q3_view_camera := c.get_view_camera()
 	var q3_view_transform := q3_view_camera.global_transform
 	var q3_view_fov := q3_view_camera.fov
-	var takeoff_pitch_axis := _get_pitch_axis_from_view(q3_view_camera.global_basis)
+	var takeoff_forward := -q3_view_camera.global_basis.orthonormalized().z
+	takeoff_forward.y = 0.0
+	takeoff_forward = takeoff_forward.normalized()
+	var takeoff_pitch := atan2(c.velocity.y, c.velocity.dot(takeoff_forward))
+	takeoff_pitch = clampf(takeoff_pitch, -c.TAKEOFF_FLIGHT_MAX_PITCH_DOWN, c.TAKEOFF_FLIGHT_MAX_PITCH_UP)
+	var expected_takeoff_forward := (
+		(takeoff_forward * cos(takeoff_pitch))
+		+ (Vector3.UP * sin(takeoff_pitch))
+	).normalized()
 	c._enter_flight()
 	var flight_entry_state := c.get_movement_state()
 	check("direct transition enters flight mode", c.mode == c.Mode.FLIGHT)
@@ -255,9 +253,9 @@ func _direct_transitions() -> void:
 	check("Q3 -> flight camera blend finishes", not c.camera_transition_active)
 	check("Q3 -> flight camera hands off to flight camera", c.flight_camera.current)
 	check_vec3(
-		"Q3 -> flight pitches nose along takeoff velocity",
-		_project_onto_pitch_plane(-c.global_basis.z, takeoff_pitch_axis).normalized(),
-		_project_onto_pitch_plane(c.velocity, takeoff_pitch_axis).normalized(),
+		"Q3 -> flight caps takeoff pitch for goose visual",
+		-c.global_basis.z,
+		expected_takeoff_forward,
 		0.001,
 	)
 	c._apply_shared_camera_mode(false)

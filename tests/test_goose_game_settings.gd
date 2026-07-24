@@ -5,36 +5,22 @@ const SETTINGS_OVERLAY_SCENE := preload("res://scenes/ui/goose_settings_overlay.
 
 func _ready() -> void:
 	var original_debug_visible: bool = GooseGameSettings.debug_hud_visible
-	var original_flight_orientation_intensity: float = GooseGameSettings.flight_orientation_intensity
-	var original_flight_orientation_slerp_rate: float = GooseGameSettings.flight_orientation_slerp_rate
 	var original_head_look_enabled: bool = GooseGameSettings.head_look_enabled
 	var original_head_look_intensity: float = GooseGameSettings.head_look_intensity
 	var original_head_look_smoothness: float = GooseGameSettings.head_look_smoothness
 
 	GooseGameSettings.debug_hud_visible = false
-	GooseGameSettings.flight_orientation_intensity = 0.35
-	GooseGameSettings.flight_orientation_slerp_rate = 9.5
 	GooseGameSettings.head_look_enabled = false
 	GooseGameSettings.head_look_intensity = 0.4
 	GooseGameSettings.head_look_smoothness = 11.5
 	GooseGameSettings.save_settings()
 	GooseGameSettings.debug_hud_visible = true
-	GooseGameSettings.flight_orientation_intensity = 0.9
-	GooseGameSettings.flight_orientation_slerp_rate = 2.0
 	GooseGameSettings.head_look_enabled = true
 	GooseGameSettings.head_look_intensity = 0.8
 	GooseGameSettings.head_look_smoothness = 3.0
 	GooseGameSettings.load_settings()
 	if GooseGameSettings.debug_hud_visible:
 		push_error("Saved debug HUD visibility did not load")
-		get_tree().quit(1)
-		return
-	if not is_equal_approx(GooseGameSettings.flight_orientation_intensity, 0.35):
-		push_error("Saved flight visual intensity did not load")
-		get_tree().quit(1)
-		return
-	if not is_equal_approx(GooseGameSettings.flight_orientation_slerp_rate, 9.5):
-		push_error("Saved flight visual smoothness did not load")
 		get_tree().quit(1)
 		return
 	if GooseGameSettings.head_look_enabled:
@@ -59,8 +45,6 @@ func _ready() -> void:
 	if not await _settings_overlay_is_valid():
 		_restore_settings(
 			original_debug_visible,
-			original_flight_orientation_intensity,
-			original_flight_orientation_slerp_rate,
 			original_head_look_enabled,
 			original_head_look_intensity,
 			original_head_look_smoothness,
@@ -70,8 +54,6 @@ func _ready() -> void:
 
 	_restore_settings(
 		original_debug_visible,
-		original_flight_orientation_intensity,
-		original_flight_orientation_slerp_rate,
 		original_head_look_enabled,
 		original_head_look_intensity,
 		original_head_look_smoothness,
@@ -125,30 +107,22 @@ func _settings_overlay_is_valid() -> bool:
 	var head_look_toggle := overlay.find_child("HeadLookToggle", true, false) as CheckButton
 	var head_look_intensity_slider := overlay.find_child("HeadLookIntensitySlider", true, false) as HSlider
 	var head_look_smoothness_slider := overlay.find_child("HeadLookSmoothnessSlider", true, false) as HSlider
+	if intensity_slider != null or slerp_slider != null:
+		push_error("Settings overlay still exposes flight tilt sliders")
+		overlay.queue_free()
+		return false
 	if (
-		intensity_slider == null
-		or slerp_slider == null
-		or head_look_toggle == null
+		head_look_toggle == null
 		or head_look_intensity_slider == null
 		or head_look_smoothness_slider == null
 	):
-		push_error("Settings overlay did not expose flight visual sliders")
+		push_error("Settings overlay did not expose head-look visual controls")
 		overlay.queue_free()
 		return false
-	intensity_slider.value = 0.5
-	slerp_slider.value = 12.0
 	head_look_toggle.button_pressed = true
 	head_look_intensity_slider.value = 0.7
 	head_look_smoothness_slider.value = 13.0
 	await get_tree().process_frame
-	if not is_equal_approx(GooseGameSettings.flight_orientation_intensity, 0.5):
-		push_error("Flight visual intensity slider did not update settings")
-		overlay.queue_free()
-		return false
-	if not is_equal_approx(GooseGameSettings.flight_orientation_slerp_rate, 12.0):
-		push_error("Flight visual smoothness slider did not update settings")
-		overlay.queue_free()
-		return false
 	if not GooseGameSettings.head_look_enabled:
 		push_error("Head-look toggle did not update settings")
 		overlay.queue_free()
@@ -173,15 +147,11 @@ func _settings_overlay_is_valid() -> bool:
 
 func _restore_settings(
 	debug_visible: bool,
-	flight_orientation_intensity: float,
-	flight_orientation_slerp_rate: float,
 	head_look_enabled: bool,
 	head_look_intensity: float,
 	head_look_smoothness: float,
 ) -> void:
 	GooseGameSettings.debug_hud_visible = debug_visible
-	GooseGameSettings.flight_orientation_intensity = flight_orientation_intensity
-	GooseGameSettings.flight_orientation_slerp_rate = flight_orientation_slerp_rate
 	GooseGameSettings.head_look_enabled = head_look_enabled
 	GooseGameSettings.head_look_intensity = head_look_intensity
 	GooseGameSettings.head_look_smoothness = head_look_smoothness

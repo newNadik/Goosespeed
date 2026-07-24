@@ -256,18 +256,13 @@ func _expect_visual_facing_direction(failures: Array[String], visual: Node) -> v
 	})
 	if not visual._uses_full_flight_orientation(flight_state):
 		failures.append("flight should use full backend body orientation")
-	visual.flight_orientation_intensity = 0.0
-	var upright_basis: Basis = visual._get_flight_visual_target_basis(flight_state)
-	if absf(upright_basis.y.dot(Vector3.UP) - 1.0) > 0.001:
-		failures.append("zero flight orientation intensity should keep goose upright")
-	visual.flight_orientation_intensity = 1.0
 	var full_basis: Basis = visual._get_flight_visual_target_basis(flight_state)
 	if full_basis.z.distance_to((flight_state.body_basis as Basis).z) > 0.001:
-		failures.append("full flight orientation intensity should match backend basis")
+		failures.append("flight orientation should match backend basis")
 	var scaled_basis := Basis.IDENTITY.scaled(Vector3(1.001, 1.0, 0.999))
-	var clean_basis: Basis = visual._slerp_rotation_basis(scaled_basis, flight_state.body_basis, 0.5)
+	var clean_basis: Basis = visual._get_flight_visual_target_basis_for_basis(scaled_basis)
 	if not _basis_is_normalized(clean_basis):
-		failures.append("flight orientation slerp should return a normalized rotation basis")
+		failures.append("flight orientation copy should return a normalized rotation basis")
 
 
 func _expect_head_look_angles(failures: Array[String]) -> void:

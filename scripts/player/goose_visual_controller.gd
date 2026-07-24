@@ -53,8 +53,6 @@ const LOOPING_ANIMATIONS := [
 @export var ground_input_turn_rate := 7.0
 @export var default_turn_rate := 14.0
 @export var input_facing_commit_time := 0.14
-@export_range(0.0, 1.0, 0.05) var flight_orientation_intensity := 0.65
-@export var flight_orientation_slerp_rate := 7.0
 @export var head_look_enabled := true
 @export_range(0.0, 1.0, 0.05) var head_look_intensity := 0.65
 @export var head_look_smoothness := 10.0
@@ -151,13 +149,8 @@ func _get_flight_visual_target_basis(state: RefCounted) -> Basis:
 
 
 func _get_flight_visual_target_basis_for_basis(source_basis: Basis) -> Basis:
-	var full_basis := source_basis.orthonormalized()
-	var upright_basis := _get_upright_basis_for_direction(-full_basis.z)
-	return _slerp_rotation_basis(
-		upright_basis,
-		full_basis,
-		clampf(flight_orientation_intensity, 0.0, 1.0),
-	)
+	var clean_basis := source_basis.orthonormalized()
+	return clean_basis if _basis_is_finite(clean_basis) else Basis.IDENTITY
 
 
 func _get_root_position() -> Vector3:
@@ -172,16 +165,6 @@ func _get_root_basis() -> Basis:
 	return latest_state.body_basis as Basis
 
 
-func _slerp_rotation_basis(from_basis: Basis, to_basis: Basis, weight: float) -> Basis:
-	var clean_from := from_basis.orthonormalized()
-	var clean_to := to_basis.orthonormalized()
-	if not _basis_is_finite(clean_from):
-		clean_from = Basis.IDENTITY
-	if not _basis_is_finite(clean_to):
-		clean_to = clean_from
-	return clean_from.slerp(clean_to, clampf(weight, 0.0, 1.0)).orthonormalized()
-
-
 func _basis_is_finite(value: Basis) -> bool:
 	return (
 		is_finite(value.x.x)
@@ -194,18 +177,6 @@ func _basis_is_finite(value: Basis) -> bool:
 		and is_finite(value.z.y)
 		and is_finite(value.z.z)
 	)
-
-
-func _get_upright_basis_for_direction(direction: Vector3) -> Basis:
-	var forward := Vector3(direction.x, 0.0, direction.z)
-	if forward.length_squared() <= 0.0001:
-		forward = _horizontal_direction(latest_state.facing_direction)
-	if forward.length_squared() <= 0.0001:
-		forward = Vector3.FORWARD
-	forward = forward.normalized()
-	var right := forward.cross(Vector3.UP).normalized()
-	var up := right.cross(forward).normalized()
-	return Basis(right, up, -forward).orthonormalized()
 
 
 func _update_intended_movement_turn_state(delta: float) -> void:

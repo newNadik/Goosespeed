@@ -81,18 +81,6 @@ func _backend_hud_is_visible(controller: Node) -> bool:
 
 func _goose_visual_settings_are_applied(player: Node) -> bool:
 	var goose_visual := player.get_node("GooseVisual")
-	if not is_equal_approx(
-		float(goose_visual.get("flight_orientation_intensity")),
-		GooseGameSettings.flight_orientation_intensity,
-	):
-		push_error("Goose visual did not apply flight orientation intensity setting")
-		return false
-	if not is_equal_approx(
-		float(goose_visual.get("flight_orientation_slerp_rate")),
-		GooseGameSettings.flight_orientation_slerp_rate,
-	):
-		push_error("Goose visual did not apply flight orientation smoothness setting")
-		return false
 	if bool(goose_visual.get("head_look_enabled")) != GooseGameSettings.head_look_enabled:
 		push_error("Goose visual did not apply head-look enabled setting")
 		return false

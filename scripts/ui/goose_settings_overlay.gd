@@ -10,10 +10,6 @@ const GooseMovesRuntimeScript := preload("res://scripts/player/goose_moves_runti
 @onready var keybindings_menu = $Root/KeybindingsMenu
 
 var syncing_visual_settings_controls := false
-var flight_orientation_intensity_slider: HSlider
-var flight_orientation_intensity_value: Label
-var flight_orientation_slerp_slider: HSlider
-var flight_orientation_slerp_value: Label
 var head_look_toggle: CheckButton
 var head_look_intensity_slider: HSlider
 var head_look_intensity_value: Label
@@ -101,10 +97,6 @@ func _apply_game_settings_scope(include_visual_settings := true) -> void:
 
 
 func _focus_character_settings() -> void:
-	if flight_orientation_intensity_slider != null and flight_orientation_intensity_slider.visible:
-		flight_orientation_intensity_slider.grab_focus()
-		return
-
 	var preset_option := settings_menu.get_node_or_null("Panel/Margin/VBox/SettingsTabs/Character/PresetRow/PresetOption") as Control
 	if preset_option != null and preset_option.visible:
 		preset_option.grab_focus()
@@ -149,24 +141,6 @@ func _ensure_visual_settings_controls() -> void:
 	title.add_theme_font_size_override("font_size", 18)
 	section.add_child(title)
 
-	section.add_child(_create_visual_slider_row(
-		"Flight tilt intensity",
-		"FlightTiltIntensitySlider",
-		"FlightTiltIntensityValue",
-		0.0,
-		1.0,
-		0.05,
-		_on_flight_orientation_intensity_changed,
-	))
-	section.add_child(_create_visual_slider_row(
-		"Flight tilt smoothness",
-		"FlightTiltSlerpRateSlider",
-		"FlightTiltSlerpRateValue",
-		1.0,
-		20.0,
-		0.5,
-		_on_flight_orientation_slerp_changed,
-	))
 	section.add_child(_create_visual_toggle_row(
 		"Head look",
 		"HeadLookToggle",
@@ -250,26 +224,6 @@ func _create_visual_toggle_row(label_text: String, toggle_name: String, callback
 
 
 func _bind_visual_settings_controls(section: Node) -> void:
-	flight_orientation_intensity_slider = section.find_child(
-		"FlightTiltIntensitySlider",
-		true,
-		false,
-	) as HSlider
-	flight_orientation_intensity_value = section.find_child(
-		"FlightTiltIntensityValue",
-		true,
-		false,
-	) as Label
-	flight_orientation_slerp_slider = section.find_child(
-		"FlightTiltSlerpRateSlider",
-		true,
-		false,
-	) as HSlider
-	flight_orientation_slerp_value = section.find_child(
-		"FlightTiltSlerpRateValue",
-		true,
-		false,
-	) as Label
 	head_look_toggle = section.find_child(
 		"HeadLookToggle",
 		true,
@@ -299,16 +253,12 @@ func _bind_visual_settings_controls(section: Node) -> void:
 
 func _sync_visual_settings_controls() -> void:
 	if (
-		flight_orientation_intensity_slider == null
-		or flight_orientation_slerp_slider == null
-		or head_look_toggle == null
+		head_look_toggle == null
 		or head_look_intensity_slider == null
 		or head_look_smoothness_slider == null
 	):
 		return
 	syncing_visual_settings_controls = true
-	flight_orientation_intensity_slider.set_value_no_signal(GooseGameSettings.flight_orientation_intensity)
-	flight_orientation_slerp_slider.set_value_no_signal(GooseGameSettings.flight_orientation_slerp_rate)
 	head_look_toggle.set_pressed_no_signal(GooseGameSettings.head_look_enabled)
 	head_look_intensity_slider.set_value_no_signal(GooseGameSettings.head_look_intensity)
 	head_look_smoothness_slider.set_value_no_signal(GooseGameSettings.head_look_smoothness)
@@ -317,28 +267,10 @@ func _sync_visual_settings_controls() -> void:
 
 
 func _update_visual_settings_value_labels() -> void:
-	if flight_orientation_intensity_value != null:
-		flight_orientation_intensity_value.text = "%.2f" % GooseGameSettings.flight_orientation_intensity
-	if flight_orientation_slerp_value != null:
-		flight_orientation_slerp_value.text = "%.1f" % GooseGameSettings.flight_orientation_slerp_rate
 	if head_look_intensity_value != null:
 		head_look_intensity_value.text = "%.2f" % GooseGameSettings.head_look_intensity
 	if head_look_smoothness_value != null:
 		head_look_smoothness_value.text = "%.1f" % GooseGameSettings.head_look_smoothness
-
-
-func _on_flight_orientation_intensity_changed(value: float) -> void:
-	if syncing_visual_settings_controls:
-		return
-	GooseGameSettings.set_flight_orientation_intensity(value)
-	_update_visual_settings_value_labels()
-
-
-func _on_flight_orientation_slerp_changed(value: float) -> void:
-	if syncing_visual_settings_controls:
-		return
-	GooseGameSettings.set_flight_orientation_slerp_rate(value)
-	_update_visual_settings_value_labels()
 
 
 func _on_head_look_enabled_changed(enabled: bool) -> void:

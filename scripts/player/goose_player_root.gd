@@ -67,8 +67,6 @@ func _apply_visual_settings() -> void:
 	var game_settings := get_node_or_null("/root/GooseGameSettings")
 	if game_settings == null or goose_visual == null:
 		return
-	goose_visual.flight_orientation_intensity = float(game_settings.get("flight_orientation_intensity"))
-	goose_visual.flight_orientation_slerp_rate = float(game_settings.get("flight_orientation_slerp_rate"))
 	goose_visual.head_look_enabled = bool(game_settings.get("head_look_enabled"))
 	goose_visual.head_look_intensity = float(game_settings.get("head_look_intensity"))
 	goose_visual.head_look_smoothness = float(game_settings.get("head_look_smoothness"))

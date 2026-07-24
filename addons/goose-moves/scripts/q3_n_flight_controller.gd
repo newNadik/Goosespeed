@@ -18,6 +18,8 @@ const DEFAULT_LANDING_CARRY_MIN_SPEED := 3.0
 const DEFAULT_HARD_LANDING_VERTICAL_SPEED := 14.0
 const CAMERA_TRANSITION_DURATION := 0.2
 const FLIGHT_COLLISION_SIZE := Vector3(1.2, 1.2, 1.2)
+const TAKEOFF_FLIGHT_MAX_PITCH_UP := deg_to_rad(30.0)
+const TAKEOFF_FLIGHT_MAX_PITCH_DOWN := deg_to_rad(25.0)
 const Q3_MOVEMENT_MOTOR := preload("res://addons/goose-moves/scripts/q3_movement_motor.gd")
 const FLIGHT_MOVEMENT_MOTOR := preload("res://addons/goose-moves/scripts/flight_movement_motor.gd")
 const Q3_MOVEMENT_HUD := preload("res://addons/goose-moves/scripts/q3_movement_hud.gd")
@@ -595,8 +597,11 @@ func _get_takeoff_flight_basis(view_basis: Basis, takeoff_velocity: Vector3) -> 
 	var right_axis := horizontal_forward.cross(Vector3.UP).normalized()
 	var velocity_in_pitch_plane := takeoff_velocity - (right_axis * takeoff_velocity.dot(right_axis))
 	var forward_axis := horizontal_forward
-	if velocity_in_pitch_plane.length_squared() > 0.0001:
-		forward_axis = velocity_in_pitch_plane.normalized()
+	var forward_speed := velocity_in_pitch_plane.dot(horizontal_forward)
+	if velocity_in_pitch_plane.length_squared() > 0.0001 and forward_speed > 0.0001:
+		var pitch := atan2(velocity_in_pitch_plane.y, forward_speed)
+		pitch = clampf(pitch, -TAKEOFF_FLIGHT_MAX_PITCH_DOWN, TAKEOFF_FLIGHT_MAX_PITCH_UP)
+		forward_axis = ((horizontal_forward * cos(pitch)) + (Vector3.UP * sin(pitch))).normalized()
 	var up_axis := right_axis.cross(forward_axis).normalized()
 	return Basis(right_axis, up_axis, -forward_axis).orthonormalized()
 
