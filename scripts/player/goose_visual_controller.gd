@@ -21,6 +21,7 @@ const ANIM_PRE_LAND := &"Goose|A_Landing_PreLanding"
 const ANIM_LAND := &"Goose|A_Landing_Touch"
 const ANIM_TAKEOFF_BOUNCE := &"Goose|A_TakeOff_BounceOff"
 const ANIM_TAKEOFF_RUNUP := &"Goose|A_TakeOff_RunUp"
+const ANIM_SLIDE := &"Goose|A_Sliding"
 const LOOPING_ANIMATIONS := [
 	ANIM_IDLE,
 	ANIM_IDLE_ALT,
@@ -291,6 +292,12 @@ func _animation_for_state(state: RefCounted, use_ground_stability: bool) -> Stri
 		return _first_available([ANIM_FLY_GLIDE, ANIM_FLY_FLAP])
 
 	if state.crouch_sliding or state.sliding:
+		if not _slide_has_player_input(state):
+			if use_ground_stability:
+				_clear_ground_locomotion()
+			var fallback_animation := _ground_slide_animation_for_speed(state.horizontal_speed)
+			return _first_available([ANIM_SLIDE, fallback_animation])
+
 		var slide_candidate := _ground_slide_animation_for_speed(state.horizontal_speed)
 		if use_ground_stability:
 			return _stable_ground_animation(slide_candidate, state.horizontal_speed)
@@ -318,6 +325,13 @@ func _ground_slide_animation_for_speed(horizontal_speed: float) -> StringName:
 	if horizontal_speed >= _run_slow_speed():
 		return _first_available([ANIM_RUN_FAST, ANIM_RUN_SLOW, ANIM_WALK_FAST])
 	return _first_available([ANIM_WALK_FAST, ANIM_RUN_SLOW, ANIM_WALK_MEDIUM])
+
+
+func _slide_has_player_input(state: RefCounted) -> bool:
+	return (
+		state.intended_movement_magnitude > 0.05
+		and not state.intended_movement_direction.is_zero_approx()
+	)
 
 
 func _stable_ground_animation(candidate: StringName, horizontal_speed: float) -> StringName:
@@ -361,6 +375,8 @@ func _configure_animation_player() -> void:
 			animation_player.get_animation(animation_name).loop_mode = Animation.LOOP_NONE
 	if animation_player.has_animation(ANIM_LAND):
 		animation_player.get_animation(ANIM_LAND).loop_mode = Animation.LOOP_NONE
+	if animation_player.has_animation(ANIM_SLIDE):
+		animation_player.get_animation(ANIM_SLIDE).loop_mode = Animation.LOOP_NONE
 
 
 func _update_animation() -> void:

@@ -44,6 +44,7 @@ func _initialize() -> void:
 	_expect_head_look_angles(failures)
 	_expect_transition_mapping(failures, visual)
 	_expect_locomotion_phase_preserved(failures)
+	_expect_slide_animation_selection(failures)
 	_expect_animation(
 		failures,
 		visual,
@@ -436,9 +437,22 @@ func _expect_transition_mapping(failures: Array[String], visual: Node) -> void:
 	_expect_animation(
 		failures,
 		visual,
-		_state({"grounded": true, "crouch_sliding": true, "horizontal_speed": 5.0}),
+		_state({
+			"grounded": true,
+			"crouch_sliding": true,
+			"horizontal_speed": 5.0,
+			"intended_movement_direction": Vector3.FORWARD,
+			"intended_movement_magnitude": 1.0,
+		}),
 		VisualControllerScript.ANIM_RUN_FAST,
-		"fast crouch slide",
+		"input crouch slide",
+	)
+	_expect_animation(
+		failures,
+		visual,
+		_state({"grounded": true, "crouch_sliding": true, "horizontal_speed": 5.0}),
+		VisualControllerScript.ANIM_SLIDE,
+		"no-input crouch slide",
 	)
 
 
@@ -464,3 +478,61 @@ func _expect_locomotion_phase_preserved(failures: Array[String]) -> void:
 			% player.current_animation_position
 		)
 	visual.free()
+
+
+func _expect_slide_animation_selection(failures: Array[String]) -> void:
+	var visual := VisualControllerScript.new()
+	var player := AnimationPlayer.new()
+	visual.animation_player = player
+	visual.add_child(player)
+	var library := AnimationLibrary.new()
+	var slide := Animation.new()
+	slide.length = 6.6667
+	var run := Animation.new()
+	run.length = 0.5
+	library.add_animation(VisualControllerScript.ANIM_SLIDE, slide)
+	library.add_animation(VisualControllerScript.ANIM_RUN_FAST, run)
+	player.add_animation_library(&"", library)
+
+	var no_input_slide := visual._animation_for_state(
+		_state({"grounded": true, "sliding": true, "horizontal_speed": 5.0}),
+		true,
+	)
+	if no_input_slide != VisualControllerScript.ANIM_SLIDE:
+		failures.append("no-input slide selected %s, expected slide pose" % no_input_slide)
+
+	var input_slide := visual._animation_for_state(
+		_state({
+			"grounded": true,
+			"sliding": true,
+			"horizontal_speed": 5.0,
+			"intended_movement_direction": Vector3.FORWARD,
+			"intended_movement_magnitude": 1.0,
+		}),
+		true,
+	)
+	if input_slide != VisualControllerScript.ANIM_RUN_FAST:
+		failures.append("input slide selected %s, expected run fast" % input_slide)
+
+	visual._play_animation(VisualControllerScript.ANIM_SLIDE, 1.0)
+	if player.current_animation != VisualControllerScript.ANIM_SLIDE:
+		failures.append("slide animation did not play")
+	if not is_equal_approx(player.speed_scale, 1.0):
+		failures.append("slide animation should run at normal speed")
+
+	var fallback_visual := VisualControllerScript.new()
+	var fallback_player := AnimationPlayer.new()
+	fallback_visual.animation_player = fallback_player
+	fallback_visual.add_child(fallback_player)
+	var fallback_library := AnimationLibrary.new()
+	fallback_library.add_animation(VisualControllerScript.ANIM_RUN_FAST, Animation.new())
+	fallback_player.add_animation_library(&"", fallback_library)
+	var fallback_slide := fallback_visual._animation_for_state(
+		_state({"grounded": true, "sliding": true, "horizontal_speed": 5.0}),
+		true,
+	)
+	if fallback_slide != VisualControllerScript.ANIM_RUN_FAST:
+		failures.append("missing slide pose selected %s, expected fallback run fast" % fallback_slide)
+
+	visual.free()
+	fallback_visual.free()
