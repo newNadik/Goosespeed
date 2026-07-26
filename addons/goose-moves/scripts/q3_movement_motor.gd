@@ -788,7 +788,19 @@ func _get_water_surface_y(water_area: Area3D) -> float:
 
 
 func _should_swim(grounded: bool) -> bool:
+	if _can_walk_out_of_water(grounded):
+		return false
 	return water_level > 1 or (water_level > 0 and not grounded)
+
+
+func _can_walk_out_of_water(grounded: bool) -> bool:
+	return (
+		grounded
+		and water_level > 0
+		and has_water_surface
+		and _is_at_swim_surface()
+		and Input.get_action_strength("player_crouch") <= 0.0
+	)
 
 
 func _is_surface_swimming(grounded: bool) -> bool:

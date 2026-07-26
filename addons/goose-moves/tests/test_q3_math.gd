@@ -299,6 +299,15 @@ func _swimming() -> void:
 	c.water_level = 1
 	check("shallow grounded water does not force swimming", not c._should_swim(true))
 	check("shallow airborne water enters surface swimming", c._should_swim(false))
+	c.water_level = 2
+	c.has_water_surface = true
+	c.water_surface_y = 1.0
+	c.global_position.y = c._get_swim_surface_target_y()
+	check("grounded surface water can transition to walking", not c._should_swim(true))
+	check("airborne surface water still swims", c._should_swim(false))
+	Input.action_press("player_crouch")
+	check("dive input keeps grounded surface water swimming", c._should_swim(true))
+	Input.action_release("player_crouch")
 
 	c.has_water_surface = true
 	c.water_surface_y = 1.0
