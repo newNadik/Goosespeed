@@ -45,6 +45,7 @@ func _initialize() -> void:
 	_expect_transition_mapping(failures, visual)
 	_expect_flight_charge_animation_gate(failures, visual)
 	_expect_locomotion_phase_preserved(failures)
+	_expect_flight_exit_blend(failures)
 	_expect_q3_landing_hold_skipped(failures)
 	_expect_slide_animation_selection(failures)
 	_expect_animation(
@@ -642,6 +643,41 @@ func _expect_locomotion_phase_preserved(failures: Array[String]) -> void:
 			"locomotion phase switched to %.3f, expected 0.250"
 			% player.current_animation_position
 		)
+	visual.free()
+
+
+func _expect_flight_exit_blend(failures: Array[String]) -> void:
+	var visual := VisualControllerScript.new()
+	var player := AnimationPlayer.new()
+	visual.animation_player = player
+	visual.add_child(player)
+	var library := AnimationLibrary.new()
+	library.add_animation(VisualControllerScript.ANIM_FLY_GLIDE, Animation.new())
+	library.add_animation(VisualControllerScript.ANIM_RUN_SLOW, Animation.new())
+	library.add_animation(VisualControllerScript.ANIM_WALK_FAST, Animation.new())
+	player.add_animation_library(&"", library)
+
+	player.play(VisualControllerScript.ANIM_FLY_GLIDE)
+	visual.latest_state = _state({
+		"mode": &"q3",
+		"just_exited_flight": true,
+		"horizontal_speed": 5.0,
+	})
+	var exit_blend := visual._blend_time_for_animation(VisualControllerScript.ANIM_RUN_SLOW)
+	if absf(exit_blend - visual.flight_exit_blend_time) > 0.001:
+		failures.append("flight exit blend %.3f should use configured %.3f" % [
+			exit_blend,
+			visual.flight_exit_blend_time,
+		])
+
+	visual.latest_state = _state({"mode": &"q3", "horizontal_speed": 5.0})
+	var regular_blend := visual._blend_time_for_animation(VisualControllerScript.ANIM_WALK_FAST)
+	if absf(regular_blend - visual.locomotion_blend_time) > 0.001:
+		failures.append("regular locomotion blend %.3f should stay %.3f" % [
+			regular_blend,
+			visual.locomotion_blend_time,
+		])
+
 	visual.free()
 
 

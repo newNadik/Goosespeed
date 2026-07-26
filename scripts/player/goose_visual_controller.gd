@@ -49,6 +49,7 @@ const LOOPING_ANIMATIONS := [
 @export var locomotion_min_hold_time := 0.1
 @export var locomotion_blend_time := 0.08
 @export var run_fast_blend_time := 0.05
+@export var flight_exit_blend_time := 0.4
 @export var landing_hold_time := 0.22
 @export var prelanding_vertical_speed := -8.0
 @export_range(0.0, 1.0, 0.05) var takeoff_runup_charge_ratio := 0.7
@@ -473,11 +474,26 @@ func _animation_speed_scale(animation_name: StringName) -> float:
 
 
 func _blend_time_for_animation(animation_name: StringName) -> float:
+	if _is_flight_exit_locomotion_blend(animation_name):
+		return maxf(flight_exit_blend_time, animation_blend_time)
 	if animation_name == ANIM_RUN_FAST:
 		return minf(run_fast_blend_time, animation_blend_time)
 	if _is_ground_locomotion(animation_name):
 		return minf(locomotion_blend_time, animation_blend_time)
 	return animation_blend_time
+
+
+func _is_flight_exit_locomotion_blend(next_animation: StringName) -> bool:
+	return (
+		latest_state.just_exited_flight
+		and latest_state.mode != &"flight"
+		and _is_flight_animation(animation_player.current_animation)
+		and _is_ground_locomotion(next_animation)
+	)
+
+
+func _is_flight_animation(animation_name: StringName) -> bool:
+	return animation_name in [ANIM_FLY_FLAP, ANIM_FLY_GLIDE]
 
 
 func _is_ground_locomotion(animation_name: StringName) -> bool:
