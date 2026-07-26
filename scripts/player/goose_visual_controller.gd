@@ -224,7 +224,7 @@ func animation_for_state(state: RefCounted) -> StringName:
 
 
 func visual_state_for_state(state: RefCounted) -> StringName:
-	if state.crashed or state.knocked_down or state.hard_landed or state.just_landed:
+	if _should_use_landing_animation(state):
 		return &"landing"
 	if state.swimming:
 		if state.horizontal_speed >= _run_slow_speed():
@@ -237,13 +237,9 @@ func visual_state_for_state(state: RefCounted) -> StringName:
 	if state.mode == &"flight":
 		return &"flight_flap" if state.flapping else &"flight_glide"
 	if not state.grounded:
-		if state.flapping:
-			return &"air_flap"
 		if state.just_entered_flight:
 			return &"takeoff"
-		if state.falling and state.vertical_speed <= prelanding_vertical_speed:
-			return &"prelanding"
-		return &"air_glide"
+		return _ground_visual_state_for_speed(state.horizontal_speed)
 	if state.crouch_sliding or state.sliding:
 		return &"slide"
 	if state.horizontal_speed < idle_speed_threshold:
@@ -254,7 +250,7 @@ func visual_state_for_state(state: RefCounted) -> StringName:
 
 
 func _animation_for_state(state: RefCounted, use_ground_stability: bool) -> StringName:
-	if state.crashed or state.knocked_down or state.hard_landed or state.just_landed:
+	if _should_use_landing_animation(state):
 		if use_ground_stability:
 			_clear_ground_locomotion()
 		return _first_available([ANIM_LAND, ANIM_PRE_LAND, ANIM_IDLE])
@@ -283,13 +279,9 @@ func _animation_for_state(state: RefCounted, use_ground_stability: bool) -> Stri
 	if not state.grounded:
 		if use_ground_stability:
 			_clear_ground_locomotion()
-		if state.flapping:
-			return _first_available([ANIM_FLY_FLAP, ANIM_FLY_GLIDE])
 		if state.just_entered_flight:
 			return _first_available([ANIM_TAKEOFF_BOUNCE, ANIM_FLY_GLIDE])
-		if state.falling and state.vertical_speed <= prelanding_vertical_speed:
-			return _first_available([ANIM_PRE_LAND, ANIM_FLY_GLIDE])
-		return _first_available([ANIM_FLY_GLIDE, ANIM_FLY_FLAP])
+		return _ground_animation_for_speed(state.horizontal_speed)
 
 	if state.crouch_sliding or state.sliding:
 		if not _slide_has_player_input(state):
@@ -319,6 +311,29 @@ func _ground_animation_for_speed(horizontal_speed: float) -> StringName:
 	if horizontal_speed < q3_run_fast_speed:
 		return _first_available([ANIM_RUN_SLOW, ANIM_RUN_FAST, ANIM_WALK_FAST])
 	return _first_available([ANIM_RUN_FAST, ANIM_RUN_SLOW, ANIM_WALK_FAST])
+
+
+func _ground_visual_state_for_speed(horizontal_speed: float) -> StringName:
+	if horizontal_speed < idle_speed_threshold:
+		return &"idle"
+	if horizontal_speed < q3_run_slow_speed:
+		return &"walk"
+	return &"run"
+
+
+func _should_use_landing_animation(state: RefCounted) -> bool:
+	return (
+		state.crashed
+		or state.knocked_down
+		or state.hard_landed
+		or (
+			state.just_landed
+			and (
+				state.just_exited_flight
+				or state.mode == &"flight"
+			)
+		)
+	)
 
 
 func _ground_slide_animation_for_speed(horizontal_speed: float) -> StringName:
@@ -383,7 +398,7 @@ func _update_animation() -> void:
 	if animation_player == null:
 		return
 	var just_landed := latest_state.just_landed or (not previous_grounded and latest_state.grounded)
-	if just_landed:
+	if just_landed and _should_use_landing_animation(latest_state):
 		landing_hold_remaining = landing_hold_time
 	var next_animation := (
 		_first_available([ANIM_LAND])
