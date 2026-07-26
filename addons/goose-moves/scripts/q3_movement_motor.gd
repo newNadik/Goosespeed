@@ -225,8 +225,11 @@ var water_acceleration := Q3_WATER_ACCELERATION
 var water_friction := Q3_WATER_FRICTION
 var slime_friction := Q3_SLIME_FRICTION
 var mouse_sensitivity := 0.003
+var camera_vertical_smoothness := 16.0
+var first_person_eye_height_offset := 0.1
 
 var head: Node3D
+var camera_anchor: Node3D
 var camera: Camera3D
 var third_person_spring_arm: SpringArm3D
 var third_person_camera: Camera3D
@@ -250,6 +253,8 @@ var water_jump_time_remaining := 0.0
 var character_collider_visible := true
 var intended_movement_direction := Vector3.ZERO
 var intended_movement_magnitude := 0.0
+var camera_anchor_initialized := false
+var smoothed_camera_anchor_y := 0.0
 
 
 func setup(
@@ -283,10 +288,13 @@ func setup(
 	_set_stance_geometry(false)
 	pitch = head.rotation.x
 	yaw = rotation.y
+	_ensure_camera_anchor()
+	reset_camera_anchor_smoothing()
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
 
-func process_tick(_delta: float) -> void:
+func process_tick(delta: float) -> void:
+	_update_camera_anchor(delta)
 	var horizontal_speed_mps := Vector2(velocity.x, velocity.z).length()
 	hud.update_values(
 		horizontal_speed_mps / Q3_METERS_PER_UNIT,
@@ -631,9 +639,68 @@ func _set_stance_geometry(crouching: bool) -> void:
 	body_shape.size = Vector3(character_size.x, hull_height, character_size.z)
 	collision_shape.position.y = hull_height * 0.5
 	head.position.y = eye_height
+	reset_camera_anchor_smoothing()
 	if body_mesh != null:
 		body_mesh.size = body_shape.size
 		character_collider_visual.position = collision_shape.position
+
+
+func _ensure_camera_anchor() -> void:
+	if camera_anchor != null:
+		return
+	camera_anchor = Node3D.new()
+	camera_anchor.name = "Q3CameraAnchor"
+	camera_anchor.top_level = true
+	body.add_child(camera_anchor)
+	camera_anchor.global_transform = head.global_transform
+	_reparent_camera_child(camera)
+	_reparent_camera_child(third_person_spring_arm)
+
+
+func _reparent_camera_child(node: Node3D) -> void:
+	if node == null or node.get_parent() == camera_anchor:
+		return
+	var preserved_transform := node.global_transform
+	var parent := node.get_parent()
+	if parent != null:
+		parent.remove_child(node)
+	camera_anchor.add_child(node)
+	node.global_transform = preserved_transform
+
+
+func reset_camera_anchor_smoothing() -> void:
+	camera_anchor_initialized = false
+	_update_camera_anchor(0.0, true)
+
+
+func _update_camera_anchor(delta: float, force_snap := false) -> void:
+	if head == null or camera_anchor == null:
+		return
+	if not head.is_inside_tree() or not camera_anchor.is_inside_tree():
+		return
+	var target_position := head.global_position + (Vector3.UP * first_person_eye_height_offset)
+	if force_snap or not camera_anchor_initialized or not _should_smooth_camera_anchor():
+		smoothed_camera_anchor_y = target_position.y
+		camera_anchor_initialized = true
+	else:
+		smoothed_camera_anchor_y = _smooth_camera_anchor_y(
+			smoothed_camera_anchor_y,
+			target_position.y,
+			delta,
+		)
+	camera_anchor.global_transform = Transform3D(
+		head.global_basis,
+		Vector3(target_position.x, smoothed_camera_anchor_y, target_position.z),
+	)
+
+
+func _should_smooth_camera_anchor() -> bool:
+	return water_level <= 1 and is_on_floor()
+
+
+func _smooth_camera_anchor_y(current_y: float, target_y: float, delta: float) -> float:
+	var blend := 1.0 - exp(-maxf(camera_vertical_smoothness, 0.0) * delta)
+	return lerpf(current_y, target_y, blend)
 
 
 func set_character_size(value: Vector3) -> void:

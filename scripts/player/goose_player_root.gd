@@ -105,7 +105,11 @@ func _active_camera_is_first_person() -> bool:
 	if camera == null:
 		return false
 	var path := str(camera.get_path())
-	return path.ends_with("/Head/Camera3D") or path.ends_with("/FlightFirstPersonCamera")
+	return (
+		path.ends_with("/Head/Camera3D")
+		or path.ends_with("/Q3CameraAnchor/Camera3D")
+		or path.ends_with("/FlightFirstPersonCamera")
+	)
 
 
 func _get_active_camera() -> Camera3D:

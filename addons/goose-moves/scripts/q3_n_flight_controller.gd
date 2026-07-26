@@ -186,6 +186,7 @@ func place_at_view(view_transform: Transform3D) -> void:
 	var view_head := get_node_or_null("Head") as Node3D
 	if view_head:
 		view_head.rotation = Vector3(euler.x, 0.0, 0.0)
+	q3_motor.reset_camera_anchor_smoothing()
 
 
 func get_view_camera() -> Camera3D:
@@ -233,6 +234,7 @@ func reset_to_spawn() -> void:
 	movement_state = MOVEMENT_STATE_TRACKER.new()
 	var euler := spawn_transform.basis.get_euler()
 	set_view_angles(euler.y, euler.x)
+	q3_motor.reset_camera_anchor_smoothing()
 	_set_q3_visuals()
 
 
@@ -266,6 +268,7 @@ func set_view_angles(view_yaw: float, view_pitch: float) -> void:
 	q3_motor.yaw = view_yaw
 	q3_motor.pitch = clampf(view_pitch, deg_to_rad(-89.0), deg_to_rad(89.0))
 	q3_motor._apply_view_rotation(false)
+	q3_motor.reset_camera_anchor_smoothing()
 	flight_motor.camera_yaw = view_yaw
 	flight_motor.camera_pitch = clampf(view_pitch, deg_to_rad(-75.0), deg_to_rad(60.0))
 	flight_motor._apply_camera_rotation()
@@ -386,6 +389,7 @@ func _apply_controller_settings() -> void:
 func _apply_shared_camera_mode(first_person: bool) -> void:
 	first_person_camera_enabled = first_person
 	q3_motor.third_person_enabled = not first_person
+	q3_motor.reset_camera_anchor_smoothing()
 	flight_motor.first_person_enabled = first_person
 	_apply_player_body_cull_masks()
 
@@ -654,6 +658,7 @@ func _enter_q3(snap_upright: bool) -> void:
 	flap_hold_time = 0.0
 	no_surface_contact_time = 0.0
 	_set_q3_visuals()
+	q3_motor.reset_camera_anchor_smoothing()
 	if should_blend_camera:
 		_begin_camera_transition(previous_view_transform, previous_view_fov, _get_q3_view_camera())
 
