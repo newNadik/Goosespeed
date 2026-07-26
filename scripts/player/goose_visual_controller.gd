@@ -56,6 +56,7 @@ const LOOPING_ANIMATIONS := [
 @export var ground_input_turn_rate := 7.0
 @export var default_turn_rate := 14.0
 @export var input_facing_commit_time := 0.14
+@export var visual_vertical_smoothness := 18.0
 @export var head_look_enabled := true
 @export_range(0.0, 1.0, 0.05) var head_look_intensity := 0.65
 @export var head_look_smoothness := 10.0
@@ -73,6 +74,8 @@ var locomotion_hold_remaining := 0.0
 var intended_movement_time := 0.0
 var tracked_intended_movement_direction := Vector3.ZERO
 var head_look_controller: Node
+var smoothed_visual_y := 0.0
+var visual_y_initialized := false
 
 
 func _ready() -> void:
@@ -94,6 +97,7 @@ func set_transform_source(value: Node3D) -> void:
 	transform_source = value
 	if transform_source != null:
 		global_position = transform_source.global_position
+		_reset_visual_position_smoothing()
 		if _uses_full_flight_orientation(latest_state):
 			global_basis = _get_flight_visual_target_basis_for_basis(transform_source.global_basis)
 
@@ -104,7 +108,7 @@ func _process(delta: float) -> void:
 	locomotion_hold_remaining = maxf(locomotion_hold_remaining - delta, 0.0)
 	_update_intended_movement_turn_state(delta)
 
-	global_position = _get_root_position()
+	global_position = _get_visual_position(delta)
 	if _uses_full_flight_orientation(latest_state):
 		global_basis = _get_flight_visual_target_basis_for_basis(_get_root_basis())
 	else:
@@ -129,6 +133,7 @@ func _connect_bridge() -> void:
 		state_bridge.state_changed.connect(_on_state_changed)
 	latest_state = state_bridge.get_state()
 	global_position = latest_state.position
+	_reset_visual_position_smoothing()
 	if _uses_full_flight_orientation(latest_state):
 		global_basis = _get_flight_visual_target_basis(latest_state)
 
@@ -160,6 +165,43 @@ func _get_root_position() -> Vector3:
 	if transform_source != null:
 		return transform_source.global_position
 	return latest_state.position
+
+
+func _get_visual_position(delta: float) -> Vector3:
+	var target_position := _get_root_position()
+	if not _should_smooth_visual_position(latest_state):
+		_set_smoothed_visual_y(target_position.y)
+		return target_position
+	if not visual_y_initialized:
+		_set_smoothed_visual_y(target_position.y)
+	else:
+		smoothed_visual_y = _smooth_visual_y(smoothed_visual_y, target_position.y, delta)
+	return Vector3(target_position.x, smoothed_visual_y, target_position.z)
+
+
+func _should_smooth_visual_position(state: RefCounted) -> bool:
+	return (
+		state.mode != &"flight"
+		and state.grounded
+		and not state.swimming
+		and not state.crashed
+		and not state.knocked_down
+		and not state.hard_landed
+	)
+
+
+func _set_smoothed_visual_y(value: float) -> void:
+	smoothed_visual_y = value
+	visual_y_initialized = true
+
+
+func _reset_visual_position_smoothing() -> void:
+	_set_smoothed_visual_y(_get_root_position().y)
+
+
+func _smooth_visual_y(current_y: float, target_y: float, delta: float) -> float:
+	var blend := 1.0 - exp(-maxf(visual_vertical_smoothness, 0.0) * delta)
+	return lerpf(current_y, target_y, blend)
 
 
 func _get_root_basis() -> Basis:

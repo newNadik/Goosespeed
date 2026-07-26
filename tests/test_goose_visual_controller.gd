@@ -41,6 +41,7 @@ func _initialize() -> void:
 	_expect_locomotion_hold(failures, visual)
 	_expect_q3_speed_scale(failures, visual)
 	_expect_visual_facing_direction(failures, visual)
+	_expect_visual_position_smoothing(failures)
 	_expect_head_look_angles(failures)
 	_expect_transition_mapping(failures, visual)
 	_expect_flight_charge_animation_gate(failures, visual)
@@ -345,6 +346,28 @@ func _expect_visual_facing_direction(failures: Array[String], visual: Node) -> v
 	var clean_basis: Basis = visual._get_flight_visual_target_basis_for_basis(scaled_basis)
 	if not _basis_is_normalized(clean_basis):
 		failures.append("flight orientation copy should return a normalized rotation basis")
+
+
+func _expect_visual_position_smoothing(failures: Array[String]) -> void:
+	var visual := VisualControllerScript.new()
+	visual.latest_state = _state({"mode": &"q3", "grounded": true, "position": Vector3(1.0, 1.0, 2.0)})
+	var initial_position: Vector3 = visual._get_visual_position(0.016)
+	if initial_position.distance_to(Vector3(1.0, 1.0, 2.0)) > 0.001:
+		failures.append("initial visual position should snap to target")
+
+	visual.latest_state = _state({"mode": &"q3", "grounded": true, "position": Vector3(3.0, 2.0, 4.0)})
+	var stepped_position: Vector3 = visual._get_visual_position(0.016)
+	if absf(stepped_position.x - 3.0) > 0.001 or absf(stepped_position.z - 4.0) > 0.001:
+		failures.append("visual smoothing should keep horizontal position exact")
+	if stepped_position.y <= 1.0 or stepped_position.y >= 2.0:
+		failures.append("grounded visual Y %.3f should smooth toward stair target" % stepped_position.y)
+
+	visual.latest_state = _state({"mode": &"q3", "grounded": false, "position": Vector3(3.0, 5.0, 4.0)})
+	var airborne_position: Vector3 = visual._get_visual_position(0.016)
+	if absf(airborne_position.y - 5.0) > 0.001:
+		failures.append("airborne visual Y should snap to target")
+
+	visual.free()
 
 
 func _expect_head_look_angles(failures: Array[String]) -> void:
