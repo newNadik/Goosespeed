@@ -233,7 +233,7 @@ func visual_state_for_state(state: RefCounted) -> StringName:
 		if state.horizontal_speed >= _walk_medium_speed():
 			return &"swim"
 		return &"swim_idle"
-	if _should_use_takeoff_runup(state):
+	if _should_use_flight_charge_animation(state):
 		return &"takeoff_charge"
 	if state.mode == &"flight":
 		return &"flight_flap" if state.flapping else &"flight_glide"
@@ -265,7 +265,7 @@ func _animation_for_state(state: RefCounted, use_ground_stability: bool) -> Stri
 			return _first_available([ANIM_SWIM_MEDIUM, ANIM_SWIM_MOVE])
 		return _first_available([ANIM_SWIM_STEADY, ANIM_SWIM_MOVE])
 
-	if _should_use_takeoff_runup(state):
+	if _should_use_flight_charge_animation(state):
 		if use_ground_stability:
 			_clear_ground_locomotion()
 		return _first_available([ANIM_TAKEOFF_RUNUP, ANIM_RUN_FAST, ANIM_WALK_FAST])
@@ -337,7 +337,7 @@ func _should_use_landing_animation(state: RefCounted) -> bool:
 	)
 
 
-func _should_use_takeoff_runup(state: RefCounted) -> bool:
+func _should_use_flight_charge_animation(state: RefCounted) -> bool:
 	if not state.flight_activation_charging or state.mode == &"flight":
 		return false
 	var threshold := maxf(state.flight_activation_threshold, 0.0)

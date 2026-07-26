@@ -43,6 +43,7 @@ func _initialize() -> void:
 	_expect_visual_facing_direction(failures, visual)
 	_expect_head_look_angles(failures)
 	_expect_transition_mapping(failures, visual)
+	_expect_flight_charge_animation_gate(failures, visual)
 	_expect_locomotion_phase_preserved(failures)
 	_expect_q3_landing_hold_skipped(failures)
 	_expect_slide_animation_selection(failures)
@@ -580,6 +581,44 @@ func _expect_transition_mapping(failures: Array[String], visual: Node) -> void:
 		VisualControllerScript.ANIM_SLIDE,
 		"no-input crouch slide",
 	)
+
+
+func _expect_flight_charge_animation_gate(failures: Array[String], visual: Node) -> void:
+	var early_charge := _state({
+		"mode": &"q3",
+		"flight_activation_charging": true,
+		"flight_activation_charge": 0.10,
+		"flight_activation_threshold": 0.30,
+	})
+	if visual._should_use_flight_charge_animation(early_charge):
+		failures.append("early flight charge should not use charge animation")
+
+	var late_charge := _state({
+		"mode": &"q3",
+		"flight_activation_charging": true,
+		"flight_activation_charge": 0.24,
+		"flight_activation_threshold": 0.30,
+	})
+	if not visual._should_use_flight_charge_animation(late_charge):
+		failures.append("late flight charge should use charge animation")
+
+	var flight_mode_charge := _state({
+		"mode": &"flight",
+		"flight_activation_charging": true,
+		"flight_activation_charge": 0.30,
+		"flight_activation_threshold": 0.30,
+	})
+	if visual._should_use_flight_charge_animation(flight_mode_charge):
+		failures.append("flight mode should ignore charge animation gate")
+
+	var zero_threshold_charge := _state({
+		"mode": &"q3",
+		"flight_activation_charging": true,
+		"flight_activation_charge": 0.0,
+		"flight_activation_threshold": 0.0,
+	})
+	if not visual._should_use_flight_charge_animation(zero_threshold_charge):
+		failures.append("zero threshold flight charge should use charge animation")
 
 
 func _expect_locomotion_phase_preserved(failures: Array[String]) -> void:
