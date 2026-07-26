@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://c01v4dokqmt34"]
 
-[ext_resource type="Script" path="res://addons/goose-moves/scripts/primitive_test_level.gd" id="1_spawner"]
+[ext_resource type="Script" uid="uid://bjmjdrn4vc2w8" path="res://addons/goose-moves/scripts/primitive_test_level.gd" id="1_spawner"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_1"]
 sky_top_color = Color(0.105, 0.149, 0.2, 1)
@@ -76,8 +76,29 @@ albedo_color = Color(0.4, 0.78, 0.94, 1)
 metallic = 0.35
 roughness = 0.18
 
+[sub_resource type="StandardMaterial3D" id="StandardMaterial_sand"]
+albedo_color = Color(0.72, 0.56, 0.25, 1)
+roughness = 0.95
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial_quicksand"]
+albedo_color = Color(0.42, 0.25, 0.1, 1)
+roughness = 0.78
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial_lava"]
+transparency = 1
+albedo_color = Color(0.95, 0.22, 0.05, 0.78)
+roughness = 0.3
+emission_enabled = true
+emission = Color(0.55, 0.055, 0.005, 1)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial_wind"]
+albedo_color = Color(0.55, 0.32, 0.78, 1)
+roughness = 0.45
+emission_enabled = true
+emission = Color(0.12, 0.04, 0.22, 1)
+
 [sub_resource type="BoxShape3D" id="BoxShape3D_pool_volume"]
-size = Vector3(14, 9, 14)
+size = Vector3(80, 9, 14)
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial_water"]
 transparency = 1
@@ -94,31 +115,10 @@ roughness = 0.3
 emission_enabled = true
 emission = Color(0.06, 0.22, 0.025, 1)
 
-[sub_resource type="StandardMaterial3D" id="StandardMaterial_lava"]
-transparency = 1
-albedo_color = Color(0.95, 0.22, 0.05, 0.78)
-roughness = 0.3
-emission_enabled = true
-emission = Color(0.55, 0.055, 0.005, 1)
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial_sand"]
-albedo_color = Color(0.72, 0.56, 0.25, 1)
-roughness = 0.95
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial_quicksand"]
-albedo_color = Color(0.42, 0.25, 0.1, 1)
-roughness = 0.78
-
-[sub_resource type="StandardMaterial3D" id="StandardMaterial_wind"]
-albedo_color = Color(0.55, 0.32, 0.78, 1)
-roughness = 0.45
-emission_enabled = true
-emission = Color(0.12, 0.04, 0.22, 1)
-
 [node name="PrimitiveTestLevel" type="Node3D" unique_id=575387278]
 script = ExtResource("1_spawner")
 
-[node name="FixtureLabels" type="Node3D" parent="."]
+[node name="FixtureLabels" type="Node3D" parent="." unique_id=441772456]
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=857223112]
 environment = SubResource("Environment_1")
@@ -139,9 +139,9 @@ size = Vector3(1000, 0.2, 1000)
 material = SubResource("ShaderMaterial_grid")
 
 [node name="WaterCutout" type="CSGBox3D" parent="GridFloor" unique_id=1342376767]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 35, -1.5, -28)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 64.326515, -1.5, -28)
 operation = 2
-size = Vector3(14.4, 4, 14.4)
+size = Vector3(80, 4, 14.4)
 
 [node name="LavaCutout" type="CSGBox3D" parent="GridFloor" unique_id=143552250]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 35, -1.5, 8)
@@ -282,44 +282,44 @@ material = SubResource("StandardMaterial_ice")
 metadata/q3_surface = "slick"
 metadata/platformer_surface = "ice"
 
-[node name="PlatformerSurfaces" type="Node3D" parent="."]
+[node name="PlatformerSurfaces" type="Node3D" parent="." unique_id=792317974]
 
-[node name="Slippery" type="CSGBox3D" parent="PlatformerSurfaces"]
+[node name="Slippery" type="CSGBox3D" parent="PlatformerSurfaces" unique_id=433560401]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -30, 0.03, 62)
 use_collision = true
 size = Vector3(10, 0.06, 10)
 material = SubResource("StandardMaterial_blue")
 metadata/platformer_surface = "slippery"
 
-[node name="NotSlippery" type="CSGBox3D" parent="PlatformerSurfaces"]
+[node name="NotSlippery" type="CSGBox3D" parent="PlatformerSurfaces" unique_id=65295487]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -18, 0.03, 62)
 use_collision = true
 size = Vector3(10, 0.06, 10)
 material = SubResource("StandardMaterial_teal")
 metadata/platformer_surface = "not_slippery"
 
-[node name="Slow" type="CSGBox3D" parent="PlatformerSurfaces"]
+[node name="Slow" type="CSGBox3D" parent="PlatformerSurfaces" unique_id=18528579]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 0.03, 62)
 use_collision = true
 size = Vector3(10, 0.06, 10)
 material = SubResource("StandardMaterial_amber")
 metadata/platformer_surface = "slow"
 
-[node name="Hard" type="CSGBox3D" parent="PlatformerSurfaces"]
+[node name="Hard" type="CSGBox3D" parent="PlatformerSurfaces" unique_id=1183856176]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0.03, 62)
 use_collision = true
 size = Vector3(10, 0.06, 10)
 material = SubResource("StandardMaterial_slate")
 metadata/platformer_surface = "hard"
 
-[node name="Quicksand" type="CSGBox3D" parent="PlatformerSurfaces"]
+[node name="Quicksand" type="CSGBox3D" parent="PlatformerSurfaces" unique_id=1476249992]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 18, 0.03, 62)
 use_collision = true
 size = Vector3(10, 0.06, 10)
 material = SubResource("StandardMaterial_sand")
 metadata/platformer_surface = "quicksand"
 
-[node name="MovingQuicksand" type="CSGBox3D" parent="PlatformerSurfaces"]
+[node name="MovingQuicksand" type="CSGBox3D" parent="PlatformerSurfaces" unique_id=1945782962]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 30, 0.03, 62)
 use_collision = true
 size = Vector3(10, 0.06, 10)
@@ -327,14 +327,14 @@ material = SubResource("StandardMaterial_quicksand")
 metadata/platformer_surface = "moving_quicksand"
 metadata/platformer_force_direction = Vector3(1, 0, 0)
 
-[node name="Burning" type="CSGBox3D" parent="PlatformerSurfaces"]
+[node name="Burning" type="CSGBox3D" parent="PlatformerSurfaces" unique_id=417017495]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 42, 0.03, 62)
 use_collision = true
 size = Vector3(10, 0.06, 10)
 material = SubResource("StandardMaterial_lava")
 metadata/platformer_surface = "burning"
 
-[node name="HorizontalWind" type="CSGBox3D" parent="PlatformerSurfaces"]
+[node name="HorizontalWind" type="CSGBox3D" parent="PlatformerSurfaces" unique_id=454529264]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 54, 0.03, 62)
 use_collision = true
 size = Vector3(10, 0.06, 10)
@@ -342,36 +342,36 @@ material = SubResource("StandardMaterial_wind")
 metadata/platformer_surface = "horizontal_wind"
 metadata/platformer_force_direction = Vector3(-1, 0, 0)
 
-[node name="VerticalWind" type="CSGBox3D" parent="PlatformerSurfaces"]
+[node name="VerticalWind" type="CSGBox3D" parent="PlatformerSurfaces" unique_id=1511828406]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 66, 0.03, 62)
 use_collision = true
 size = Vector3(10, 0.06, 10)
 material = SubResource("StandardMaterial_wind")
 metadata/platformer_surface = "vertical_wind"
 
-[node name="SurfaceClassSlopes" type="Node3D" parent="."]
+[node name="SurfaceClassSlopes" type="Node3D" parent="." unique_id=171891237]
 
-[node name="VerySlippery12" type="CSGBox3D" parent="SurfaceClassSlopes"]
+[node name="VerySlippery12" type="CSGBox3D" parent="SurfaceClassSlopes" unique_id=1734240153]
 transform = Transform3D(1, 0, 0, 0, 0.9781476, -0.2079117, 0, 0.2079117, 0.9781476, -27, 1.05, 78)
 use_collision = true
 size = Vector3(10, 0.4, 10)
 material = SubResource("StandardMaterial_ice")
 metadata/platformer_surface = "very_slippery"
 
-[node name="Slippery22" type="CSGBox3D" parent="SurfaceClassSlopes"]
+[node name="Slippery22" type="CSGBox3D" parent="SurfaceClassSlopes" unique_id=199784374]
 transform = Transform3D(1, 0, 0, 0, 0.92718387, -0.3746066, 0, 0.3746066, 0.92718387, -9, 1.87, 78)
 use_collision = true
 size = Vector3(10, 0.4, 10)
 material = SubResource("StandardMaterial_blue")
 metadata/platformer_surface = "slippery"
 
-[node name="Default40" type="CSGBox3D" parent="SurfaceClassSlopes"]
+[node name="Default40" type="CSGBox3D" parent="SurfaceClassSlopes" unique_id=854131898]
 transform = Transform3D(1, 0, 0, 0, 0.76604444, -0.64278764, 0, 0.64278764, 0.76604444, 9, 3.21, 78)
 use_collision = true
 size = Vector3(10, 0.4, 10)
 material = SubResource("StandardMaterial_coral")
 
-[node name="NotSlippery50" type="CSGBox3D" parent="SurfaceClassSlopes"]
+[node name="NotSlippery50" type="CSGBox3D" parent="SurfaceClassSlopes" unique_id=9142883]
 transform = Transform3D(1, 0, 0, 0, 0.64278764, -0.76604444, 0, 0.76604444, 0.64278764, 27, 3.83, 78)
 use_collision = true
 size = Vector3(10, 0.4, 10)
@@ -388,11 +388,12 @@ metadata/q3_volume_type = "water"
 metadata/platformer_medium = "water"
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="Volumes/Water" unique_id=760944213]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 29.226868, 0, 0)
 shape = SubResource("BoxShape3D_pool_volume")
 
 [node name="Surface" type="CSGBox3D" parent="Volumes/Water" unique_id=979101280]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4.5, 0)
-size = Vector3(14, 0.04, 14)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 29.338455, 4.5, 0)
+size = Vector3(80, 0.04, 14)
 material = SubResource("StandardMaterial_water")
 
 [node name="Slime" type="Area3D" parent="Volumes" unique_id=1767156755]
@@ -425,33 +426,33 @@ material = SubResource("StandardMaterial_lava")
 [node name="Pools" type="Node3D" parent="." unique_id=1970258624]
 
 [node name="WaterSlope" type="CSGBox3D" parent="Pools" unique_id=2126288644]
-transform = Transform3D(1, 0, 0, 0, 0.7431448, 0.6691306, 0, -0.6691306, 0.7431448, 35, -4.5, -26)
+transform = Transform3D(-4.371139e-08, 0.6691306, -0.7431448, 0, 0.7431448, 0.6691306, 1, 2.9248628e-08, -3.2483893e-08, 29.291367, -4.5, -27.982996)
 use_collision = true
 size = Vector3(13.8, 0.2, 13.45)
 material = SubResource("StandardMaterial_slate")
 
 [node name="WaterWallLeft" type="CSGBox3D" parent="Pools" unique_id=144070470]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 27.85, -4.5, -28)
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 64.652466, -4.5, -21.055075)
 use_collision = true
-size = Vector3(0.3, 9, 14.3)
+size = Vector3(0.3, 9, 81.58183)
 material = SubResource("StandardMaterial_slate")
 
 [node name="WaterWallRight" type="CSGBox3D" parent="Pools" unique_id=394529920]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 42.15, -4.5, -28)
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 64.40141, -4.5, -35.111416)
 use_collision = true
-size = Vector3(0.3, 9, 14.3)
+size = Vector3(0.3, 9, 82.25133)
 material = SubResource("StandardMaterial_slate")
 
 [node name="WaterSlopeBack" type="CSGBox3D" parent="Pools" unique_id=556318182]
-transform = Transform3D(1, 0, 0, 0, 0.3354515, -0.9420575, 0, 0.9420575, 0.3354515, 35, -4.5, -33.4)
+transform = Transform3D(-4.371139e-08, -0.6691306, -0.7431448, 0, 0.7431448, -0.6691306, 1, -2.9248628e-08, -3.2483893e-08, 100.8077, -4.557668, -27.961203)
 use_collision = true
-size = Vector3(13.8, 0.2, 9.55)
+size = Vector3(13.8, 0.2, 15.414795)
 material = SubResource("StandardMaterial_slate")
 
 [node name="WaterBottom" type="CSGBox3D" parent="Pools" unique_id=2001216897]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 35, -9.05, -31.4)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 63.592052, -9.05, -27.411694)
 use_collision = true
-size = Vector3(13.8, 0.2, 0.8)
+size = Vector3(70.98411, 0.2, 17.069386)
 material = SubResource("StandardMaterial_slate")
 metadata/platformer_surface = "flowing_water"
 metadata/platformer_force_direction = Vector3(0, 0, 1)
