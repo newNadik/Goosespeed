@@ -29,11 +29,15 @@ const Q3_STANDING_HULL_HEIGHT := Q3_STANDING_MAX_Z - Q3_MINS_Z
 const Q3_CROUCH_HULL_HEIGHT := Q3_CROUCH_MAX_Z - Q3_MINS_Z
 const Q3_STANDING_EYE_HEIGHT := Q3_STANDING_VIEWHEIGHT - Q3_MINS_Z
 const Q3_CROUCH_EYE_HEIGHT := Q3_CROUCH_VIEWHEIGHT - Q3_MINS_Z
-const Q3_SWIM_SCALE := 0.5
-const Q3_WATER_ACCELERATION := 4.0
-const Q3_WATER_FRICTION := 1.0
+const Q3_SWIM_SCALE := 1.0
+const Q3_WATER_ACCELERATION := 6.0
+const Q3_WATER_FRICTION := 2.0
 const Q3_SLIME_FRICTION := 12.0
-const Q3_WATER_SINK_SPEED := 60.0
+const Q3_WATER_SURFACE_RISE_SPEED := 30.0
+const Q3_SWIM_SURFACE_DEPTH := 0.8
+const Q3_SWIM_SURFACE_TOLERANCE := 0.25
+const Q3_SWIM_SURFACE_FLOAT_RESPONSE := 8.0
+const Q3_SWIM_SURFACE_FLOAT_ACCELERATION := 18.0
 const Q3_VOLUME_COLLISION_MASK := 2
 const Q3_WATER_JUMP_FORWARD_DISTANCE := 30.0 * Q3_METERS_PER_UNIT
 const Q3_WATER_JUMP_LOW_PROBE_HEIGHT := (Q3_MINS_Z * -1.0 + 4.0) * Q3_METERS_PER_UNIT
@@ -249,6 +253,8 @@ var body_shape: BoxShape3D
 var body_mesh: BoxMesh
 var water_level := 0
 var water_type: StringName
+var water_surface_y := 0.0
+var has_water_surface := false
 var water_jump_time_remaining := 0.0
 var character_collider_visible := true
 var intended_movement_direction := Vector3.ZERO
@@ -346,7 +352,7 @@ func physics_tick(delta: float) -> void:
 		_water_jump_move(delta)
 		_end_force_vector_debug_frame(debug_start_velocity, delta)
 		return
-	if water_level > 1:
+	if _should_swim(grounded):
 		if _try_water_jump():
 			_water_jump_move(delta)
 			_end_force_vector_debug_frame(debug_start_velocity, delta)
@@ -491,7 +497,7 @@ func _try_wall_jump(grounded: bool) -> bool:
 		not control_enabled
 		or not wall_jump_enabled
 		or grounded
-		or water_level > 1
+		or _should_swim(grounded)
 		or wall_jump_cooldown_remaining > 0.0
 		or not KeybindingsSettings.is_action_just_pressed(&"player_special")
 		or not _wall_jump_height_allowed()
@@ -724,12 +730,16 @@ func _can_stand() -> bool:
 func _update_water_level() -> void:
 	water_level = 0
 	water_type = &""
+	water_surface_y = 0.0
+	has_water_surface = false
 	var eye_height := head.position.y
 	var water_area := _get_water_area_at(global_position + (Vector3.UP * Q3_METERS_PER_UNIT))
 	if water_area == null:
 		return
 
 	water_type = StringName(water_area.get_meta("q3_volume_type", &"water"))
+	water_surface_y = _get_water_surface_y(water_area)
+	has_water_surface = is_finite(water_surface_y)
 	water_level = 1
 	if _get_water_area_at(global_position + (Vector3.UP * (eye_height * 0.5))) == null:
 		return
@@ -751,6 +761,67 @@ func _get_water_area_at(point: Vector3) -> Area3D:
 	return results[0].get("collider") as Area3D
 
 
+func _get_water_surface_y(water_area: Area3D) -> float:
+	if water_area.has_meta("q3_surface_y"):
+		return float(water_area.get_meta("q3_surface_y"))
+	var explicit_surface := water_area.get_node_or_null("Surface") as Node3D
+	if explicit_surface != null:
+		return explicit_surface.global_position.y
+
+	var surface_y := -INF
+	for child in water_area.get_children():
+		var shape_node := child as CollisionShape3D
+		if shape_node == null or shape_node.disabled:
+			continue
+		var box := shape_node.shape as BoxShape3D
+		if box == null:
+			continue
+		var half_size := box.size * 0.5
+		var basis := shape_node.global_basis
+		var vertical_extent := (
+			absf(basis.x.y) * half_size.x
+			+ absf(basis.y.y) * half_size.y
+			+ absf(basis.z.y) * half_size.z
+		)
+		surface_y = maxf(surface_y, shape_node.global_position.y + vertical_extent)
+	return surface_y
+
+
+func _should_swim(grounded: bool) -> bool:
+	return water_level > 1 or (water_level > 0 and not grounded)
+
+
+func _is_surface_swimming(grounded: bool) -> bool:
+	if not _should_swim(grounded) or not has_water_surface:
+		return false
+	if Input.get_action_strength("player_crouch") > 0.0:
+		return false
+	return _is_at_swim_surface()
+
+
+func _is_underwater_swimming(grounded: bool) -> bool:
+	return _should_swim(grounded) and not _is_surface_swimming(grounded)
+
+
+func _is_at_swim_surface() -> bool:
+	return has_water_surface and global_position.y >= _get_swim_surface_target_y() - Q3_SWIM_SURFACE_TOLERANCE
+
+
+func clear_water_state() -> void:
+	water_level = 0
+	water_type = &""
+	water_surface_y = 0.0
+	has_water_surface = false
+	water_jump_time_remaining = 0.0
+
+
+func settle_to_swim_surface() -> void:
+	if not has_water_surface:
+		return
+	global_position.y = minf(global_position.y, _get_swim_surface_target_y())
+	_clamp_to_swim_surface()
+
+
 func _water_move(movement_input: Vector2, delta: float) -> void:
 	_apply_friction(delta, false)
 	var wish_velocity := _get_swim_wish_velocity(movement_input)
@@ -758,11 +829,13 @@ func _water_move(movement_input: Vector2, delta: float) -> void:
 	if wish_speed > move_speed * swim_speed_scale:
 		wish_speed = move_speed * swim_speed_scale
 	_accelerate(wish_velocity.normalized(), wish_speed, water_acceleration, delta)
+	_apply_surface_float(delta)
 
 	if is_on_floor() and velocity.dot(get_floor_normal()) < 0.0:
 		_project_velocity_onto_plane(get_floor_normal())
 
 	move_and_slide()
+	_clamp_to_swim_surface()
 	_update_floor_surface()
 
 
@@ -808,9 +881,11 @@ func _has_solid_at(point: Vector3) -> bool:
 
 
 func _get_swim_wish_velocity(movement_input: Vector2) -> Vector3:
-	var vertical_input := _get_vertical_input()
+	var vertical_input := _get_swim_vertical_input()
 	if movement_input.is_zero_approx() and is_zero_approx(vertical_input):
-		return Vector3.DOWN * Q3_WATER_SINK_SPEED * Q3_METERS_PER_UNIT
+		if water_level >= 3 and not has_water_surface:
+			return Vector3.UP * Q3_WATER_SURFACE_RISE_SPEED * Q3_METERS_PER_UNIT
+		return Vector3.ZERO
 
 	var movement_scale := _get_movement_scale()
 	var forward_move := movement_input.y * movement_scale
@@ -818,9 +893,58 @@ func _get_swim_wish_velocity(movement_input: Vector2) -> Vector3:
 	var maximum_move := maxf(maxf(absf(forward_move), absf(right_move)), absf(vertical_input))
 	var total_move := sqrt((forward_move * forward_move) + (right_move * right_move) + (vertical_input * vertical_input))
 	var command_scale := move_speed * maximum_move / total_move
-	var forward := -head.global_transform.basis.z
+	var forward := _get_surface_swim_forward(vertical_input)
 	var right := _get_flat_view_right()
 	return ((forward * forward_move) + (right * right_move) + (Vector3.UP * vertical_input)) * command_scale
+
+
+func _get_surface_swim_forward(vertical_input: float) -> Vector3:
+	if not is_zero_approx(vertical_input):
+		return -head.global_transform.basis.z
+	var forward := -head.global_transform.basis.z
+	forward.y = 0.0
+	if forward.is_zero_approx():
+		forward = -global_transform.basis.z
+		forward.y = 0.0
+	return forward.normalized() if not forward.is_zero_approx() else Vector3.FORWARD
+
+
+func _get_swim_vertical_input() -> float:
+	if Input.is_action_pressed("player_flap"):
+		if _should_swim(is_on_floor()) and not _is_at_swim_surface():
+			return 1.0 - Input.get_action_strength("player_crouch")
+		return -Input.get_action_strength("player_crouch")
+	return _get_vertical_input()
+
+
+func _apply_surface_float(delta: float) -> void:
+	if not has_water_surface or _get_swim_vertical_input() < 0.0:
+		return
+	var target_y := _get_swim_surface_target_y()
+	var desired_velocity_y := clampf(
+		(target_y - global_position.y) * Q3_SWIM_SURFACE_FLOAT_RESPONSE,
+		-move_speed * 0.35,
+		move_speed * 0.35,
+	)
+	velocity.y = move_toward(
+		velocity.y,
+		desired_velocity_y,
+		Q3_SWIM_SURFACE_FLOAT_ACCELERATION * delta,
+	)
+
+
+func _clamp_to_swim_surface() -> void:
+	if not has_water_surface or _get_swim_vertical_input() < 0.0:
+		return
+	var target_y := _get_swim_surface_target_y()
+	if global_position.y <= target_y:
+		return
+	global_position.y = target_y
+	velocity.y = minf(velocity.y, 0.0)
+
+
+func _get_swim_surface_target_y() -> float:
+	return water_surface_y - Q3_SWIM_SURFACE_DEPTH
 
 
 func _get_current_friction_coefficient() -> float:
@@ -836,7 +960,7 @@ func _get_current_friction_coefficient() -> float:
 func _get_current_acceleration() -> float:
 	if water_jump_time_remaining > 0.0:
 		return 0.0
-	if water_level > 1:
+	if _should_swim(is_on_floor()):
 		return water_acceleration
 	if is_on_floor() and not floor_is_slick:
 		return _get_ground_acceleration() * (WARSOW_CROUCH_SLIDE_CONTROL if is_crouch_sliding else 1.0)
@@ -1075,7 +1199,7 @@ func handle_unhandled_input(event: InputEvent) -> void:
 	if event is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
 		yaw -= event.relative.x * mouse_sensitivity
 		pitch = clampf(pitch - (event.relative.y * mouse_sensitivity), deg_to_rad(-89.0), deg_to_rad(89.0))
-		_apply_view_rotation(_idle_camera_orbit_is_active(_get_movement_input(), is_on_floor()))
+		_apply_view_rotation(_idle_camera_orbit_is_active(_get_movement_input()))
 
 
 func recenter_camera() -> void:
@@ -1186,15 +1310,21 @@ func _sync_body_yaw_for_movement(movement_input: Vector2, grounded: bool) -> voi
 	_apply_view_rotation(false)
 
 
-func _idle_camera_orbit_is_active(movement_input: Vector2, grounded: bool) -> bool:
+func _idle_camera_orbit_is_active(movement_input: Vector2, grounded := is_on_floor()) -> bool:
 	return (
 		idle_camera_orbit_enabled
 		and third_person_enabled
-		and grounded
-		and water_level <= 1
+		and _idle_camera_orbit_surface_allows(grounded)
 		and movement_input.is_zero_approx()
+		and _get_vertical_input() >= 0.0
 		and Vector2(velocity.x, velocity.z).length_squared() < 0.0025
 	)
+
+
+func _idle_camera_orbit_surface_allows(grounded: bool) -> bool:
+	if grounded and water_level <= 1:
+		return true
+	return _should_swim(grounded) and has_water_surface
 
 
 func _apply_view_rotation(orbit_body: bool) -> void:

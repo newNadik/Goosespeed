@@ -20,6 +20,7 @@ const CAMERA_TRANSITION_DURATION := 0.2
 const FLIGHT_COLLISION_SIZE := Vector3(1.2, 1.2, 1.2)
 const TAKEOFF_FLIGHT_MAX_PITCH_UP := deg_to_rad(30.0)
 const TAKEOFF_FLIGHT_MAX_PITCH_DOWN := deg_to_rad(25.0)
+const WATER_TAKEOFF_VERTICAL_SPEED_SCALE := 0.85
 const Q3_MOVEMENT_MOTOR := preload("res://addons/goose-moves/scripts/q3_movement_motor.gd")
 const FLIGHT_MOVEMENT_MOTOR := preload("res://addons/goose-moves/scripts/flight_movement_motor.gd")
 const Q3_MOVEMENT_HUD := preload("res://addons/goose-moves/scripts/q3_movement_hud.gd")
@@ -127,6 +128,7 @@ func _physics_process(delta: float) -> void:
 		flight_motor.physics_tick(delta)
 		if flight_motor.consume_flap_impulse_fired():
 			movement_state.record_flap()
+		q3_motor._update_water_level()
 		var flight_bounce_impact := _get_body_bounce_impact(flight_impact_velocity)
 		if not flight_bounce_impact.is_empty():
 			var bounced_velocity := _get_body_bounce_velocity(
@@ -137,6 +139,8 @@ func _physics_process(delta: float) -> void:
 			velocity = bounced_velocity
 			movement_state.record_crash(flight_bounce_impact)
 			_start_knockdown()
+		elif _flight_entered_water():
+			_enter_q3_water_landing(flight_impact_velocity)
 		elif get_slide_collision_count() > 0:
 			var flight_landing_impact := _get_floor_impact(flight_impact_velocity)
 			_enter_q3(true)
@@ -417,7 +421,7 @@ func _get_movement_state_snapshot() -> Dictionary:
 		"intended_movement_direction": q3_motor.intended_movement_direction if mode == Mode.Q3 else Vector3.ZERO,
 		"intended_movement_magnitude": q3_motor.intended_movement_magnitude if mode == Mode.Q3 else 0.0,
 		"grounded": grounded,
-		"swimming": q3_motor.water_level > 1,
+		"swimming": mode == Mode.Q3 and q3_motor._should_swim(grounded),
 		"water_level": q3_motor.water_level,
 		"water_type": q3_motor.water_type,
 		"crouching": q3_motor.is_crouching,
@@ -471,10 +475,22 @@ func _update_flap_hold(delta: float) -> void:
 	if _is_knocked_down():
 		flap_hold_time = 0.0
 		return
+	if not _can_charge_flight_hold():
+		flap_hold_time = 0.0
+		return
 	if Input.is_action_pressed("player_flap"):
 		flap_hold_time += delta
 	else:
 		flap_hold_time = 0.0
+
+
+func _can_charge_flight_hold() -> bool:
+	if mode != Mode.Q3:
+		return false
+	var grounded := is_on_floor()
+	if q3_motor._should_swim(grounded):
+		return q3_motor._is_surface_swimming(grounded)
+	return true
 
 
 func _update_no_surface_contact_time(delta: float) -> void:
@@ -485,12 +501,21 @@ func _update_no_surface_contact_time(delta: float) -> void:
 
 
 func _can_activate_flight() -> bool:
+	var grounded := is_on_floor()
+	var swimming := q3_motor._should_swim(grounded)
+	var surface_swimming := q3_motor._is_surface_swimming(grounded)
 	return (
 		not _is_knocked_down()
 		and flap_hold_time >= flight_hold_threshold
-		and no_surface_contact_time >= flight_no_contact_threshold
-		and velocity.length() >= flight_min_activation_speed
+		and (surface_swimming or (not swimming and no_surface_contact_time >= flight_no_contact_threshold))
+		and _flight_activation_speed(swimming) >= flight_min_activation_speed
 	)
+
+
+func _flight_activation_speed(swimming: bool) -> float:
+	if swimming:
+		return Vector2(velocity.x, velocity.z).length()
+	return velocity.length()
 
 
 func _is_touching_surface() -> bool:
@@ -553,11 +578,14 @@ func _update_knockdown_hud() -> void:
 func _enter_flight() -> void:
 	if mode == Mode.FLIGHT:
 		return
+	var entering_from_surface_swim := q3_motor._is_surface_swimming(is_on_floor())
 	var previous_camera := get_view_camera()
 	var previous_view_transform := previous_camera.global_transform
 	var previous_view_fov := previous_camera.fov
-	var preserved_velocity := velocity
+	var preserved_velocity := _water_takeoff_velocity(velocity) if entering_from_surface_swim else velocity
 	var preserved_position := global_position
+	if entering_from_surface_swim:
+		preserved_position.y = maxf(preserved_position.y, q3_motor._get_swim_surface_target_y())
 	var view_transform := previous_view_transform
 	var flight_basis := _get_takeoff_flight_basis(view_transform.basis, preserved_velocity)
 	var entering_from_flap_hold := Input.is_action_pressed("player_flap")
@@ -574,6 +602,7 @@ func _enter_flight() -> void:
 	)
 	velocity = preserved_velocity
 	mode = Mode.FLIGHT
+	q3_motor.clear_water_state()
 	movement_state.record_entered_flight()
 	motion_mode = CharacterBody3D.MOTION_MODE_FLOATING
 	floor_snap_length = 0.0
@@ -584,6 +613,12 @@ func _enter_flight() -> void:
 	_begin_camera_transition(previous_view_transform, previous_view_fov, flight_motor.get_view_camera())
 	if entering_from_flap_hold:
 		Input.action_release("player_flap")
+
+
+func _water_takeoff_velocity(source_velocity: Vector3) -> Vector3:
+	var result := source_velocity
+	result.y = maxf(result.y, q3_motor.jump_velocity * WATER_TAKEOFF_VERTICAL_SPEED_SCALE)
+	return result
 
 
 func _get_takeoff_flight_basis(view_basis: Basis, takeoff_velocity: Vector3) -> Basis:
@@ -661,6 +696,23 @@ func _enter_q3(snap_upright: bool) -> void:
 	q3_motor.reset_camera_anchor_smoothing()
 	if should_blend_camera:
 		_begin_camera_transition(previous_view_transform, previous_view_fov, _get_q3_view_camera())
+
+
+func _flight_entered_water() -> bool:
+	return q3_motor.water_level > 0 and velocity.y <= 0.0
+
+
+func _enter_q3_water_landing(impact_velocity: Vector3) -> void:
+	_enter_q3(true)
+	q3_motor._update_water_level()
+	q3_motor.settle_to_swim_surface()
+	velocity.y = minf(velocity.y, 0.0)
+	var impact := {
+		"normal": Vector3.UP,
+		"speed": maxf(0.0, -impact_velocity.y),
+		"surface_type": q3_motor.water_type if q3_motor.water_type != &"" else &"water",
+	}
+	_record_landing_and_preserve(impact_velocity, impact)
 
 
 func _set_q3_visuals() -> void:

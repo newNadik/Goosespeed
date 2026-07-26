@@ -1,5 +1,6 @@
 extends "res://addons/goose-moves/tests/q3_test.gd"
-# Controller math vs the source-verified Q3 reference
+# Controller math vs the source-verified Q3 reference, with documented
+# GooseSpeed tuning overrides for water movement.
 # (references/Quake-III-Arena/code/game/bg_pmove.c, docs/q3-movement.md).
 # Pure function checks — the controller instance never runs a physics frame.
 
@@ -25,6 +26,7 @@ func step() -> void:
 	_warsow_ramp_clip()
 	_projection()
 	_wish_speed()
+	_swimming()
 	finish()
 
 
@@ -38,9 +40,9 @@ func _constants() -> void:
 	check_approx("ground acceleration = 10", c.ground_acceleration, 10.0)
 	check_approx("air acceleration = 1", c.air_acceleration, 1.0)
 	check_approx("friction = 6", c.friction, 6.0)
-	check_approx("water acceleration = 4", c.water_acceleration, 4.0)
-	check_approx("water friction = 1", c.water_friction, 1.0)
-	check_approx("swim scale = 0.5", c.swim_speed_scale, 0.5)
+	check_approx("water acceleration = 6", c.water_acceleration, 6.0)
+	check_approx("water friction = 2", c.water_friction, 2.0)
+	check_approx("swim scale = 1.0", c.swim_speed_scale, 1.0)
 	check_approx("crouch scale = 0.25", c.crouch_speed_scale, 0.25)
 	check_approx("walk scale = 64/127", c.walk_speed_scale, 64.0 / 127.0)
 	check_approx("max slope angle from MIN_WALK_NORMAL 0.7",
@@ -93,13 +95,13 @@ func _friction() -> void:
 	c.velocity = Vector3(320.0 * U, 0, 0)
 	c._apply_friction(DT, true)
 	check_approx("wading: water friction stacks on ground friction",
-		c.velocity.x, 320.0 * U * (1.0 - 6.0 * DT - 1.0 * 1.0 * DT))
+		c.velocity.x, 320.0 * U * (1.0 - 6.0 * DT - 2.0 * 1.0 * DT))
 
 	c.water_level = 3
 	c.velocity = Vector3(4, 2, 0)
 	c._apply_friction(DT, false)
 	check_vec3("swimming: drop = speed*waterfriction*level*dt on the full 3D vector",
-		c.velocity, Vector3(4, 2, 0) * (1.0 - 3.0 * DT))
+		c.velocity, Vector3(4, 2, 0) * (1.0 - 6.0 * DT))
 
 	# project extension, not VQ3 (Q3 uses pm_waterfriction for all liquids)
 	c.water_type = &"slime"
@@ -245,3 +247,82 @@ func _wish_speed() -> void:
 	check_approx("wishspeed: held vertical input lowers horizontal wishspeed (CmdScale quirk)",
 		c._get_wish_speed(Vector2(0, 1)), c.move_speed / sqrt(2.0), 1e-3)
 	Input.action_release("player_crouch")
+
+
+func _swimming() -> void:
+	c.water_level = 2
+	c.head.rotation.x = deg_to_rad(-35.0)
+	var surface_wish: Vector3 = c._get_swim_wish_velocity(Vector2(0, 1))
+	check_approx("surface swim ignores view pitch without vertical input",
+		surface_wish.y, 0.0, 1e-5)
+	check_approx("surface swim top speed matches run speed",
+		surface_wish.length(), c.move_speed, 1e-5)
+
+	var idle_surface_wish: Vector3 = c._get_swim_wish_velocity(Vector2.ZERO)
+	check_vec3("surface swim idle holds depth instead of sinking",
+		idle_surface_wish, Vector3.ZERO, 1e-6)
+
+	c.water_level = 3
+	var submerged_idle_wish: Vector3 = c._get_swim_wish_velocity(Vector2.ZERO)
+	check_vec3("submerged swim idle gently rises toward the surface",
+		submerged_idle_wish,
+		Vector3.UP * c.Q3_WATER_SURFACE_RISE_SPEED * U,
+		1e-6)
+
+	Input.action_press("player_crouch")
+	var dive_wish: Vector3 = c._get_swim_wish_velocity(Vector2.ZERO)
+	check("crouch input intentionally dives", dive_wish.y < 0.0)
+	Input.action_release("player_crouch")
+
+	Input.action_press("player_jump")
+	check("jump input can swim upward", c._get_swim_vertical_input() > 0.0)
+	Input.action_release("player_jump")
+	Input.action_press("player_flap")
+	check_approx("underwater held flap swims upward",
+		c._get_swim_vertical_input(), 1.0, 1e-6)
+	c.water_level = 2
+	c.has_water_surface = true
+	c.water_surface_y = 1.0
+	c.global_position.y = c._get_swim_surface_target_y()
+	check_approx("surface held flap does not add swim-up input",
+		c._get_swim_vertical_input(), 0.0, 1e-6)
+	var held_flap_wish: Vector3 = c._get_swim_wish_velocity(Vector2.ZERO)
+	check_vec3("held flap leaves surface swim idle neutral",
+		held_flap_wish, Vector3.ZERO, 1e-6)
+	Input.action_press("player_crouch")
+	check("crouch still dives while flap is held", c._get_swim_vertical_input() < 0.0)
+	Input.action_release("player_crouch")
+	Input.action_release("player_flap")
+	c.has_water_surface = false
+	c.global_position = Vector3.ZERO
+
+	c.water_level = 1
+	check("shallow grounded water does not force swimming", not c._should_swim(true))
+	check("shallow airborne water enters surface swimming", c._should_swim(false))
+
+	c.has_water_surface = true
+	c.water_surface_y = 1.0
+	c.global_position = Vector3.ZERO
+	c.velocity = Vector3.ZERO
+	c._apply_surface_float(DT)
+	check("surface float lifts toward the waterline target", c.velocity.y > 0.0)
+	c.global_position.y = c.water_surface_y - c.Q3_SWIM_SURFACE_DEPTH + 0.25
+	c.velocity = Vector3.ZERO
+	c._apply_surface_float(DT)
+	check("surface float settles downward when above target", c.velocity.y < 0.0)
+	Input.action_press("player_crouch")
+	c.velocity = Vector3.ZERO
+	c._apply_surface_float(DT)
+	check_vec3("dive input bypasses surface float", c.velocity, Vector3.ZERO, 1e-6)
+	Input.action_release("player_crouch")
+	c.global_position.y = c.water_surface_y
+	c.velocity = Vector3.UP
+	c._clamp_to_swim_surface()
+	check_approx("surface clamp keeps swimmer at float target",
+		c.global_position.y,
+		c.water_surface_y - c.Q3_SWIM_SURFACE_DEPTH,
+		1e-6)
+	check("surface clamp clears upward velocity", c.velocity.y <= 0.0)
+	c.has_water_surface = false
+	c.head.rotation = Vector3.ZERO
+	c.water_level = 0

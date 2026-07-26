@@ -66,6 +66,32 @@ func _initialize() -> void:
 	_expect_animation(
 		failures,
 		visual,
+		_state({"swimming": true, "crouching": true, "vertical_speed": -1.0, "velocity": Vector3.DOWN}),
+		VisualControllerScript.ANIM_SWIM_DIVE,
+		"swim dive",
+	)
+	_expect_animation(
+		failures,
+		visual,
+		_state({"swimming": true, "water_level": 3, "vertical_speed": 1.0, "velocity": Vector3.UP}),
+		VisualControllerScript.ANIM_SWIM_UP,
+		"underwater swim up",
+	)
+	_expect_animation(
+		failures,
+		visual,
+		_state({
+			"swimming": true,
+			"flight_activation_charging": true,
+			"flight_activation_charge": 0.24,
+			"flight_activation_threshold": 0.30,
+		}),
+		VisualControllerScript.ANIM_SWIM_TAKEOFF,
+		"surface swim takeoff charge",
+	)
+	_expect_animation(
+		failures,
+		visual,
 		_state({"mode": &"q3", "grounded": false, "horizontal_speed": 5.0, "velocity": Vector3.UP * 2.0}),
 		VisualControllerScript.ANIM_RUN_SLOW,
 		"uphill contact-airborne run",
@@ -145,6 +171,13 @@ func _initialize() -> void:
 	_expect_visual_state(
 		failures,
 		visual,
+		_state({"mode": &"flight", "swimming": true, "grounded": false}),
+		&"flight_glide",
+		"flight visual state ignores stale swim flag",
+	)
+	_expect_visual_state(
+		failures,
+		visual,
 		_state({"mode": &"flight", "grounded": false, "just_entered_flight": true, "flapping": true}),
 		&"flight_flap",
 		"flight flap beats entry visual state",
@@ -203,6 +236,32 @@ func _initialize() -> void:
 		}),
 		&"run",
 		"q3 landing carry visual state keeps locomotion",
+	)
+	_expect_visual_state(
+		failures,
+		visual,
+		_state({"swimming": true, "crouching": true, "vertical_speed": -1.0}),
+		&"swim_dive",
+		"swim dive visual state",
+	)
+	_expect_visual_state(
+		failures,
+		visual,
+		_state({"swimming": true, "water_level": 3, "vertical_speed": 1.0}),
+		&"swim_up",
+		"swim up visual state",
+	)
+	_expect_visual_state(
+		failures,
+		visual,
+		_state({
+			"swimming": true,
+			"flight_activation_charging": true,
+			"flight_activation_charge": 0.24,
+			"flight_activation_threshold": 0.30,
+		}),
+		&"swim_takeoff_charge",
+		"surface swim takeoff visual state",
 	)
 
 	visual.free()
@@ -536,6 +595,13 @@ func _expect_transition_mapping(failures: Array[String], visual: Node) -> void:
 		_state({"mode": &"flight", "grounded": false, "velocity": Vector3.FORWARD * 10.0}),
 		VisualControllerScript.ANIM_FLY_GLIDE,
 		"flight glide mode",
+	)
+	_expect_animation(
+		failures,
+		visual,
+		_state({"mode": &"flight", "swimming": true, "grounded": false, "velocity": Vector3.FORWARD * 10.0}),
+		VisualControllerScript.ANIM_FLY_GLIDE,
+		"flight ignores stale swim animation flag",
 	)
 	_expect_animation(
 		failures,

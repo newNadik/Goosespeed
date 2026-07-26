@@ -34,7 +34,8 @@ const Q3_SWIM_SCALE := Q3_MOVEMENT_MOTOR.Q3_SWIM_SCALE
 const Q3_WATER_ACCELERATION := Q3_MOVEMENT_MOTOR.Q3_WATER_ACCELERATION
 const Q3_WATER_FRICTION := Q3_MOVEMENT_MOTOR.Q3_WATER_FRICTION
 const Q3_SLIME_FRICTION := Q3_MOVEMENT_MOTOR.Q3_SLIME_FRICTION
-const Q3_WATER_SINK_SPEED := Q3_MOVEMENT_MOTOR.Q3_WATER_SINK_SPEED
+const Q3_WATER_SURFACE_RISE_SPEED := Q3_MOVEMENT_MOTOR.Q3_WATER_SURFACE_RISE_SPEED
+const Q3_SWIM_SURFACE_DEPTH := Q3_MOVEMENT_MOTOR.Q3_SWIM_SURFACE_DEPTH
 const Q3_VOLUME_COLLISION_MASK := Q3_MOVEMENT_MOTOR.Q3_VOLUME_COLLISION_MASK
 const Q3_WATER_JUMP_FORWARD_DISTANCE := Q3_MOVEMENT_MOTOR.Q3_WATER_JUMP_FORWARD_DISTANCE
 const Q3_WATER_JUMP_LOW_PROBE_HEIGHT := Q3_MOVEMENT_MOTOR.Q3_WATER_JUMP_LOW_PROBE_HEIGHT
@@ -287,6 +288,18 @@ var water_type:
 	set(value):
 		motor.water_type = value
 
+var water_surface_y:
+	get:
+		return motor.water_surface_y
+	set(value):
+		motor.water_surface_y = value
+
+var has_water_surface:
+	get:
+		return motor.has_water_surface
+	set(value):
+		motor.has_water_surface = value
+
 var water_jump_time_remaining:
 	get:
 		return motor.water_jump_time_remaining
@@ -348,7 +361,7 @@ func get_movement_state() -> Dictionary:
 		"velocity": velocity,
 		"facing_direction": -global_basis.z,
 		"grounded": grounded,
-		"swimming": water_level > 1,
+		"swimming": motor._should_swim(grounded),
 		"water_level": water_level,
 		"water_type": water_type,
 		"crouching": is_crouching,
@@ -421,6 +434,27 @@ func _update_water_level() -> void:
 func _get_water_area_at(point: Vector3) -> Area3D:
 	return motor._get_water_area_at(point)
 
+func _get_water_surface_y(water_area: Area3D) -> float:
+	return motor._get_water_surface_y(water_area)
+
+func _should_swim(grounded: bool) -> bool:
+	return motor._should_swim(grounded)
+
+func _is_surface_swimming(grounded: bool) -> bool:
+	return motor._is_surface_swimming(grounded)
+
+func _is_underwater_swimming(grounded: bool) -> bool:
+	return motor._is_underwater_swimming(grounded)
+
+func _is_at_swim_surface() -> bool:
+	return motor._is_at_swim_surface()
+
+func clear_water_state() -> void:
+	motor.clear_water_state()
+
+func settle_to_swim_surface() -> void:
+	motor.settle_to_swim_surface()
+
 func _water_move(movement_input: Vector2, delta: float) -> void:
 	motor._water_move(movement_input, delta)
 
@@ -435,6 +469,18 @@ func _has_solid_at(point: Vector3) -> bool:
 
 func _get_swim_wish_velocity(movement_input: Vector2) -> Vector3:
 	return motor._get_swim_wish_velocity(movement_input)
+
+func _get_swim_vertical_input() -> float:
+	return motor._get_swim_vertical_input()
+
+func _apply_surface_float(delta: float) -> void:
+	motor._apply_surface_float(delta)
+
+func _clamp_to_swim_surface() -> void:
+	motor._clamp_to_swim_surface()
+
+func _get_swim_surface_target_y() -> float:
+	return motor._get_swim_surface_target_y()
 
 func _get_current_friction_coefficient() -> float:
 	return motor._get_current_friction_coefficient()

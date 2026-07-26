@@ -20,6 +20,9 @@ const Q3_N_FLIGHT_DEFAULT_FOV := 80.0
 const Q3_N_FLIGHT_DEFAULT_Q3_THIRD_PERSON := 1.0
 const Q3_N_FLIGHT_DEFAULT_FLIGHT_FIRST_PERSON := 0.0
 const Q3_N_FLIGHT_DEFAULT_MOVEMENT_MODE := Q3CC.MovementMode.WARSOW_CLASSIC
+const OLD_Q3_SWIM_SPEED_SCALE := 0.5
+const OLD_Q3_WATER_ACCELERATION := 4.0
+const OLD_Q3_WATER_FRICTION := 1.0
 const MIN_FOV := 60.0
 const MAX_FOV := 140.0
 const CHARACTER_Q3 := "q3"
@@ -172,6 +175,7 @@ func load_settings() -> void:
 		character_controller = _normalize_character_controller(str(config.get_value(SECTION, "character_controller", CHARACTER_Q3)))
 		_load_controller_settings(config)
 		_load_selected_presets(config)
+		_migrate_swim_defaults()
 	apply_window_mode()
 
 
@@ -469,6 +473,24 @@ func _load_selected_presets(config: ConfigFile) -> void:
 			"source": source,
 			"id": id,
 		}
+
+
+func _migrate_swim_defaults() -> void:
+	for controller_id in [CHARACTER_Q3, CHARACTER_Q3_N_FLIGHT]:
+		var selected := selected_presets.get(controller_id, {}) as Dictionary
+		if selected.get("source", SOURCE_BUILTIN) != SOURCE_BUILTIN:
+			continue
+		if selected.get("id", DEFAULT_PRESET_ID) != DEFAULT_PRESET_ID:
+			continue
+		var settings := controller_settings[controller_id] as Dictionary
+		_migrate_float_setting(settings, "swim_speed_scale", OLD_Q3_SWIM_SPEED_SCALE, Q3CC.Q3_SWIM_SCALE)
+		_migrate_float_setting(settings, "water_acceleration", OLD_Q3_WATER_ACCELERATION, Q3CC.Q3_WATER_ACCELERATION)
+		_migrate_float_setting(settings, "water_friction", OLD_Q3_WATER_FRICTION, Q3CC.Q3_WATER_FRICTION)
+
+
+func _migrate_float_setting(settings: Dictionary, key: String, old_value: float, new_value: float) -> void:
+	if is_equal_approx(float(settings.get(key, new_value)), old_value):
+		settings[key] = new_value
 
 
 func _apply_preset_values(payload: Dictionary, controller_id: String) -> bool:

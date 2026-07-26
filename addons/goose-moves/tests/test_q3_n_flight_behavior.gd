@@ -17,11 +17,27 @@ func _ready() -> void:
 	add_static_box(Vector3(24, 0.2, 24), Transform3D(Basis.IDENTITY, Vector3(0, -0.1, 0)))
 	add_static_box(Vector3(12, 0.2, 12), Transform3D(Basis.IDENTITY, Vector3(20, -0.1, 0)), true)
 	add_static_box(Vector3(1, 6, 8), Transform3D(Basis.IDENTITY, Vector3(0, 3, -6)))
+	_add_water_volume()
 	c = CONTROLLER_SCENE.instantiate()
 	c.position = Vector3(0, 3, 0)
 	add_child(c)
 	Input.action_release("player_jump")
 	Input.action_release("player_flap")
+
+
+func _add_water_volume() -> void:
+	var area := Area3D.new()
+	area.collision_layer = 2
+	area.collision_mask = 0
+	area.set_meta("q3_volume_type", &"water")
+	area.set_meta("q3_surface_y", 1.0)
+	var shape := CollisionShape3D.new()
+	var box := BoxShape3D.new()
+	box.size = Vector3(10.0, 4.0, 10.0)
+	shape.shape = box
+	area.add_child(shape)
+	add_child(area)
+	area.global_position = Vector3(60.0, -1.0, 0.0)
 
 
 func _goto(next: String) -> void:
@@ -194,6 +210,38 @@ func _direct_transitions() -> void:
 		0.001,
 	)
 
+	c.mode = c.Mode.Q3
+	c.q3_motor.water_level = 1
+	c.q3_motor.has_water_surface = true
+	c.q3_motor.water_surface_y = 1.0
+	c.global_position.y = c.q3_motor._get_swim_surface_target_y() - 0.4
+	c.flap_hold_time = c.flight_hold_threshold
+	c.no_surface_contact_time = 0.0
+	c.flight_min_activation_speed = 12.0
+	c.velocity = Vector3(0.0, 20.0, -11.85)
+	check("underwater swim cannot activate flight", not c._can_activate_flight())
+	Input.action_press("player_flap")
+	c.flap_hold_time = 0.0
+	c._update_flap_hold(0.5)
+	check_approx("underwater swim does not charge flight", c.flap_hold_time, 0.0, 0.001)
+	c.global_position.y = c.q3_motor._get_swim_surface_target_y()
+	c._update_flap_hold(0.5)
+	check_approx("surface swim charges flight with normal hold timing", c.flap_hold_time, 0.5, 0.001)
+	Input.action_release("player_flap")
+	c.flap_hold_time = c.flight_hold_threshold
+	c.velocity = Vector3(0.0, 20.0, -11.85)
+	check("water takeoff uses horizontal speed gate", not c._can_activate_flight())
+	c.velocity = Vector3(0.0, 0.0, -12.0)
+	check("water takeoff bypasses airborne no-contact gate", c._can_activate_flight())
+	c._enter_flight()
+	check("water takeoff enters flight mode", c.mode == c.Mode.FLIGHT)
+	check("water takeoff clears stale swim state", not c.get_movement_state()["swimming"])
+	check("water takeoff adds upward launch speed", c.velocity.y > 0.0)
+	c._enter_q3(true)
+	c._cancel_camera_transition()
+	c.q3_motor.clear_water_state()
+	c.global_position = Vector3(0.0, 3.0, 0.0)
+
 	c.velocity = Vector3(3, 4, -5)
 	c.global_basis = (
 		Basis(Vector3.FORWARD, deg_to_rad(40.0))
@@ -295,6 +343,25 @@ func _direct_transitions() -> void:
 	check("hybrid presentation mode disables internal cameras", not c.flight_camera.current and not c.camera.current and not c.third_person_camera.current)
 	c.set_presentation_enabled(true)
 
+	c.global_position = Vector3(60.0, 0.2, 0.0)
+	c.velocity = Vector3(0.0, -3.0, -8.0)
+	c.global_basis = Basis.IDENTITY
+	c._enter_flight()
+	c.q3_motor._update_water_level()
+	check("flight detects water volume entry", c._flight_entered_water())
+	c._enter_q3_water_landing(Vector3(0.0, -3.0, -8.0))
+	var water_landing_state := c.get_movement_state()
+	check("water landing returns to Q3 mode", c.mode == c.Mode.Q3)
+	check("water landing reports swimming", water_landing_state["swimming"])
+	check("water landing records landing event", water_landing_state["just_landed"])
+	check("water landing reports water surface", water_landing_state["landing_surface_type"] == &"water")
+	c.q3_motor.clear_water_state()
+	c.global_position = Vector3(0.0, 3.0, 0.0)
+	c.velocity = Vector3(3, 4, -5)
+	c.global_basis = Basis.IDENTITY
+	c._enter_flight()
+	c._update_camera_transition(c.CAMERA_TRANSITION_DURATION)
+
 	var flight_view_transform := c.get_view_camera().global_transform
 	var flight_view_fov := c.get_view_camera().fov
 	c._enter_q3(true)
@@ -362,6 +429,19 @@ func _check_idle_camera_orbit() -> void:
 	check_approx("idle camera orbit leaves body yaw fixed", c.rotation.y, 0.0, 0.001)
 	check_approx("idle camera orbit stores look yaw on head", c.head.rotation.y, c.q3_motor.yaw, 0.001)
 	check_vec3("idle camera orbit keeps movement facing stable", c.get_movement_state()["facing_direction"], Vector3.FORWARD, 0.001)
+	c.q3_motor.water_level = 1
+	c.q3_motor.has_water_surface = true
+	c.q3_motor.yaw = -0.6
+	c.velocity = Vector3.ZERO
+	c.q3_motor._sync_body_yaw_for_movement(Vector2.ZERO, false)
+	check_approx("swim idle orbit leaves body yaw fixed", c.rotation.y, 0.0, 0.001)
+	check_approx("swim idle orbit stores look yaw on head", c.head.rotation.y, c.q3_motor.yaw, 0.001)
+	Input.action_press("player_crouch")
+	c.q3_motor._sync_body_yaw_for_movement(Vector2.ZERO, false)
+	check_approx("dive input disables swim idle orbit", c.rotation.y, c.q3_motor.yaw, 0.001)
+	Input.action_release("player_crouch")
+	c.q3_motor.water_level = 0
+	c.q3_motor.has_water_surface = false
 	c.q3_motor.third_person_enabled = false
 	c.q3_motor.yaw = -0.8
 	c.q3_motor._sync_body_yaw_for_movement(Vector2.ZERO, true)

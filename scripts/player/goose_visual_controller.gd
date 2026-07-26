@@ -12,6 +12,9 @@ const ANIM_WALK_FAST := &"Goose|A_WalkFast"
 const ANIM_RUN_SLOW := &"Goose|A_RunSlow"
 const ANIM_RUN_FAST := &"Goose|A_RunFast"
 const ANIM_SWIM_STEADY := &"Goose|A_SwimSteady_1"
+const ANIM_SWIM_DIVE := &"Goose|A_SwimSteady_3"
+const ANIM_SWIM_UP := &"Goose|A_SwimSteady_4"
+const ANIM_SWIM_TAKEOFF := &"Goose|A_SwimSteady_5"
 const ANIM_SWIM_MOVE := &"Goose|A_SwimMove"
 const ANIM_SWIM_MEDIUM := &"Goose|A_SwimMoveMedium"
 const ANIM_SWIM_FAST := &"Goose|A_SwimMoveFast"
@@ -31,6 +34,7 @@ const LOOPING_ANIMATIONS := [
 	ANIM_RUN_SLOW,
 	ANIM_RUN_FAST,
 	ANIM_SWIM_STEADY,
+	ANIM_SWIM_UP,
 	ANIM_SWIM_MOVE,
 	ANIM_SWIM_MEDIUM,
 	ANIM_SWIM_FAST,
@@ -270,16 +274,22 @@ func animation_for_state(state: RefCounted) -> StringName:
 func visual_state_for_state(state: RefCounted) -> StringName:
 	if _should_use_landing_animation(state):
 		return &"landing"
+	if _should_use_flight_charge_animation(state) and not state.swimming:
+		return &"takeoff_charge"
+	if state.mode == &"flight":
+		return &"flight_flap" if state.flapping else &"flight_glide"
 	if state.swimming:
+		if _should_use_flight_charge_animation(state):
+			return &"swim_takeoff_charge"
+		if _should_use_swim_dive_animation(state):
+			return &"swim_dive"
+		if _should_use_swim_up_animation(state):
+			return &"swim_up"
 		if state.horizontal_speed >= _run_slow_speed():
 			return &"swim_fast"
 		if state.horizontal_speed >= _walk_medium_speed():
 			return &"swim"
 		return &"swim_idle"
-	if _should_use_flight_charge_animation(state):
-		return &"takeoff_charge"
-	if state.mode == &"flight":
-		return &"flight_flap" if state.flapping else &"flight_glide"
 	if not state.grounded:
 		if state.just_entered_flight:
 			return &"takeoff"
@@ -299,16 +309,7 @@ func _animation_for_state(state: RefCounted, use_ground_stability: bool) -> Stri
 			_clear_ground_locomotion()
 		return _first_available([ANIM_LAND, ANIM_PRE_LAND, ANIM_IDLE])
 
-	if state.swimming:
-		if use_ground_stability:
-			_clear_ground_locomotion()
-		if state.horizontal_speed >= _run_slow_speed():
-			return _first_available([ANIM_SWIM_FAST, ANIM_SWIM_MEDIUM, ANIM_SWIM_MOVE])
-		if state.horizontal_speed >= _walk_medium_speed():
-			return _first_available([ANIM_SWIM_MEDIUM, ANIM_SWIM_MOVE])
-		return _first_available([ANIM_SWIM_STEADY, ANIM_SWIM_MOVE])
-
-	if _should_use_flight_charge_animation(state):
+	if _should_use_flight_charge_animation(state) and not state.swimming:
 		if use_ground_stability:
 			_clear_ground_locomotion()
 		return _first_available([ANIM_TAKEOFF_RUNUP, ANIM_RUN_FAST, ANIM_WALK_FAST])
@@ -319,6 +320,21 @@ func _animation_for_state(state: RefCounted, use_ground_stability: bool) -> Stri
 		if state.flapping:
 			return _first_available([ANIM_FLY_FLAP, ANIM_FLY_GLIDE])
 		return _first_available([ANIM_FLY_GLIDE, ANIM_FLY_FLAP])
+
+	if state.swimming:
+		if use_ground_stability:
+			_clear_ground_locomotion()
+		if _should_use_flight_charge_animation(state):
+			return _first_available([ANIM_SWIM_TAKEOFF, ANIM_SWIM_STEADY, ANIM_SWIM_MOVE])
+		if _should_use_swim_dive_animation(state):
+			return _first_available([ANIM_SWIM_DIVE, ANIM_SWIM_STEADY, ANIM_SWIM_MOVE])
+		if _should_use_swim_up_animation(state):
+			return _first_available([ANIM_SWIM_UP, ANIM_SWIM_STEADY, ANIM_SWIM_MOVE])
+		if state.horizontal_speed >= _run_slow_speed():
+			return _first_available([ANIM_SWIM_FAST, ANIM_SWIM_MEDIUM, ANIM_SWIM_MOVE])
+		if state.horizontal_speed >= _walk_medium_speed():
+			return _first_available([ANIM_SWIM_MEDIUM, ANIM_SWIM_MOVE])
+		return _first_available([ANIM_SWIM_STEADY, ANIM_SWIM_MOVE])
 
 	if not state.grounded:
 		if use_ground_stability:
@@ -389,6 +405,14 @@ func _should_use_flight_charge_animation(state: RefCounted) -> bool:
 	return state.flight_activation_charge >= threshold * clampf(takeoff_runup_charge_ratio, 0.0, 1.0)
 
 
+func _should_use_swim_dive_animation(state: RefCounted) -> bool:
+	return state.crouching and state.vertical_speed < -0.1
+
+
+func _should_use_swim_up_animation(state: RefCounted) -> bool:
+	return state.vertical_speed > 0.1 and state.water_level >= 2
+
+
 func _ground_slide_animation_for_speed(horizontal_speed: float) -> StringName:
 	if horizontal_speed >= _run_slow_speed():
 		return _first_available([ANIM_RUN_FAST, ANIM_RUN_SLOW, ANIM_WALK_FAST])
@@ -438,7 +462,7 @@ func _configure_animation_player() -> void:
 	for animation_name in LOOPING_ANIMATIONS:
 		if animation_player.has_animation(animation_name):
 			animation_player.get_animation(animation_name).loop_mode = Animation.LOOP_LINEAR
-	for animation_name in [ANIM_PRE_LAND, ANIM_TAKEOFF_BOUNCE]:
+	for animation_name in [ANIM_PRE_LAND, ANIM_TAKEOFF_BOUNCE, ANIM_SWIM_DIVE, ANIM_SWIM_TAKEOFF]:
 		if animation_player.has_animation(animation_name):
 			animation_player.get_animation(animation_name).loop_mode = Animation.LOOP_NONE
 	if animation_player.has_animation(ANIM_LAND):
