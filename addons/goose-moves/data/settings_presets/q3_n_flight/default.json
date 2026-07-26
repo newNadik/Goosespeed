@@ -22,7 +22,7 @@
 		"mouse_sensitivity": 0.003,
 		"movement_mode": 1.0,
 		"auto_jump": 1.0,
-		"crouch_slide": 0.0,
+		"crouch_slide": 1.0,
 		"ramp_launch": 0.0,
 		"wall_jump": 0.0,
 		"third_person": 1.0,

@@ -54,7 +54,7 @@ const Q3_SETTING_DEFS: Array[Dictionary] = [
 		{"label": "Warsow Classic (CPM-like)", "value": Q3CC.MovementMode.WARSOW_CLASSIC},
 	]},
 	{"key": "auto_jump", "label": "Autojump", "default": 1.0, "min": 0.0, "max": 1.0, "step": 1.0, "control": "toggle"},
-	{"key": "crouch_slide", "label": "Crouch slide", "default": 0.0, "min": 0.0, "max": 1.0, "step": 1.0, "control": "toggle"},
+	{"key": "crouch_slide", "label": "Slide / tuck", "default": 0.0, "min": 0.0, "max": 1.0, "step": 1.0, "control": "toggle"},
 	{"key": "ramp_launch", "label": "Steep-ramp launch", "default": 0.0, "min": 0.0, "max": 1.0, "step": 1.0, "control": "toggle"},
 	{"key": "wall_jump", "label": "Wall jump", "default": 0.0, "min": 0.0, "max": 1.0, "step": 1.0, "control": "toggle"},
 	{"key": "third_person", "label": "Third-person camera", "default": 0.0, "min": 0.0, "max": 1.0, "step": 1.0, "control": "toggle"},
@@ -240,6 +240,8 @@ func _apply_q3_n_flight_default_overrides(def: Dictionary) -> void:
 			def["default"] = Q3_N_FLIGHT_DEFAULT_Q3_THIRD_PERSON
 		"first_person":
 			def["default"] = Q3_N_FLIGHT_DEFAULT_FLIGHT_FIRST_PERSON
+		"crouch_slide":
+			def["default"] = 1.0
 
 
 func _is_q3_n_flight_fixed_size_key(controller_id: String, key: String) -> bool:

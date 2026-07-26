@@ -42,6 +42,9 @@ func _ready() -> void:
 	if not await _bridge_preserves_backend_flap_state(player, controller):
 		get_tree().quit(1)
 		return
+	if not _hybrid_control_button_behaves_as_slide(controller):
+		get_tree().quit(1)
+		return
 
 	print("Q3 + Flight backend OK")
 	get_tree().quit(0)
@@ -179,6 +182,43 @@ func _bridge_preserves_backend_flap_state(player: Node, controller: Node) -> boo
 		return false
 	if visual.visual_state_for_state(state) != &"flight_flap":
 		push_error("Goose visual state did not use bridged backend flap state")
+		return false
+	return true
+
+
+func _hybrid_control_button_behaves_as_slide(controller: Node) -> bool:
+	var q3_motor = controller.q3_motor
+	if not q3_motor.crouch_slide_enabled:
+		push_error("Q3 + Flight did not force slide/tuck enabled")
+		return false
+	controller._enter_q3(false)
+	q3_motor.water_level = 0
+	q3_motor.is_crouch_sliding = false
+	q3_motor.crouch_slide_time_remaining = 0.0
+	q3_motor.velocity = Vector3(8.0, 0.0, 0.0)
+
+	Input.action_press("player_crouch")
+	q3_motor._update_crouch_slide(1.0 / 60.0, true)
+	if not q3_motor.is_crouch_sliding:
+		Input.action_release("player_crouch")
+		push_error("Control button did not start a grounded slide")
+		return false
+	if q3_motor.crouch_slide_time_remaining > 0.6:
+		Input.action_release("player_crouch")
+		push_error("Grounded slide lasted too long for flat ground")
+		return false
+	q3_motor._update_crouch_state()
+	if not q3_motor.is_crouching:
+		Input.action_release("player_crouch")
+		push_error("Slide did not lower the stance while active")
+		return false
+
+	q3_motor.is_crouch_sliding = false
+	q3_motor.crouch_slide_time_remaining = 0.0
+	q3_motor._update_crouch_state()
+	Input.action_release("player_crouch")
+	if q3_motor.is_crouching:
+		push_error("Control button stayed in dry-ground crouch after slide")
 		return false
 	return true
 

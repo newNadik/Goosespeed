@@ -6,7 +6,7 @@ The game is built around short replayable courses, route learning, immediate res
 
 ## Project Status
 
-This repository is the main Godot game project. It is currently an early shell: project settings are in place, but the first playable scene has not been added yet.
+This repository is the main Godot game project. It currently has a main menu, a GooseSpeed movement lab scene, and the `goose-moves` Q3 + Flight backend integrated for gameplay testing.
 
 Target platform for the initial build:
 
@@ -52,7 +52,7 @@ From this workspace, the project can also be checked headlessly with:
 HOME=/tmp XDG_DATA_HOME=/tmp /Applications/Godot.app/Contents/MacOS/godot --headless --path goosespeed --quit-after 1
 ```
 
-At the moment this exits with "no main scene defined" because the first playable scene has not been created yet.
+The macOS certificate warning from Godot is expected during headless validation and is not treated as a project failure.
 
 ## Design Direction
 

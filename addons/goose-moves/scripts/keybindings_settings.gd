@@ -114,7 +114,7 @@ const Q3_N_FLIGHT_ACTION_LABELS := {
 	"player_right": "Move Right / Roll Right",
 	"player_jump": "Jump",
 	"player_flap": "Flap / Hold Flight",
-	"player_crouch": "Crouch / Exit Flight",
+	"player_crouch": "Slide / Tuck",
 	"player_special": "Special / Wall Jump",
 	"player_walk": "Slow Walk",
 }

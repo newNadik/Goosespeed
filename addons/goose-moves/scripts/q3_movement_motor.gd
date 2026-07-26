@@ -58,6 +58,9 @@ const WARSOW_CROUCH_SLIDE_FADE := 0.5
 const WARSOW_CROUCH_SLIDE_COOLDOWN := 0.7
 const WARSOW_CROUCH_SLIDE_CONTROL := 3.0
 const WARSOW_WALK_SPEED := 160.0
+const GOOSE_GROUND_SLIDE_DURATION := 0.18
+const GOOSE_GROUND_SLIDE_FADE := 0.25
+const GOOSE_GROUND_SLIDE_MIN_SPEED := WARSOW_WALK_SPEED * Q3_METERS_PER_UNIT
 const WARSOW_GROUND_DETACH_SPEED := 180.0
 const WARSOW_SLIDE_OVERBOUNCE := 1.01
 const WARSOW_PLANE_INTERACTION_EPSILON := 0.05
@@ -247,6 +250,7 @@ var floor_is_slick := false
 var is_crouching := false
 var is_crouch_sliding := false
 var crouch_slide_time_remaining := 0.0
+var crouch_slide_fade_duration := WARSOW_CROUCH_SLIDE_FADE
 var ground_friction_multiplier := 1.0
 var wall_jump_cooldown_remaining := 0.0
 var body_shape: BoxShape3D
@@ -319,7 +323,6 @@ func process_tick(delta: float) -> void:
 func physics_tick(delta: float) -> void:
 	var debug_start_velocity := velocity
 	_begin_force_vector_debug_frame()
-	_update_crouch_state()
 	_update_water_level()
 	wall_jump_cooldown_remaining = maxf(wall_jump_cooldown_remaining - delta, 0.0)
 	var grounded := is_on_floor()
@@ -348,6 +351,7 @@ func physics_tick(delta: float) -> void:
 	var movement_input := _get_movement_input()
 	_sync_body_yaw_for_movement(movement_input, grounded)
 	_update_crouch_slide(delta, grounded)
+	_update_crouch_state()
 	if water_jump_time_remaining > 0.0:
 		_water_jump_move(delta)
 		_end_force_vector_debug_frame(debug_start_velocity, delta)
@@ -459,7 +463,15 @@ func _get_movement_scale() -> float:
 func _get_vertical_input() -> float:
 	if not control_enabled:
 		return 0.0
-	return (Input.get_action_strength("player_jump") - Input.get_action_strength("player_crouch"))
+	var crouch_strength := Input.get_action_strength("player_crouch")
+	if (
+		settings_controller_id == Settings.CHARACTER_Q3_N_FLIGHT
+		and is_on_floor()
+		and water_level <= 0
+		and not is_crouch_sliding
+	):
+		crouch_strength = 0.0
+	return Input.get_action_strength("player_jump") - crouch_strength
 
 
 func _jump_requested() -> bool:
@@ -593,6 +605,7 @@ func _update_crouch_slide(delta: float, grounded: bool) -> void:
 	if not crouch_slide_enabled:
 		is_crouch_sliding = false
 		crouch_slide_time_remaining = 0.0
+		crouch_slide_fade_duration = WARSOW_CROUCH_SLIDE_FADE
 		return
 
 	if crouch_slide_time_remaining > 0.0:
@@ -600,19 +613,26 @@ func _update_crouch_slide(delta: float, grounded: bool) -> void:
 		if crouch_slide_time_remaining <= 0.0:
 			crouch_slide_time_remaining = WARSOW_CROUCH_SLIDE_COOLDOWN if is_crouch_sliding else 0.0
 			is_crouch_sliding = false
+			crouch_slide_fade_duration = WARSOW_CROUCH_SLIDE_FADE
 
 	var horizontal_speed := Vector2(velocity.x, velocity.z).length()
 	var can_slide := (
-		_get_vertical_input() < 0.0
-		and horizontal_speed > WARSOW_WALK_SPEED * Q3_METERS_PER_UNIT
+		Input.is_action_pressed("player_crouch")
+		and water_level <= 0
+		and horizontal_speed > GOOSE_GROUND_SLIDE_MIN_SPEED
 	)
 	if can_slide:
-		if crouch_slide_time_remaining > 0.0 or grounded:
+		if is_crouch_sliding or crouch_slide_time_remaining > 0.0:
 			return
+		crouch_slide_fade_duration = GOOSE_GROUND_SLIDE_FADE if grounded else WARSOW_CROUCH_SLIDE_FADE
 		is_crouch_sliding = true
-		crouch_slide_time_remaining = WARSOW_CROUCH_SLIDE_DURATION + WARSOW_CROUCH_SLIDE_FADE
+		crouch_slide_time_remaining = (
+			GOOSE_GROUND_SLIDE_DURATION + GOOSE_GROUND_SLIDE_FADE
+			if grounded
+			else WARSOW_CROUCH_SLIDE_DURATION + WARSOW_CROUCH_SLIDE_FADE
+		)
 	elif is_crouch_sliding:
-		crouch_slide_time_remaining = minf(crouch_slide_time_remaining, WARSOW_CROUCH_SLIDE_FADE)
+		crouch_slide_time_remaining = minf(crouch_slide_time_remaining, crouch_slide_fade_duration)
 
 
 func _update_crouch_state() -> void:
@@ -620,7 +640,10 @@ func _update_crouch_state() -> void:
 		if is_crouching and _can_stand():
 			_set_crouching(false)
 		return
-	if Input.is_action_pressed("player_crouch"):
+	var wants_low_stance := Input.is_action_pressed("player_crouch")
+	if settings_controller_id == Settings.CHARACTER_Q3_N_FLIGHT:
+		wants_low_stance = wants_low_stance and (water_level > 0 or is_crouch_sliding)
+	if wants_low_stance:
 		if not is_crouching:
 			_set_crouching(true)
 	elif is_crouching and _can_stand():
@@ -989,9 +1012,9 @@ func _get_ground_friction() -> float:
 	var ground_friction := WARSOW_FRICTION if movement_mode == MovementMode.WARSOW_CLASSIC else friction
 	if not crouch_slide_enabled or not is_crouch_sliding:
 		return ground_friction * ground_friction_multiplier
-	if crouch_slide_time_remaining >= WARSOW_CROUCH_SLIDE_FADE:
+	if crouch_slide_time_remaining >= crouch_slide_fade_duration:
 		return 0.0
-	var fade_fraction := maxf(crouch_slide_time_remaining, 0.0) / WARSOW_CROUCH_SLIDE_FADE
+	var fade_fraction := maxf(crouch_slide_time_remaining, 0.0) / maxf(crouch_slide_fade_duration, 0.001)
 	return ground_friction * (1.0 - sqrt(fade_fraction)) * ground_friction_multiplier
 
 
@@ -1267,7 +1290,11 @@ func _get_force_vector_debug_origin() -> Vector3:
 func _apply_controller_settings() -> void:
 	movement_mode = roundi(Settings.get_controller_setting("movement_mode", settings_controller_id)) as MovementMode
 	auto_jump = Settings.get_controller_setting("auto_jump", settings_controller_id) >= 0.5
-	crouch_slide_enabled = Settings.get_controller_setting("crouch_slide", settings_controller_id) >= 0.5
+	crouch_slide_enabled = (
+		true
+		if settings_controller_id == Settings.CHARACTER_Q3_N_FLIGHT
+		else Settings.get_controller_setting("crouch_slide", settings_controller_id) >= 0.5
+	)
 	ramp_launch_enabled = Settings.get_controller_setting("ramp_launch", settings_controller_id) >= 0.5
 	wall_jump_enabled = Settings.get_controller_setting("wall_jump", settings_controller_id) >= 0.5
 	third_person_enabled = Settings.get_controller_setting("third_person", settings_controller_id) >= 0.5
@@ -1282,6 +1309,7 @@ func _apply_controller_settings() -> void:
 	if not crouch_slide_enabled:
 		is_crouch_sliding = false
 		crouch_slide_time_remaining = 0.0
+		crouch_slide_fade_duration = WARSOW_CROUCH_SLIDE_FADE
 	move_speed = Settings.get_controller_setting("move_speed", settings_controller_id)
 	ground_acceleration = Settings.get_controller_setting("ground_acceleration", settings_controller_id)
 	air_acceleration = Settings.get_controller_setting("air_acceleration", settings_controller_id)

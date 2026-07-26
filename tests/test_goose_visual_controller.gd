@@ -21,7 +21,7 @@ func _initialize() -> void:
 		visual,
 		_state({"grounded": true, "horizontal_speed": 3.0}),
 		VisualControllerScript.ANIM_WALK_FAST,
-		"q3 crouch speed",
+		"q3 slide-entry speed",
 	)
 	_expect_animation(
 		failures,
@@ -783,15 +783,15 @@ func _expect_transition_mapping(failures: Array[String], visual: Node) -> void:
 			"intended_movement_direction": Vector3.FORWARD,
 			"intended_movement_magnitude": 1.0,
 		}),
-		VisualControllerScript.ANIM_RUN_FAST,
-		"input crouch slide",
+		VisualControllerScript.ANIM_SLIDE,
+		"input slide",
 	)
 	_expect_animation(
 		failures,
 		visual,
 		_state({"grounded": true, "crouch_sliding": true, "horizontal_speed": 5.0}),
 		VisualControllerScript.ANIM_SLIDE,
-		"no-input crouch slide",
+		"no-input slide",
 	)
 
 
@@ -957,8 +957,8 @@ func _expect_slide_animation_selection(failures: Array[String]) -> void:
 		}),
 		true,
 	)
-	if input_slide != VisualControllerScript.ANIM_RUN_FAST:
-		failures.append("input slide selected %s, expected run fast" % input_slide)
+	if input_slide != VisualControllerScript.ANIM_SLIDE:
+		failures.append("input slide selected %s, expected slide pose" % input_slide)
 
 	visual._play_animation(VisualControllerScript.ANIM_SLIDE, 1.0)
 	if player.current_animation != VisualControllerScript.ANIM_SLIDE:

@@ -351,16 +351,10 @@ func _animation_for_state(state: RefCounted, use_ground_stability: bool) -> Stri
 		return _ground_animation_for_speed(state.horizontal_speed)
 
 	if state.crouch_sliding or state.sliding:
-		if not _slide_has_player_input(state):
-			if use_ground_stability:
-				_clear_ground_locomotion()
-			var fallback_animation := _ground_slide_animation_for_speed(state.horizontal_speed)
-			return _first_available([ANIM_SLIDE, fallback_animation])
-
-		var slide_candidate := _ground_slide_animation_for_speed(state.horizontal_speed)
 		if use_ground_stability:
-			return _stable_ground_animation(slide_candidate, state.horizontal_speed)
-		return slide_candidate
+			_clear_ground_locomotion()
+		var fallback_animation := _ground_slide_animation_for_speed(state.horizontal_speed)
+		return _first_available([ANIM_SLIDE, fallback_animation])
 
 	var candidate := _ground_animation_for_speed(state.horizontal_speed)
 	if use_ground_stability:

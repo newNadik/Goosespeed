@@ -27,7 +27,7 @@ func _ready() -> void:
 		"Esc  Pause",
 		"Shift  Walk",
 		"Space  Jump / Hold Flight",
-		"Ctrl  Crouch / Exit Flight",
+		"Ctrl  Slide / Tuck",
 		"Q  Honk",
 		"C  Recenter Camera",
 		"V  Toggle Camera",

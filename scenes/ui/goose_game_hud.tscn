@@ -87,7 +87,7 @@ text = "Space  Jump"
 
 [node name="CrouchLabel" type="Label" parent="Root/HintsPanel/Margin/HintsList"]
 layout_mode = 2
-text = "Ctrl  Crouch"
+text = "Ctrl  Slide / Tuck"
 
 [node name="WalkLabel" type="Label" parent="Root/HintsPanel/Margin/HintsList"]
 layout_mode = 2

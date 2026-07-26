@@ -62,7 +62,7 @@ func _control_hints() -> Array[String]:
 		"Mouse  Look",
 		"Space  Jump / Hold Flight",
 		"Shift  Walk",
-		"Ctrl  Crouch / Exit Flight",
+		"Ctrl  Slide / Tuck",
 		"E  Wall Jump",
 		"Q  Honk",
 		"R  Restart",
