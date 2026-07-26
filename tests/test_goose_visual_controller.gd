@@ -70,6 +70,36 @@ func _initialize() -> void:
 	_expect_animation(
 		failures,
 		visual,
+		_state({
+			"mode": &"q3",
+			"grounded": false,
+			"flight_activation_charging": true,
+			"flight_activation_charge": 0.10,
+			"flight_activation_threshold": 0.30,
+			"horizontal_speed": 5.0,
+			"velocity": Vector3.UP * 2.0,
+		}),
+		VisualControllerScript.ANIM_RUN_SLOW,
+		"early airborne flight charge keeps locomotion",
+	)
+	_expect_animation(
+		failures,
+		visual,
+		_state({
+			"mode": &"q3",
+			"grounded": false,
+			"flight_activation_charging": true,
+			"flight_activation_charge": 0.24,
+			"flight_activation_threshold": 0.30,
+			"horizontal_speed": 5.0,
+			"velocity": Vector3.UP * 2.0,
+		}),
+		VisualControllerScript.ANIM_TAKEOFF_RUNUP,
+		"airborne flight charge",
+	)
+	_expect_animation(
+		failures,
+		visual,
 		_state({"mode": &"q3", "grounded": false, "horizontal_speed": 3.0, "velocity": Vector3.UP * 2.0}),
 		VisualControllerScript.ANIM_WALK_FAST,
 		"uphill contact-airborne walk",
@@ -115,6 +145,34 @@ func _initialize() -> void:
 		_state({"mode": &"flight", "grounded": false, "just_entered_flight": true, "flapping": true}),
 		&"flight_flap",
 		"flight flap beats entry visual state",
+	)
+	_expect_visual_state(
+		failures,
+		visual,
+		_state({
+			"mode": &"q3",
+			"grounded": false,
+			"flight_activation_charging": true,
+			"flight_activation_charge": 0.10,
+			"flight_activation_threshold": 0.30,
+			"horizontal_speed": 5.0,
+		}),
+		&"run",
+		"early airborne flight charge visual state",
+	)
+	_expect_visual_state(
+		failures,
+		visual,
+		_state({
+			"mode": &"q3",
+			"grounded": false,
+			"flight_activation_charging": true,
+			"flight_activation_charge": 0.24,
+			"flight_activation_threshold": 0.30,
+			"horizontal_speed": 5.0,
+		}),
+		&"takeoff_charge",
+		"airborne flight charge visual state",
 	)
 	_expect_visual_state(
 		failures,
@@ -388,9 +446,43 @@ func _expect_transition_mapping(failures: Array[String], visual: Node) -> void:
 	_expect_animation(
 		failures,
 		visual,
-		_state({"grounded": true, "flight_activation_charging": true, "horizontal_speed": 8.0}),
+		_state({
+			"grounded": true,
+			"flight_activation_charging": true,
+			"flight_activation_charge": 0.24,
+			"flight_activation_threshold": 0.30,
+			"horizontal_speed": 8.0,
+		}),
 		VisualControllerScript.ANIM_TAKEOFF_RUNUP,
 		"flight activation charge",
+	)
+	_expect_animation(
+		failures,
+		visual,
+		_state({
+			"mode": &"q3",
+			"grounded": false,
+			"flight_activation_charging": true,
+			"flight_activation_charge": 0.10,
+			"flight_activation_threshold": 0.30,
+			"horizontal_speed": 8.0,
+		}),
+		VisualControllerScript.ANIM_RUN_FAST,
+		"early airborne flight activation charge keeps locomotion",
+	)
+	_expect_animation(
+		failures,
+		visual,
+		_state({
+			"mode": &"q3",
+			"grounded": false,
+			"flight_activation_charging": true,
+			"flight_activation_charge": 0.24,
+			"flight_activation_threshold": 0.30,
+			"horizontal_speed": 8.0,
+		}),
+		VisualControllerScript.ANIM_TAKEOFF_RUNUP,
+		"airborne flight activation charge",
 	)
 	_expect_animation(
 		failures,

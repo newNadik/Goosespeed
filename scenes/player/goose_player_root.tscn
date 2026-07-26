@@ -29541,6 +29541,7 @@ script = ExtResource("5_bridge")
 
 [node name="GooseVisual" type="Node3D" parent="." unique_id=1083393616]
 script = ExtResource("6_visual")
+takeoff_runup_charge_ratio = 0.5
 head_look_enabled = false
 
 [node name="Goose" type="Node3D" parent="GooseVisual" unique_id=1198041386]

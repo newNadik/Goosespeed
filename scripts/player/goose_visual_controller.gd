@@ -51,6 +51,7 @@ const LOOPING_ANIMATIONS := [
 @export var run_fast_blend_time := 0.05
 @export var landing_hold_time := 0.22
 @export var prelanding_vertical_speed := -8.0
+@export_range(0.0, 1.0, 0.05) var takeoff_runup_charge_ratio := 0.7
 @export var ground_input_turn_rate := 7.0
 @export var default_turn_rate := 14.0
 @export var input_facing_commit_time := 0.14
@@ -232,7 +233,7 @@ func visual_state_for_state(state: RefCounted) -> StringName:
 		if state.horizontal_speed >= _walk_medium_speed():
 			return &"swim"
 		return &"swim_idle"
-	if state.flight_activation_charging and state.grounded:
+	if _should_use_takeoff_runup(state):
 		return &"takeoff_charge"
 	if state.mode == &"flight":
 		return &"flight_flap" if state.flapping else &"flight_glide"
@@ -264,7 +265,7 @@ func _animation_for_state(state: RefCounted, use_ground_stability: bool) -> Stri
 			return _first_available([ANIM_SWIM_MEDIUM, ANIM_SWIM_MOVE])
 		return _first_available([ANIM_SWIM_STEADY, ANIM_SWIM_MOVE])
 
-	if state.flight_activation_charging and state.grounded:
+	if _should_use_takeoff_runup(state):
 		if use_ground_stability:
 			_clear_ground_locomotion()
 		return _first_available([ANIM_TAKEOFF_RUNUP, ANIM_RUN_FAST, ANIM_WALK_FAST])
@@ -334,6 +335,15 @@ func _should_use_landing_animation(state: RefCounted) -> bool:
 			)
 		)
 	)
+
+
+func _should_use_takeoff_runup(state: RefCounted) -> bool:
+	if not state.flight_activation_charging or state.mode == &"flight":
+		return false
+	var threshold := maxf(state.flight_activation_threshold, 0.0)
+	if threshold <= 0.0:
+		return true
+	return state.flight_activation_charge >= threshold * clampf(takeoff_runup_charge_ratio, 0.0, 1.0)
 
 
 func _ground_slide_animation_for_speed(horizontal_speed: float) -> StringName:
