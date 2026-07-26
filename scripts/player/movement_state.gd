@@ -20,6 +20,7 @@ var crouch_sliding := false
 var gliding := false
 var flapping := false
 var falling := false
+var ground_distance := INF
 var wall_contact := false
 var ceiling_contact := false
 var flight_activation_charging := false
@@ -70,6 +71,7 @@ func copy_from(other) -> void:
 	flapping = bool(_read(other, "flapping", flapping))
 	gliding = bool(_read(other, "gliding", _read(other, "mode", mode) == "flight")) and not flapping
 	falling = bool(_read(other, "falling", not grounded and vertical_speed < -0.2))
+	ground_distance = float(_read(other, "ground_distance", ground_distance))
 	wall_contact = bool(_read(other, "wall_contact", wall_contact))
 	ceiling_contact = bool(_read(other, "ceiling_contact", ceiling_contact))
 	flight_activation_charging = bool(_read(other, "flight_activation_charging", flight_activation_charging))

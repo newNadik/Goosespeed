@@ -161,7 +161,7 @@ func _physics_process(delta: float) -> void:
 	if not was_grounded and is_on_floor() and q3_impact_velocity.y <= 0.0:
 		_record_landing_and_preserve(q3_impact_velocity, _get_floor_impact(q3_impact_velocity))
 	elif was_grounded and not is_on_floor():
-		movement_state.record_takeoff(q3_impact_velocity)
+		movement_state.record_takeoff(velocity)
 	var q3_bounce_impact := _get_body_bounce_impact(q3_impact_velocity)
 	if not q3_bounce_impact.is_empty():
 		velocity = _get_body_bounce_velocity(q3_impact_velocity, q3_bounce_impact["normal"] as Vector3)
@@ -422,6 +422,7 @@ func _get_movement_state_snapshot() -> Dictionary:
 		"intended_movement_magnitude": q3_motor.intended_movement_magnitude if mode == Mode.Q3 else 0.0,
 		"grounded": grounded,
 		"swimming": mode == Mode.Q3 and q3_motor._should_swim(grounded),
+		"ground_distance": movement_state.get_ground_distance(self, 20.0, cos(floor_max_angle)),
 		"water_level": q3_motor.water_level,
 		"water_type": q3_motor.water_type,
 		"crouching": q3_motor.is_crouching,

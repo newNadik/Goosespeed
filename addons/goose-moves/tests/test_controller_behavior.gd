@@ -106,6 +106,7 @@ func _jump() -> void:
 		check_approx("jump frame stores vy after one air gravity tick",
 			c.velocity.y, c.jump_velocity - c.gravity * DT, 1e-4)
 		check("jump left the ground", not c.is_on_floor())
+		check("jump takeoff records upward launch", c.movement_state.takeoff_vertical_speed > 0.0)
 		vy_prev = c.velocity.y
 		apex = c.global_position.y
 		return

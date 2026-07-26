@@ -339,7 +339,7 @@ func _physics_process(delta: float) -> void:
 		if not impact.is_empty():
 			movement_state.record_landing(impact_velocity, impact)
 	elif was_grounded and not is_on_floor():
-		movement_state.record_takeoff(impact_velocity)
+		movement_state.record_takeoff(velocity)
 
 
 func _unhandled_input(event: InputEvent) -> void:
@@ -362,6 +362,7 @@ func get_movement_state() -> Dictionary:
 		"facing_direction": -global_basis.z,
 		"grounded": grounded,
 		"swimming": motor._should_swim(grounded),
+		"ground_distance": movement_state.get_ground_distance(self, 20.0, cos(floor_max_angle)),
 		"water_level": water_level,
 		"water_type": water_type,
 		"crouching": is_crouching,

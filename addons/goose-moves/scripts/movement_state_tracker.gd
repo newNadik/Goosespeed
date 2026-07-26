@@ -3,6 +3,7 @@ extends RefCounted
 
 const EVENT_DURATION := 0.12
 const FLAP_EVENT_DURATION := 0.22
+const DEFAULT_GROUND_PROBE_DISTANCE := 20.0
 
 var just_landed_time_remaining := 0.0
 var just_took_off_time_remaining := 0.0
@@ -130,6 +131,31 @@ func _get_collision_surface_type(collision: KinematicCollision3D, default_surfac
 	return default_surface_type
 
 
+func get_ground_distance(
+	body: CharacterBody3D,
+	max_distance := DEFAULT_GROUND_PROBE_DISTANCE,
+	walkable_normal_y := 0.0
+) -> float:
+	var world := body.get_world_3d()
+	if world == null:
+		return INF
+	var origin := body.global_position + (Vector3.UP * 0.05)
+	var query := PhysicsRayQueryParameters3D.create(
+		origin,
+		origin + (Vector3.DOWN * (max_distance + 0.05))
+	)
+	query.exclude = [body.get_rid()]
+	query.hit_from_inside = false
+	var result := world.direct_space_state.intersect_ray(query)
+	if result.is_empty():
+		return INF
+	var normal := result.get("normal", Vector3.UP) as Vector3
+	if normal.y < walkable_normal_y:
+		return INF
+	var hit_position := result.get("position", origin) as Vector3
+	return maxf(0.0, origin.y - hit_position.y - 0.05)
+
+
 func build_state(snapshot: Dictionary) -> Dictionary:
 	var velocity := snapshot.get("velocity", Vector3.ZERO) as Vector3
 	var horizontal_velocity := Vector3(velocity.x, 0.0, velocity.z)
@@ -181,7 +207,8 @@ func build_state(snapshot: Dictionary) -> Dictionary:
 		"flight_activation_threshold": float(snapshot.get("flight_activation_threshold", 0.0)),
 		"gliding": is_gliding,
 		"flapping": is_flapping,
-		"falling": bool(snapshot.get("falling", false)),
+		"falling": bool(snapshot.get("falling", not grounded and velocity.y < -0.2)),
+		"ground_distance": float(snapshot.get("ground_distance", INF)),
 		"just_landed": just_landed_time_remaining > 0.0,
 		"just_took_off": just_took_off_time_remaining > 0.0,
 		"just_entered_flight": just_entered_flight_time_remaining > 0.0,

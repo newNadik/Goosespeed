@@ -136,9 +136,72 @@ func _initialize() -> void:
 	_expect_animation(
 		failures,
 		visual,
-		_state({"mode": &"q3", "grounded": false, "falling": true, "horizontal_speed": 5.0, "velocity": Vector3.DOWN}),
+		_state({
+			"mode": &"q3",
+			"grounded": false,
+			"falling": true,
+			"horizontal_speed": 5.0,
+			"vertical_speed": -1.0,
+			"ground_distance": 0.8,
+		}),
 		VisualControllerScript.ANIM_RUN_SLOW,
-		"non-flight slow fall keeps locomotion",
+		"near-ground fall keeps locomotion",
+	)
+	_expect_animation(
+		failures,
+		visual,
+		_state({
+			"mode": &"q3",
+			"grounded": false,
+			"falling": true,
+			"horizontal_speed": 5.0,
+			"vertical_speed": -12.0,
+			"ground_distance": 8.0,
+		}),
+		VisualControllerScript.ANIM_PRE_LAND,
+		"far non-flight fall uses prelanding without time gate",
+	)
+	_expect_animation(
+		failures,
+		visual,
+		_state({
+			"mode": &"q3",
+			"grounded": false,
+			"falling": true,
+			"horizontal_speed": 5.0,
+			"vertical_speed": -12.0,
+			"ground_distance": 8.0,
+		}),
+		VisualControllerScript.ANIM_PRE_LAND,
+		"non-flight fast fall uses prelanding",
+	)
+	_expect_animation(
+		failures,
+		visual,
+		_state({
+			"mode": &"q3",
+			"grounded": false,
+			"falling": true,
+			"horizontal_speed": 5.0,
+			"vertical_speed": -1.0,
+			"ground_distance": 8.0,
+		}),
+		VisualControllerScript.ANIM_PRE_LAND,
+		"prelanding uses distance without speed gate",
+	)
+	_expect_animation(
+		failures,
+		visual,
+		_state({
+			"mode": &"q3",
+			"grounded": false,
+			"falling": true,
+			"horizontal_speed": 5.0,
+			"vertical_speed": -12.0,
+			"ground_distance": 0.8,
+		}),
+		VisualControllerScript.ANIM_RUN_SLOW,
+		"near-ground jump descent keeps locomotion",
 	)
 	_expect_visual_state(
 		failures,
@@ -220,9 +283,30 @@ func _initialize() -> void:
 	_expect_visual_state(
 		failures,
 		visual,
-		_state({"mode": &"q3", "grounded": false, "falling": true, "horizontal_speed": 5.0, "vertical_speed": -12.0}),
+		_state({
+			"mode": &"q3",
+			"grounded": false,
+			"falling": true,
+			"horizontal_speed": 5.0,
+			"vertical_speed": -12.0,
+			"ground_distance": 8.0,
+		}),
+		&"prelanding",
+		"q3 fall visual state uses prelanding",
+	)
+	_expect_visual_state(
+		failures,
+		visual,
+		_state({
+			"mode": &"q3",
+			"grounded": false,
+			"falling": true,
+			"horizontal_speed": 5.0,
+			"vertical_speed": -12.0,
+			"ground_distance": 0.8,
+		}),
 		&"run",
-		"q3 fall visual state keeps locomotion",
+		"near-ground jump descent visual state keeps locomotion",
 	)
 	_expect_visual_state(
 		failures,
@@ -627,9 +711,47 @@ func _expect_transition_mapping(failures: Array[String], visual: Node) -> void:
 	_expect_animation(
 		failures,
 		visual,
-		_state({"mode": &"q3", "grounded": false, "falling": true, "horizontal_speed": 5.0, "vertical_speed": -12.0, "velocity": Vector3.DOWN * 12.0}),
+		_state({
+			"mode": &"q3",
+			"grounded": false,
+			"falling": true,
+			"horizontal_speed": 5.0,
+			"vertical_speed": -12.0,
+			"ground_distance": 8.0,
+			"velocity": Vector3.DOWN * 12.0,
+		}),
+		VisualControllerScript.ANIM_PRE_LAND,
+		"q3 fast fall uses prelanding",
+	)
+	_expect_animation(
+		failures,
+		visual,
+		_state({
+			"mode": &"q3",
+			"grounded": false,
+			"falling": true,
+			"horizontal_speed": 5.0,
+			"vertical_speed": -12.0,
+			"ground_distance": 0.8,
+			"velocity": Vector3.DOWN * 12.0,
+		}),
 		VisualControllerScript.ANIM_RUN_SLOW,
-		"q3 fast fall keeps locomotion",
+		"q3 near-ground jump descent keeps locomotion",
+	)
+	_expect_animation(
+		failures,
+		visual,
+		_state({
+			"mode": &"q3",
+			"grounded": false,
+			"just_exited_flight": true,
+			"falling": true,
+			"horizontal_speed": 5.0,
+			"vertical_speed": -12.0,
+			"ground_distance": 8.0,
+		}),
+		VisualControllerScript.ANIM_PRE_LAND,
+		"stopped flight fall uses prelanding",
 	)
 	_expect_animation(
 		failures,
