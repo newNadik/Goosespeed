@@ -1,0 +1,148 @@
+[gd_scene load_steps=13 format=3 uid="uid://dr8mj0tls44y5"]
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_course"]
+sky_top_color = Color(0.35, 0.55, 0.72, 1)
+sky_horizon_color = Color(0.72, 0.82, 0.86, 1)
+ground_bottom_color = Color(0.14, 0.18, 0.23, 1)
+ground_horizon_color = Color(0.42, 0.48, 0.52, 1)
+
+[sub_resource type="Sky" id="Sky_course"]
+sky_material = SubResource("ProceduralSkyMaterial_course")
+
+[sub_resource type="Environment" id="Environment_course"]
+background_mode = 2
+sky = SubResource("Sky_course")
+ambient_light_source = 3
+ambient_light_color = Color(0.52, 0.6, 0.68, 1)
+ambient_light_energy = 0.62
+reflected_light_source = 2
+tonemap_mode = 2
+tonemap_exposure = 1.05
+
+[sub_resource type="StandardMaterial3D" id="Material_ground"]
+albedo_color = Color(0.46, 0.52, 0.42, 1)
+roughness = 0.9
+
+[sub_resource type="StandardMaterial3D" id="Material_slide"]
+albedo_color = Color(0.74, 0.63, 0.42, 1)
+roughness = 0.82
+
+[sub_resource type="StandardMaterial3D" id="Material_ramp"]
+albedo_color = Color(0.5, 0.58, 0.66, 1)
+roughness = 0.84
+
+[sub_resource type="StandardMaterial3D" id="Material_marker"]
+albedo_color = Color(0.9, 0.34, 0.18, 1)
+roughness = 0.7
+
+[sub_resource type="StandardMaterial3D" id="Material_finish"]
+albedo_color = Color(0.95, 0.72, 0.22, 1)
+roughness = 0.72
+
+[sub_resource type="StandardMaterial3D" id="Material_water"]
+transparency = 1
+albedo_color = Color(0.16, 0.46, 0.78, 0.68)
+roughness = 0.28
+
+[sub_resource type="BoxShape3D" id="BoxShape_water"]
+size = Vector3(22, 5, 18)
+
+[sub_resource type="BoxShape3D" id="BoxShape_finish"]
+size = Vector3(10, 6, 2)
+
+[node name="FirstCourseSlice" type="Node3D"]
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment_course")
+
+[node name="Sun" type="DirectionalLight3D" parent="."]
+transform = Transform3D(0.819152, 0.40558, -0.40558, 0, 0.707107, 0.707107, 0.573576, -0.579228, 0.579228, 0, 0, 0)
+light_color = Color(1, 0.94, 0.82, 1)
+light_energy = 1.2
+shadow_enabled = true
+directional_shadow_max_distance = 180.0
+
+[node name="SpawnPoint" type="Node3D" parent="."]
+transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, 0, 1.2, -34)
+
+[node name="Geometry" type="Node3D" parent="."]
+
+[node name="StartStraight" type="CSGBox3D" parent="Geometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.12, -23)
+use_collision = true
+size = Vector3(14, 0.25, 30)
+material = SubResource("Material_ground")
+
+[node name="SlideSlope" type="CSGBox3D" parent="Geometry"]
+transform = Transform3D(1, 0, 0, 0, 0.965926, 0.258819, 0, -0.258819, 0.965926, 0, 1.4, -2)
+use_collision = true
+size = Vector3(14, 0.35, 24)
+material = SubResource("Material_slide")
+
+[node name="LaunchRamp" type="CSGBox3D" parent="Geometry"]
+transform = Transform3D(1, 0, 0, 0, 0.819152, -0.573576, 0, 0.573576, 0.819152, 0, 2.6, 17)
+use_collision = true
+size = Vector3(12, 0.4, 12)
+material = SubResource("Material_ramp")
+
+[node name="LandingPath" type="CSGBox3D" parent="Geometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.12, 44)
+use_collision = true
+size = Vector3(18, 0.25, 28)
+material = SubResource("Material_ground")
+
+[node name="WaterExitRamp" type="CSGBox3D" parent="Geometry"]
+transform = Transform3D(1, 0, 0, 0, 0.906308, -0.422618, 0, 0.422618, 0.906308, 0, 0.6, 65)
+use_collision = true
+size = Vector3(12, 0.35, 12)
+material = SubResource("Material_ramp")
+
+[node name="FinishRunout" type="CSGBox3D" parent="Geometry"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.12, 82)
+use_collision = true
+size = Vector3(14, 0.25, 24)
+material = SubResource("Material_ground")
+
+[node name="RouteMarkers" type="Node3D" parent="."]
+
+[node name="SlideMarker" type="CSGBox3D" parent="RouteMarkers"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 0.35, -5)
+size = Vector3(0.35, 0.7, 5)
+material = SubResource("Material_marker")
+
+[node name="FlightGateLeft" type="CSGBox3D" parent="RouteMarkers"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7, 3, 28)
+size = Vector3(0.4, 6, 0.4)
+material = SubResource("Material_marker")
+
+[node name="FlightGateRight" type="CSGBox3D" parent="RouteMarkers"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 3, 28)
+size = Vector3(0.4, 6, 0.4)
+material = SubResource("Material_marker")
+
+[node name="Volumes" type="Node3D" parent="."]
+
+[node name="Water" type="Area3D" parent="Volumes"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1.2, 55)
+collision_layer = 2
+collision_mask = 0
+metadata/q3_volume_type = "water"
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Volumes/Water"]
+shape = SubResource("BoxShape_water")
+
+[node name="Surface" type="CSGBox3D" parent="Volumes/Water"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.5, 0)
+size = Vector3(22, 0.08, 18)
+material = SubResource("Material_water")
+
+[node name="FinishTrigger" type="Area3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.5, 92)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="FinishTrigger"]
+shape = SubResource("BoxShape_finish")
+
+[node name="FinishMarker" type="CSGBox3D" parent="."]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 92)
+size = Vector3(10, 6, 0.3)
+material = SubResource("Material_finish")

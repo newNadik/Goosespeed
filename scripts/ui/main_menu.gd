@@ -1,7 +1,7 @@
 class_name MainMenu
 extends Control
 
-const LEVEL_SCENE := "res://scenes/test/goosespeed_movement_lab.tscn"
+const LEVEL_SCENE := "res://scenes/game/game_scene.tscn"
 
 @onready var start_button: Button = $MenuBackground/MarginContainer/VBoxContainer/StartButton
 @onready var settings_button: Button = $MenuBackground/MarginContainer/VBoxContainer/SettingsButton
