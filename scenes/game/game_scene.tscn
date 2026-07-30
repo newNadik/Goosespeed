@@ -1,20 +1,20 @@
-[gd_scene load_steps=7 format=3 uid="uid://dbfll48sw4u4t"]
+[gd_scene format=3 uid="uid://dbfll48sw4u4t"]
 
-[ext_resource type="Script" path="res://scripts/gameplay/game_scene.gd" id="1_game"]
+[ext_resource type="Script" uid="uid://cypi7ygllao2b" path="res://scripts/gameplay/game_scene.gd" id="1_game"]
 [ext_resource type="PackedScene" path="res://scenes/ui/goose_game_hud.tscn" id="2_hud"]
-[ext_resource type="PackedScene" path="res://scenes/player/goose_player_root.tscn" id="3_player"]
-[ext_resource type="PackedScene" path="res://scenes/courses/first_course_slice.tscn" id="4_course"]
-[ext_resource type="PackedScene" path="res://scenes/debug/goose_visual_debug_overlay.tscn" id="5_debug"]
+[ext_resource type="PackedScene" uid="uid://r48mulvevh7j" path="res://scenes/courses/farm_level.tscn" id="2_p0de3"]
+[ext_resource type="PackedScene" uid="uid://c03rnu2cc85km" path="res://scenes/player/goose_player_root.tscn" id="3_player"]
+[ext_resource type="PackedScene" uid="uid://bksw8d5n5qsrj" path="res://scenes/debug/goose_visual_debug_overlay.tscn" id="5_debug"]
 
-[node name="GooseGameScene" type="Node3D"]
+[node name="GooseGameScene" type="Node3D" unique_id=1187776317]
 script = ExtResource("1_game")
 
-[node name="CourseRoot" type="Node3D" parent="."]
+[node name="CourseRoot" type="Node3D" parent="." unique_id=472786772]
 
-[node name="FirstCourseSlice" parent="CourseRoot" instance=ExtResource("4_course")]
+[node name="farm_level" parent="CourseRoot" unique_id=2011784816 instance=ExtResource("2_p0de3")]
 
-[node name="GoosePlayerRoot" parent="." instance=ExtResource("3_player")]
+[node name="GoosePlayerRoot" parent="." unique_id=386113842 instance=ExtResource("3_player")]
 
-[node name="GooseGameHud" parent="." instance=ExtResource("2_hud")]
+[node name="GooseGameHud" parent="." unique_id=2125325350 instance=ExtResource("2_hud")]
 
-[node name="GooseVisualDebugOverlay" parent="." instance=ExtResource("5_debug")]
+[node name="GooseVisualDebugOverlay" parent="." unique_id=189416155 instance=ExtResource("5_debug")]

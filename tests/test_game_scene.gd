@@ -12,6 +12,19 @@ func _ready() -> void:
 	var player := game.get_node("GoosePlayerRoot")
 	var controller: Node3D = player.get_active_controller()
 	var spawn_point := game.get_node("CourseRoot/FirstCourseSlice/SpawnPoint") as Node3D
+	var course := game.get_node("CourseRoot/FirstCourseSlice")
+	for required_node in [
+		"Geometry/SafeGroundRoute",
+		"Geometry/ShortcutRoute",
+		"Geometry/AirRoute",
+		"RouteMarkers/SpeedCuePosts",
+		"RouteMarkers/RouteSigns",
+	]:
+		if course.get_node_or_null(required_node) == null:
+			push_error("First course slice is missing race route node: %s" % required_node)
+			get_tree().quit(1)
+			return
+
 	if _horizontal_distance(controller.global_position, spawn_point.global_position) > 0.05:
 		push_error(
 			"Game scene did not place player at course spawn: got %s, want %s" % [

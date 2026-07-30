@@ -1,4 +1,4 @@
-[gd_scene load_steps=13 format=3 uid="uid://dr8mj0tls44y5"]
+[gd_scene load_steps=19 format=3 uid="uid://dr8mj0tls44y5"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_course"]
 sky_top_color = Color(0.35, 0.55, 0.72, 1)
@@ -23,6 +23,10 @@ tonemap_exposure = 1.05
 albedo_color = Color(0.46, 0.52, 0.42, 1)
 roughness = 0.9
 
+[sub_resource type="StandardMaterial3D" id="Material_safe_route"]
+albedo_color = Color(0.38, 0.55, 0.42, 1)
+roughness = 0.88
+
 [sub_resource type="StandardMaterial3D" id="Material_slide"]
 albedo_color = Color(0.74, 0.63, 0.42, 1)
 roughness = 0.82
@@ -31,9 +35,25 @@ roughness = 0.82
 albedo_color = Color(0.5, 0.58, 0.66, 1)
 roughness = 0.84
 
+[sub_resource type="StandardMaterial3D" id="Material_shortcut"]
+albedo_color = Color(0.58, 0.44, 0.34, 1)
+roughness = 0.84
+
+[sub_resource type="StandardMaterial3D" id="Material_air_route"]
+albedo_color = Color(0.38, 0.64, 0.76, 1)
+roughness = 0.72
+
 [sub_resource type="StandardMaterial3D" id="Material_marker"]
 albedo_color = Color(0.9, 0.34, 0.18, 1)
 roughness = 0.7
+
+[sub_resource type="StandardMaterial3D" id="Material_gate"]
+albedo_color = Color(0.88, 0.86, 0.78, 1)
+roughness = 0.65
+
+[sub_resource type="StandardMaterial3D" id="Material_obstacle"]
+albedo_color = Color(0.28, 0.28, 0.31, 1)
+roughness = 0.76
 
 [sub_resource type="StandardMaterial3D" id="Material_finish"]
 albedo_color = Color(0.95, 0.72, 0.22, 1)
@@ -85,6 +105,90 @@ use_collision = true
 size = Vector3(12, 0.4, 12)
 material = SubResource("Material_ramp")
 
+[node name="SafeGroundRoute" type="Node3D" parent="Geometry"]
+
+[node name="SafeRouteCenter" type="CSGBox3D" parent="Geometry/SafeGroundRoute"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.1, 36)
+use_collision = true
+size = Vector3(11, 0.22, 34)
+material = SubResource("Material_safe_route")
+
+[node name="SafeRouteLeftWall" type="CSGBox3D" parent="Geometry/SafeGroundRoute"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 0.75, 36)
+use_collision = true
+size = Vector3(0.45, 1.5, 30)
+material = SubResource("Material_gate")
+
+[node name="SafeRouteRightWall" type="CSGBox3D" parent="Geometry/SafeGroundRoute"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 6, 0.75, 36)
+use_collision = true
+size = Vector3(0.45, 1.5, 30)
+material = SubResource("Material_gate")
+
+[node name="ShortcutRoute" type="Node3D" parent="Geometry"]
+
+[node name="ShortcutEntry" type="CSGBox3D" parent="Geometry/ShortcutRoute"]
+transform = Transform3D(0.906308, 0, 0.422618, 0, 1, 0, -0.422618, 0, 0.906308, -8, 0, 11)
+use_collision = true
+size = Vector3(6, 0.25, 18)
+material = SubResource("Material_shortcut")
+
+[node name="ShortcutBackStraight" type="CSGBox3D" parent="Geometry/ShortcutRoute"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -15, 0, 38)
+use_collision = true
+size = Vector3(6, 0.25, 42)
+material = SubResource("Material_shortcut")
+
+[node name="ShortcutExit" type="CSGBox3D" parent="Geometry/ShortcutRoute"]
+transform = Transform3D(0.906308, 0, -0.422618, 0, 1, 0, 0.422618, 0, 0.906308, -8, 0, 65)
+use_collision = true
+size = Vector3(6, 0.25, 18)
+material = SubResource("Material_shortcut")
+
+[node name="ShortcutLeftWall" type="CSGBox3D" parent="Geometry/ShortcutRoute"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -18.4, 0.8, 38)
+use_collision = true
+size = Vector3(0.45, 1.6, 38)
+material = SubResource("Material_obstacle")
+
+[node name="ShortcutRightWall" type="CSGBox3D" parent="Geometry/ShortcutRoute"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -11.6, 0.8, 38)
+use_collision = true
+size = Vector3(0.45, 1.6, 38)
+material = SubResource("Material_obstacle")
+
+[node name="ShortcutSlalomA" type="CSGBox3D" parent="Geometry/ShortcutRoute"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16.5, 1.4, 26)
+use_collision = true
+size = Vector3(0.7, 2.8, 0.7)
+material = SubResource("Material_marker")
+
+[node name="ShortcutSlalomB" type="CSGBox3D" parent="Geometry/ShortcutRoute"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -13.5, 1.4, 39)
+use_collision = true
+size = Vector3(0.7, 2.8, 0.7)
+material = SubResource("Material_marker")
+
+[node name="ShortcutSlalomC" type="CSGBox3D" parent="Geometry/ShortcutRoute"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -16.5, 1.4, 52)
+use_collision = true
+size = Vector3(0.7, 2.8, 0.7)
+material = SubResource("Material_marker")
+
+[node name="AirRoute" type="Node3D" parent="Geometry"]
+
+[node name="AirLaunchLane" type="CSGBox3D" parent="Geometry/AirRoute"]
+transform = Transform3D(0.906308, 0, -0.422618, 0, 0.965926, -0.258819, 0.422618, 0.23457, 0.875426, 8, 3.1, 20)
+use_collision = true
+size = Vector3(5, 0.35, 14)
+material = SubResource("Material_air_route")
+
+[node name="AirLandingPerch" type="CSGBox3D" parent="Geometry/AirRoute"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11.5, 3.2, 61)
+use_collision = true
+size = Vector3(7, 0.3, 11)
+material = SubResource("Material_air_route")
+
 [node name="LandingPath" type="CSGBox3D" parent="Geometry"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.12, 44)
 use_collision = true
@@ -105,20 +209,107 @@ material = SubResource("Material_ground")
 
 [node name="RouteMarkers" type="Node3D" parent="."]
 
+[node name="StartGateLeft" type="CSGBox3D" parent="RouteMarkers"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7, 2, -33)
+size = Vector3(0.5, 4, 0.5)
+material = SubResource("Material_gate")
+
+[node name="StartGateRight" type="CSGBox3D" parent="RouteMarkers"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 2, -33)
+size = Vector3(0.5, 4, 0.5)
+material = SubResource("Material_gate")
+
+[node name="StartGateTop" type="CSGBox3D" parent="RouteMarkers"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 4, -33)
+size = Vector3(14.5, 0.45, 0.45)
+material = SubResource("Material_gate")
+
 [node name="SlideMarker" type="CSGBox3D" parent="RouteMarkers"]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -6, 0.35, -5)
 size = Vector3(0.35, 0.7, 5)
 material = SubResource("Material_marker")
 
+[node name="SpeedCuePosts" type="Node3D" parent="RouteMarkers"]
+
+[node name="LeftPostA" type="CSGBox3D" parent="RouteMarkers/SpeedCuePosts"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.2, 1.5, -22)
+size = Vector3(0.35, 3, 0.35)
+material = SubResource("Material_gate")
+
+[node name="RightPostA" type="CSGBox3D" parent="RouteMarkers/SpeedCuePosts"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.2, 1.5, -22)
+size = Vector3(0.35, 3, 0.35)
+material = SubResource("Material_gate")
+
+[node name="LeftPostB" type="CSGBox3D" parent="RouteMarkers/SpeedCuePosts"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.2, 1.5, -12)
+size = Vector3(0.35, 3, 0.35)
+material = SubResource("Material_gate")
+
+[node name="RightPostB" type="CSGBox3D" parent="RouteMarkers/SpeedCuePosts"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.2, 1.5, -12)
+size = Vector3(0.35, 3, 0.35)
+material = SubResource("Material_gate")
+
+[node name="LeftPostC" type="CSGBox3D" parent="RouteMarkers/SpeedCuePosts"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7.2, 1.5, -2)
+size = Vector3(0.35, 3, 0.35)
+material = SubResource("Material_gate")
+
+[node name="RightPostC" type="CSGBox3D" parent="RouteMarkers/SpeedCuePosts"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.2, 1.5, -2)
+size = Vector3(0.35, 3, 0.35)
+material = SubResource("Material_gate")
+
+[node name="SafeLowGateLeft" type="CSGBox3D" parent="RouteMarkers"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -4.7, 1.8, 46)
+size = Vector3(0.45, 3.6, 0.45)
+material = SubResource("Material_gate")
+
+[node name="SafeLowGateRight" type="CSGBox3D" parent="RouteMarkers"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 4.7, 1.8, 46)
+size = Vector3(0.45, 3.6, 0.45)
+material = SubResource("Material_gate")
+
+[node name="SafeLowGateTop" type="CSGBox3D" parent="RouteMarkers"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.55, 46)
+size = Vector3(9.8, 0.45, 0.45)
+material = SubResource("Material_gate")
+
 [node name="FlightGateLeft" type="CSGBox3D" parent="RouteMarkers"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -7, 3, 28)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7.5, 4, 34)
 size = Vector3(0.4, 6, 0.4)
-material = SubResource("Material_marker")
+material = SubResource("Material_air_route")
 
 [node name="FlightGateRight" type="CSGBox3D" parent="RouteMarkers"]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 3, 28)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15.5, 4, 34)
 size = Vector3(0.4, 6, 0.4)
-material = SubResource("Material_marker")
+material = SubResource("Material_air_route")
+
+[node name="FlightGateTop" type="CSGBox3D" parent="RouteMarkers"]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11.5, 7, 34)
+size = Vector3(8.4, 0.4, 0.4)
+material = SubResource("Material_air_route")
+
+[node name="RouteSigns" type="Node3D" parent="RouteMarkers"]
+
+[node name="SafeRouteSign" type="Label3D" parent="RouteMarkers/RouteSigns"]
+transform = Transform3D(1, 0, 0, 0, 0.906308, -0.422618, 0, 0.422618, 0.906308, 0, 2.2, 18)
+text = "SAFE"
+font_size = 42
+modulate = Color(0.82, 1, 0.8, 1)
+
+[node name="ShortcutSign" type="Label3D" parent="RouteMarkers/RouteSigns"]
+transform = Transform3D(0.906308, 0, 0.422618, 0, 0.906308, -0.422618, -0.422618, 0.422618, 0.821394, -13, 2.2, 18)
+text = "SHORTCUT"
+font_size = 34
+modulate = Color(1, 0.72, 0.54, 1)
+
+[node name="AirRouteSign" type="Label3D" parent="RouteMarkers/RouteSigns"]
+transform = Transform3D(0.906308, 0, -0.422618, 0, 0.906308, -0.422618, 0.422618, 0.422618, 0.821394, 10.5, 5.2, 24)
+text = "AIR"
+font_size = 42
+modulate = Color(0.72, 0.92, 1, 1)
 
 [node name="Volumes" type="Node3D" parent="."]
 
