@@ -71,10 +71,14 @@ theme_override_font_sizes/font_size = 15
 [node name="DirectionPanel" type="PanelContainer" parent="Root"]
 custom_minimum_size = Vector2(132, 46)
 layout_mode = 1
-offset_left = 16.0
+anchors_preset = 5
+anchor_left = 0.5
+anchor_right = 0.5
+offset_left = -66.0
 offset_top = 16.0
-offset_right = 148.0
+offset_right = 66.0
 offset_bottom = 62.0
+grow_horizontal = 2
 mouse_filter = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_hud_panel_dark")
 
@@ -105,112 +109,112 @@ theme_override_font_sizes/font_size = 16
 text = "0m"
 vertical_alignment = 1
 
-[node name="TopRightPanel" type="PanelContainer" parent="Root"]
-custom_minimum_size = Vector2(250, 0)
+[node name="TimerPanel" type="PanelContainer" parent="Root"]
+custom_minimum_size = Vector2(180, 0)
 layout_mode = 1
-anchors_preset = 1
-anchor_left = 1.0
-anchor_right = 1.0
-offset_left = -266.0
+offset_left = 16.0
 offset_top = 16.0
-offset_right = -16.0
-offset_bottom = 132.0
+offset_right = 196.0
+offset_bottom = 58.0
 mouse_filter = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_hud_panel")
 
-[node name="Margin" type="MarginContainer" parent="Root/TopRightPanel"]
+[node name="Margin" type="MarginContainer" parent="Root/TimerPanel"]
 layout_mode = 2
 theme_override_constants/margin_left = 14
-theme_override_constants/margin_top = 10
+theme_override_constants/margin_top = 8
 theme_override_constants/margin_right = 14
-theme_override_constants/margin_bottom = 10
+theme_override_constants/margin_bottom = 8
 
-[node name="VBox" type="VBoxContainer" parent="Root/TopRightPanel/Margin"]
+[node name="VBox" type="VBoxContainer" parent="Root/TimerPanel/Margin"]
 layout_mode = 2
 theme_override_constants/separation = 5
 
-[node name="SpeedLabel" type="Label" parent="Root/TopRightPanel/Margin/VBox"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.09411765, 0.18431373, 0.26666668, 1)
-text = "Speed  0.0 m/s"
-horizontal_alignment = 2
-
-[node name="TimerLabel" type="Label" parent="Root/TopRightPanel/Margin/VBox"]
+[node name="TimerLabel" type="Label" parent="Root/TimerPanel/Margin/VBox"]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.99607843, 0.46666667, 0.2627451, 1)
 text = "Run  00.00"
-horizontal_alignment = 2
+horizontal_alignment = 1
 
-[node name="FlightWidget" type="VBoxContainer" parent="Root/TopRightPanel/Margin/VBox"]
-layout_mode = 2
-theme_override_constants/separation = 3
-
-[node name="FlightLabel" type="Label" parent="Root/TopRightPanel/Margin/VBox/FlightWidget"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.09411765, 0.18431373, 0.26666668, 1)
-text = "Flap  ready"
-horizontal_alignment = 2
-
-[node name="FlightProgress" type="ProgressBar" parent="Root/TopRightPanel/Margin/VBox/FlightWidget"]
-custom_minimum_size = Vector2(0, 8)
-layout_mode = 2
-max_value = 1.0
-value = 1.0
-show_percentage = false
-
-[node name="DetailPanel" type="PanelContainer" parent="Root"]
-custom_minimum_size = Vector2(232, 0)
-layout_mode = 1
-anchors_preset = 2
-anchor_top = 1.0
-anchor_bottom = 1.0
-offset_left = 16.0
-offset_top = -100.0
-offset_right = 248.0
-offset_bottom = -16.0
-grow_vertical = 0
-mouse_filter = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_hud_panel_dark")
-
-[node name="Margin" type="MarginContainer" parent="Root/DetailPanel"]
-layout_mode = 2
-theme_override_constants/margin_left = 14
-theme_override_constants/margin_top = 10
-theme_override_constants/margin_right = 14
-theme_override_constants/margin_bottom = 10
-
-[node name="VBox" type="VBoxContainer" parent="Root/DetailPanel/Margin"]
-layout_mode = 2
-theme_override_constants/separation = 4
-
-[node name="VerticalSpeedLabel" type="Label" parent="Root/DetailPanel/Margin/VBox"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.94509804, 0.8745098, 0.7411765, 1)
-text = "Vertical  +0.0 m/s"
-
-[node name="AccelerationLabel" type="Label" parent="Root/DetailPanel/Margin/VBox"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.94509804, 0.8745098, 0.7411765, 1)
-text = "Accel  0.0 m/s2"
-
-[node name="SurfaceLabel" type="Label" parent="Root/DetailPanel/Margin/VBox"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.94509804, 0.8745098, 0.7411765, 1)
-text = "Surface  ground"
-
-[node name="DebugPanel" type="PanelContainer" parent="Root"]
-custom_minimum_size = Vector2(288, 0)
+[node name="MovementPanel" type="PanelContainer" parent="Root"]
+custom_minimum_size = Vector2(250, 0)
 layout_mode = 1
 anchors_preset = 3
 anchor_left = 1.0
 anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = -304.0
+offset_left = -266.0
 offset_top = -160.0
 offset_right = -16.0
 offset_bottom = -16.0
 grow_horizontal = 0
+grow_vertical = 0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_hud_panel")
+
+[node name="Margin" type="MarginContainer" parent="Root/MovementPanel"]
+layout_mode = 2
+theme_override_constants/margin_left = 14
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 14
+theme_override_constants/margin_bottom = 10
+
+[node name="VBox" type="VBoxContainer" parent="Root/MovementPanel/Margin"]
+layout_mode = 2
+theme_override_constants/separation = 5
+
+[node name="SpeedLabel" type="Label" parent="Root/MovementPanel/Margin/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.09411765, 0.18431373, 0.26666668, 1)
+text = "Speed  0.0 m/s"
+horizontal_alignment = 2
+
+[node name="FlightWidget" type="VBoxContainer" parent="Root/MovementPanel/Margin/VBox"]
+layout_mode = 2
+theme_override_constants/separation = 3
+
+[node name="FlightLabel" type="Label" parent="Root/MovementPanel/Margin/VBox/FlightWidget"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.09411765, 0.18431373, 0.26666668, 1)
+text = "Flap  ready"
+horizontal_alignment = 2
+
+[node name="FlightProgress" type="ProgressBar" parent="Root/MovementPanel/Margin/VBox/FlightWidget"]
+custom_minimum_size = Vector2(0, 8)
+layout_mode = 2
+max_value = 1.0
+value = 1.0
+show_percentage = false
+
+[node name="VerticalSpeedLabel" type="Label" parent="Root/MovementPanel/Margin/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.09411765, 0.18431373, 0.26666668, 1)
+text = "Vertical  +0.0 m/s"
+horizontal_alignment = 2
+
+[node name="AccelerationLabel" type="Label" parent="Root/MovementPanel/Margin/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.09411765, 0.18431373, 0.26666668, 1)
+text = "Accel  0.0 m/s2"
+horizontal_alignment = 2
+
+[node name="SurfaceLabel" type="Label" parent="Root/MovementPanel/Margin/VBox"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.09411765, 0.18431373, 0.26666668, 1)
+text = "Surface  ground"
+horizontal_alignment = 2
+
+[node name="DebugPanel" type="PanelContainer" parent="Root"]
+custom_minimum_size = Vector2(288, 0)
+layout_mode = 1
+anchors_preset = 2
+anchor_top = 1.0
+anchor_bottom = 1.0
+offset_left = 16.0
+offset_top = -160.0
+offset_right = 304.0
+offset_bottom = -16.0
 grow_vertical = 0
 mouse_filter = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_hud_panel_dark")

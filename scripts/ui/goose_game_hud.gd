@@ -10,16 +10,16 @@ const PANEL_MARGIN := 16.0
 @onready var direction_label: Label = $Root/DirectionPanel/Margin/DirectionBox/DirectionLabel
 @onready var state_details_panel: PanelContainer = $Root/StateDetailsPanel
 @onready var state_details_label: RichTextLabel = $Root/StateDetailsPanel/Margin/StateDetailsLabel
-@onready var top_right_panel: PanelContainer = $Root/TopRightPanel
-@onready var speed_label: Label = $Root/TopRightPanel/Margin/VBox/SpeedLabel
-@onready var timer_label: Label = $Root/TopRightPanel/Margin/VBox/TimerLabel
-@onready var flight_widget: VBoxContainer = $Root/TopRightPanel/Margin/VBox/FlightWidget
-@onready var flight_label: Label = $Root/TopRightPanel/Margin/VBox/FlightWidget/FlightLabel
-@onready var flight_progress: ProgressBar = $Root/TopRightPanel/Margin/VBox/FlightWidget/FlightProgress
-@onready var detail_panel: PanelContainer = $Root/DetailPanel
-@onready var vertical_speed_label: Label = $Root/DetailPanel/Margin/VBox/VerticalSpeedLabel
-@onready var acceleration_label: Label = $Root/DetailPanel/Margin/VBox/AccelerationLabel
-@onready var surface_label: Label = $Root/DetailPanel/Margin/VBox/SurfaceLabel
+@onready var timer_panel: PanelContainer = $Root/TimerPanel
+@onready var timer_label: Label = $Root/TimerPanel/Margin/VBox/TimerLabel
+@onready var movement_panel: PanelContainer = $Root/MovementPanel
+@onready var speed_label: Label = $Root/MovementPanel/Margin/VBox/SpeedLabel
+@onready var flight_widget: VBoxContainer = $Root/MovementPanel/Margin/VBox/FlightWidget
+@onready var flight_label: Label = $Root/MovementPanel/Margin/VBox/FlightWidget/FlightLabel
+@onready var flight_progress: ProgressBar = $Root/MovementPanel/Margin/VBox/FlightWidget/FlightProgress
+@onready var vertical_speed_label: Label = $Root/MovementPanel/Margin/VBox/VerticalSpeedLabel
+@onready var acceleration_label: Label = $Root/MovementPanel/Margin/VBox/AccelerationLabel
+@onready var surface_label: Label = $Root/MovementPanel/Margin/VBox/SurfaceLabel
 @onready var debug_panel: PanelContainer = $Root/DebugPanel
 @onready var state_label: Label = $Root/DebugPanel/Margin/VBox/StateLabel
 @onready var fps_label: Label = $Root/DebugPanel/Margin/VBox/FpsLabel
@@ -97,14 +97,20 @@ func _update_visibility() -> void:
 	state_details_panel.visible = state_details_visible and player != null and state_bridge != null
 	direction_panel.visible = direction_visible and finish_target != null
 	timer_label.visible = timer_visible
+	timer_panel.visible = timer_visible
 	speed_label.visible = speed_visible
 	flight_widget.visible = flight_visible and _has_flight_widget_data()
-	top_right_panel.visible = timer_label.visible or speed_label.visible or flight_widget.visible
 
 	vertical_speed_label.visible = vertical_speed_visible
 	acceleration_label.visible = acceleration_visible
 	surface_label.visible = surface_visible
-	detail_panel.visible = vertical_speed_visible or acceleration_visible or surface_visible
+	movement_panel.visible = (
+		speed_label.visible
+		or flight_widget.visible
+		or vertical_speed_visible
+		or acceleration_visible
+		or surface_visible
+	)
 
 	state_label.visible = state_visible
 	fps_label.visible = fps_visible
