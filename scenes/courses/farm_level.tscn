@@ -19,6 +19,8 @@ ambient_light_source = 3
 ambient_light_color = Color(0.43529412, 0.5176471, 0.5647059, 1)
 ambient_light_energy = 0.5
 reflected_light_source = 2
+adjustment_enabled = true
+adjustment_saturation = 0.85
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_ka346"]
 size = Vector3(233.26416, 1, 184.7633)
