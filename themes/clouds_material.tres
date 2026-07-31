@@ -1,8 +1,9 @@
-[gd_resource type="ShaderMaterial" load_steps=2 format=3]
+[gd_resource type="ShaderMaterial" format=3 uid="uid://diq5m7pb6a7xl"]
 
-[ext_resource type="Shader" path="res://themes/clouds.gdshader" id="1_clouds_shader"]
+[ext_resource type="Shader" uid="uid://c3fp0g1kudn0h" path="res://themes/clouds.gdshader" id="1_clouds_shader"]
 
 [resource]
+render_priority = 0
 shader = ExtResource("1_clouds_shader")
 shader_parameter/top_color = Color(0.965, 0.929, 0.847, 1)
 shader_parameter/base_color = Color(0.945, 0.875, 0.741, 1)

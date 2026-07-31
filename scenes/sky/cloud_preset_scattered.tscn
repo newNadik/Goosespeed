@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://drpah2ta6inga"]
 
-[ext_resource type="Material" path="res://themes/clouds_material.tres" id="1_clouds"]
+[ext_resource type="Material" uid="uid://diq5m7pb6a7xl" path="res://themes/clouds_material.tres" id="1_clouds"]
 
 [sub_resource type="SphereMesh" id="SphereMesh_cloud"]
 radius = 1.0
