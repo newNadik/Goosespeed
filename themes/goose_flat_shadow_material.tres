@@ -1,0 +1,16 @@
+[gd_resource type="ShaderMaterial" format=3 uid="uid://qj52vsqp8baw"]
+
+[ext_resource type="Shader" uid="uid://beq3r6t0d001v" path="res://themes/goose_flat_shadow.gdshader" id="1_goose_shader"]
+[ext_resource type="Texture2D" uid="uid://dyyuv8dcmnitk" path="res://assets/models/Goose_retro_flat.png" id="2_goose_texture"]
+
+[resource]
+render_priority = 0
+shader = ExtResource("1_goose_shader")
+shader_parameter/albedo_texture = ExtResource("2_goose_texture")
+shader_parameter/alpha_scissor_threshold = 0.5
+shader_parameter/base_brightness = 0.84
+shader_parameter/saturated_brightness = 0.9
+shader_parameter/lit_tint = Color(1, 1, 1, 1)
+shader_parameter/shadow_tint = Color(0.58, 0.66, 0.69, 1)
+shader_parameter/shadow_strength = 0.42
+shader_parameter/shadow_cutoff = 0.08

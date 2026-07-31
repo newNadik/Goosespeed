@@ -32,7 +32,7 @@ environment = SubResource("Environment_hy1i6")
 transform = Transform3D(2.5, 0, 0, 0, 2.5, 0, 0, 0, 2.5, 0, 0, 0)
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=2074729986]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.0739746, -0.5, 42.38141)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -1.074, -0.4, 42.381)
 shape = SubResource("BoxShape3D_ka346")
 
 [node name="Sun" type="DirectionalLight3D" parent="." unique_id=270734984]
