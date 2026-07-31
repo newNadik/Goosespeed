@@ -1,0 +1,14 @@
+[gd_scene load_steps=5 format=3]
+
+[ext_resource type="Script" path="res://scripts/sky/sky_controller.gd" id="1_controller"]
+[ext_resource type="PackedScene" path="res://scenes/sky/cloud_preset_wide.tscn" id="2_wide"]
+[ext_resource type="PackedScene" path="res://scenes/sky/cloud_preset_stacked.tscn" id="3_stacked"]
+[ext_resource type="PackedScene" path="res://scenes/sky/cloud_preset_scattered.tscn" id="4_scattered"]
+
+[node name="Sky" type="Node3D"]
+script = ExtResource("1_controller")
+cloudiness = 4
+wind = 1
+cloud_presets = Array[PackedScene]([ExtResource("2_wide"), ExtResource("3_stacked"), ExtResource("4_scattered")])
+spawn_area_size = Vector2(170, 150)
+altitude_range = Vector2(24, 42)

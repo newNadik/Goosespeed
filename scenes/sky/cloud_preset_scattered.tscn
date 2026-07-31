@@ -1,0 +1,36 @@
+[gd_scene format=3 uid="uid://drpah2ta6inga"]
+
+[ext_resource type="Material" path="res://themes/clouds_material.tres" id="1_clouds"]
+
+[sub_resource type="SphereMesh" id="SphereMesh_cloud"]
+radius = 1.0
+height = 2.0
+radial_segments = 16
+rings = 8
+
+[node name="CloudPresetScattered" type="Node3D" unique_id=1705205270]
+
+[node name="LargePuff" type="MeshInstance3D" parent="." unique_id=1349304587]
+transform = Transform3D(5.8, 0, 0, 0, 1.8, 0, 0, 0, 3.5, -2.8, 0, 0.7)
+material_override = ExtResource("1_clouds")
+mesh = SubResource("SphereMesh_cloud")
+
+[node name="MiddlePuff" type="MeshInstance3D" parent="." unique_id=68000416]
+transform = Transform3D(4.4, 0, 0, 0, 1.5, 0, 0, 0, 2.7, 2.7, -0.2, -1.4634168)
+material_override = ExtResource("1_clouds")
+mesh = SubResource("SphereMesh_cloud")
+
+[node name="SmallPuffA" type="MeshInstance3D" parent="." unique_id=1515487540]
+transform = Transform3D(2.9, 0, 0, 0, 1.1, 0, 0, 0, 2, -7.439763, 0.3407487, -1.1397648)
+material_override = ExtResource("1_clouds")
+mesh = SubResource("SphereMesh_cloud")
+
+[node name="SmallPuffB" type="MeshInstance3D" parent="." unique_id=494568964]
+transform = Transform3D(3, 0, 0, 0, 1.15, 0, 0, 0, 1.9, 4.3957415, -0.3, 1.0671889)
+material_override = ExtResource("1_clouds")
+mesh = SubResource("SphereMesh_cloud")
+
+[node name="HighPuff" type="MeshInstance3D" parent="." unique_id=401709329]
+transform = Transform3D(3.8, 0, 0, 0, 1.35, 0, 0, 0, 2.5, -0.4, 1.5451514, -0.15)
+material_override = ExtResource("1_clouds")
+mesh = SubResource("SphereMesh_cloud")

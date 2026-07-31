@@ -1,0 +1,17 @@
+[gd_resource type="ShaderMaterial" load_steps=2 format=3]
+
+[ext_resource type="Shader" path="res://themes/clouds.gdshader" id="1_clouds_shader"]
+
+[resource]
+shader = ExtResource("1_clouds_shader")
+shader_parameter/top_color = Color(0.965, 0.929, 0.847, 1)
+shader_parameter/base_color = Color(0.945, 0.875, 0.741, 1)
+shader_parameter/shadow_color = Color(0.435, 0.518, 0.565, 1)
+shader_parameter/light_direction = Vector3(0.45, -0.7, 0.25)
+shader_parameter/shadow_threshold = -0.15
+shader_parameter/shadow_strength = 0.55
+shader_parameter/enable_rim = true
+shader_parameter/rim_power = 2.0
+shader_parameter/rim_strength = 0.25
+shader_parameter/cloud_speed = 0.45
+shader_parameter/cloud_strength = 0.08
