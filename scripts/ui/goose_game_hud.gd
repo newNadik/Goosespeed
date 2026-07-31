@@ -8,6 +8,8 @@ const PANEL_MARGIN := 16.0
 @onready var direction_panel: PanelContainer = $Root/DirectionPanel
 @onready var direction_arrow: Label = $Root/DirectionPanel/Margin/DirectionBox/DirectionArrow
 @onready var direction_label: Label = $Root/DirectionPanel/Margin/DirectionBox/DirectionLabel
+@onready var state_details_panel: PanelContainer = $Root/StateDetailsPanel
+@onready var state_details_label: RichTextLabel = $Root/StateDetailsPanel/Margin/StateDetailsLabel
 @onready var top_right_panel: PanelContainer = $Root/TopRightPanel
 @onready var speed_label: Label = $Root/TopRightPanel/Margin/VBox/SpeedLabel
 @onready var timer_label: Label = $Root/TopRightPanel/Margin/VBox/TimerLabel
@@ -27,6 +29,7 @@ const PANEL_MARGIN := 16.0
 
 var player: Node
 var state_bridge: Node
+var visual_controller: Node
 var finish_target: Node3D
 var elapsed_time := 0.0
 var run_finished := false
@@ -48,6 +51,7 @@ func _process(delta: float) -> void:
 func set_player(value: Node) -> void:
 	player = value
 	state_bridge = player.get("movement_state_bridge") if player != null else null
+	visual_controller = player.get_node_or_null("GooseVisual") if player != null else null
 	has_previous_velocity = false
 	_update_labels()
 
@@ -88,7 +92,9 @@ func _update_visibility() -> void:
 	var raw_visible := _hud_visible(GooseGameSettings.HUD_RAW_MOVEMENT)
 	var surface_flags_visible := _hud_visible(GooseGameSettings.HUD_SURFACE_FLAGS)
 	var input_visible := _hud_visible(GooseGameSettings.HUD_INPUT_STATE)
+	var state_details_visible := _hud_visible(GooseGameSettings.HUD_DEBUG_STATE_VIEW)
 
+	state_details_panel.visible = state_details_visible and player != null and state_bridge != null
 	direction_panel.visible = direction_visible and finish_target != null
 	timer_label.visible = timer_visible
 	speed_label.visible = speed_visible
@@ -127,6 +133,7 @@ func _update_labels() -> void:
 	]
 	surface_flags_label.text = "Flags  %s" % _format_surface_flags(state)
 	input_state_label.text = "Input  %s  mode:%s" % [_format_input_state(), str(state.mode)]
+	_update_state_details(state)
 
 
 func _get_movement_state() -> RefCounted:
@@ -211,6 +218,61 @@ func _get_flight_debug_state() -> Dictionary:
 	if active_controller != null and active_controller.has_method("get_flight_debug_state"):
 		return active_controller.get_flight_debug_state()
 	return {}
+
+
+func _update_state_details(state: RefCounted) -> void:
+	if not state_details_panel.visible:
+		return
+	var flight_debug := _get_flight_debug_state()
+	state_details_label.text = "\n".join([
+		"[center][b]%s[/b][/center]" % _get_visual_state_name(state),
+		"[center]contact  %s[/center]" % _format_debug_flags(state, [
+			&"grounded",
+			&"airborne",
+			&"swimming",
+			&"sliding",
+			&"crouching",
+			&"crouch_sliding",
+		]),
+		"[center]flight   %s[/center]" % _format_debug_flags(state, [
+			&"flight_activation_charging",
+			&"just_entered_flight",
+			&"just_exited_flight",
+			&"gliding",
+			&"flapping",
+			&"falling",
+		]),
+		"[center]flap cd %s[/center]" % _format_flap_cooldown(flight_debug),
+	])
+
+
+func _format_debug_flags(state: RefCounted, flags: Array[StringName]) -> String:
+	var parts: Array[String] = []
+	for flag in flags:
+		parts.append(_format_debug_flag(str(flag), bool(state.get(str(flag)))))
+	return "  ".join(parts)
+
+
+func _format_debug_flag(flag_name: String, active: bool) -> String:
+	if active:
+		return "[color=#ffffff][b]%s[/b][/color]" % flag_name
+	return "[color=#5f6670]%s[/color]" % flag_name
+
+
+func _format_flap_cooldown(debug_state: Dictionary) -> String:
+	var remaining := float(debug_state.get("flap_cooldown_remaining", 0.0))
+	var cooldown := float(debug_state.get("flap_cooldown", 0.0))
+	if cooldown <= 0.0:
+		return "[color=#5f6670]n/a[/color]"
+	if remaining > 0.0:
+		return "[color=#ffcc45][b]%.2f / %.2f[/b][/color]" % [remaining, cooldown]
+	return "[color=#1df05a][b]ready[/b][/color]"
+
+
+func _get_visual_state_name(state: RefCounted) -> String:
+	if visual_controller != null and visual_controller.has_method("visual_state_for_state"):
+		return str(visual_controller.visual_state_for_state(state))
+	return _state_text(state)
 
 
 func _get_active_controller() -> Node3D:

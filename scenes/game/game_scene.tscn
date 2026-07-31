@@ -5,7 +5,6 @@
 [ext_resource type="PackedScene" uid="uid://r48mulvevh7j" path="res://scenes/courses/farm_level.tscn" id="2_p0de3"]
 [ext_resource type="PackedScene" uid="uid://c03rnu2cc85km" path="res://scenes/player/goose_player_root.tscn" id="3_player"]
 [ext_resource type="PackedScene" path="res://scenes/effects/print_effect.tscn" id="4_print"]
-[ext_resource type="PackedScene" uid="uid://bksw8d5n5qsrj" path="res://scenes/debug/goose_visual_debug_overlay.tscn" id="5_debug"]
 
 [node name="GooseGameScene" type="Node3D" unique_id=1187776317]
 script = ExtResource("1_game")
@@ -23,5 +22,3 @@ dither_strength = 0.7
 tint_strength = 0.1
 
 [node name="GooseGameHud" parent="." unique_id=2125325350 instance=ExtResource("2_hud")]
-
-[node name="GooseVisualDebugOverlay" parent="." unique_id=189416155 instance=ExtResource("5_debug")]

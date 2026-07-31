@@ -5,7 +5,6 @@ const PAUSE_MENU_SCENE := preload("res://scenes/ui/pause_menu.tscn")
 
 @onready var player: Node = $GoosePlayerRoot
 @onready var game_hud: Node = $GooseGameHud
-@onready var visual_debug: Node = $GooseVisualDebugOverlay
 @onready var course_root: Node3D = $CourseRoot
 
 var elapsed_time := 0.0
@@ -21,7 +20,6 @@ func _ready() -> void:
 	game_hud.set_player(player)
 	if game_hud.has_method("set_finish_target"):
 		game_hud.set_finish_target(finish_area)
-	visual_debug.set_player(player)
 	add_child(PAUSE_MENU_SCENE.instantiate())
 	_update_hud()
 
