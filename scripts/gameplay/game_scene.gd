@@ -19,6 +19,8 @@ func _ready() -> void:
 	_connect_finish_trigger()
 	_apply_spawn_transform()
 	game_hud.set_player(player)
+	if game_hud.has_method("set_finish_target"):
+		game_hud.set_finish_target(finish_area)
 	visual_debug.set_player(player)
 	add_child(PAUSE_MENU_SCENE.instantiate())
 	_update_hud()

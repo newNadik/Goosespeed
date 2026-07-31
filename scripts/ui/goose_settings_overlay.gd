@@ -10,11 +10,13 @@ const GooseMovesRuntimeScript := preload("res://scripts/player/goose_moves_runti
 @onready var keybindings_menu = $Root/KeybindingsMenu
 
 var syncing_visual_settings_controls := false
+var syncing_hud_settings_controls := false
 var head_look_toggle: CheckButton
 var head_look_intensity_slider: HSlider
 var head_look_intensity_value: Label
 var head_look_smoothness_slider: HSlider
 var head_look_smoothness_value: Label
+var hud_toggles := {}
 
 
 func _ready() -> void:
@@ -94,6 +96,8 @@ func _apply_game_settings_scope(include_visual_settings := true) -> void:
 		return
 	_ensure_visual_settings_controls()
 	_sync_visual_settings_controls()
+	_ensure_hud_settings_controls()
+	_sync_hud_settings_controls()
 
 
 func _focus_character_settings() -> void:
@@ -169,6 +173,68 @@ func _ensure_visual_settings_controls() -> void:
 	_bind_visual_settings_controls(section)
 
 
+func _ensure_hud_settings_controls() -> void:
+	var settings_box := settings_menu.get_node_or_null(
+		"Panel/Margin/VBox/SettingsTabs/Character/ScrollContainer/ControllerSettingsBox"
+	) as VBoxContainer
+	if settings_box == null:
+		return
+
+	var existing_section := settings_box.get_node_or_null("GooseHudSettings") as VBoxContainer
+	if existing_section != null:
+		if existing_section.is_queued_for_deletion():
+			existing_section.name = "QueuedGooseHudSettings"
+		else:
+			_bind_hud_settings_controls(existing_section)
+			return
+
+	var section := VBoxContainer.new()
+	section.name = "GooseHudSettings"
+	section.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	section.add_theme_constant_override("separation", 8)
+
+	var spacer := Control.new()
+	spacer.custom_minimum_size = Vector2(0.0, 8.0)
+	section.add_child(spacer)
+
+	var title := Label.new()
+	title.name = "Title"
+	title.text = "HUD"
+	title.add_theme_font_size_override("font_size", 18)
+	section.add_child(title)
+
+	var presets := HBoxContainer.new()
+	presets.name = "PresetButtons"
+	presets.add_theme_constant_override("separation", 8)
+	section.add_child(presets)
+	presets.add_child(_create_hud_preset_button("Core", "core"))
+	presets.add_child(_create_hud_preset_button("Detailed", "detailed"))
+	presets.add_child(_create_hud_preset_button("Debug", "debug"))
+
+	_add_hud_group(section, "Core", [
+		[GooseGameSettings.HUD_DIRECTION_TO_FINISH, "Direction to finish"],
+		[GooseGameSettings.HUD_TIMER, "Timer"],
+		[GooseGameSettings.HUD_SPEED, "Speed"],
+		[GooseGameSettings.HUD_FLIGHT_WIDGET, "Flight widget"],
+	])
+	_add_hud_group(section, "Detailed", [
+		[GooseGameSettings.HUD_VERTICAL_SPEED, "Vertical speed"],
+		[GooseGameSettings.HUD_ACCELERATION, "Acceleration"],
+		[GooseGameSettings.HUD_SURFACE_GRIP, "Surface / grip"],
+	])
+	_add_hud_group(section, "Debug", [
+		[GooseGameSettings.HUD_STATE, "State"],
+		[GooseGameSettings.HUD_FPS, "FPS"],
+		[GooseGameSettings.HUD_RAW_MOVEMENT, "Raw movement"],
+		[GooseGameSettings.HUD_SURFACE_FLAGS, "Surface flags"],
+		[GooseGameSettings.HUD_INPUT_STATE, "Input state"],
+		[GooseGameSettings.HUD_DEBUG_STATE_VIEW, "Debug state view"],
+	])
+
+	settings_box.add_child(section)
+	_bind_hud_settings_controls(section)
+
+
 func _create_visual_slider_row(
 	label_text: String,
 	slider_name: String,
@@ -223,6 +289,45 @@ func _create_visual_toggle_row(label_text: String, toggle_name: String, callback
 	return row
 
 
+func _create_hud_preset_button(label_text: String, preset: String) -> Button:
+	var button := Button.new()
+	button.text = label_text
+	button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	button.pressed.connect(_on_hud_preset_pressed.bind(preset))
+	return button
+
+
+func _add_hud_group(section: VBoxContainer, title_text: String, items: Array) -> void:
+	var title := Label.new()
+	title.text = title_text
+	title.add_theme_font_size_override("font_size", 14)
+	section.add_child(title)
+
+	for item in items:
+		var element := str(item[0])
+		var label_text := str(item[1])
+		section.add_child(_create_hud_toggle_row(label_text, element))
+
+
+func _create_hud_toggle_row(label_text: String, element: String) -> HBoxContainer:
+	var row := HBoxContainer.new()
+	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_theme_constant_override("separation", 12)
+
+	var label := Label.new()
+	label.text = label_text
+	label.custom_minimum_size = Vector2(150.0, 0.0)
+	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_child(label)
+
+	var toggle := CheckButton.new()
+	toggle.name = _hud_toggle_name(element)
+	toggle.set_meta("hud_element", element)
+	toggle.toggled.connect(_on_hud_toggle_changed.bind(element))
+	row.add_child(toggle)
+	return row
+
+
 func _bind_visual_settings_controls(section: Node) -> void:
 	head_look_toggle = section.find_child(
 		"HeadLookToggle",
@@ -251,6 +356,14 @@ func _bind_visual_settings_controls(section: Node) -> void:
 	) as Label
 
 
+func _bind_hud_settings_controls(section: Node) -> void:
+	hud_toggles.clear()
+	for element in GooseGameSettings.HUD_ELEMENTS:
+		var toggle := section.find_child(_hud_toggle_name(element), true, false) as CheckButton
+		if toggle != null:
+			hud_toggles[element] = toggle
+
+
 func _sync_visual_settings_controls() -> void:
 	if (
 		head_look_toggle == null
@@ -264,6 +377,17 @@ func _sync_visual_settings_controls() -> void:
 	head_look_smoothness_slider.set_value_no_signal(GooseGameSettings.head_look_smoothness)
 	syncing_visual_settings_controls = false
 	_update_visual_settings_value_labels()
+
+
+func _sync_hud_settings_controls() -> void:
+	if hud_toggles.is_empty():
+		return
+	syncing_hud_settings_controls = true
+	for element in GooseGameSettings.HUD_ELEMENTS:
+		var toggle := hud_toggles.get(element) as CheckButton
+		if toggle != null:
+			toggle.set_pressed_no_signal(GooseGameSettings.is_hud_element_visible(element))
+	syncing_hud_settings_controls = false
 
 
 func _update_visual_settings_value_labels() -> void:
@@ -292,3 +416,22 @@ func _on_head_look_smoothness_changed(value: float) -> void:
 		return
 	GooseGameSettings.set_head_look_smoothness(value)
 	_update_visual_settings_value_labels()
+
+
+func _on_hud_preset_pressed(preset: String) -> void:
+	GooseGameSettings.apply_hud_preset(preset)
+	_sync_hud_settings_controls()
+
+
+func _on_hud_toggle_changed(enabled: bool, element: String) -> void:
+	if syncing_hud_settings_controls:
+		return
+	GooseGameSettings.set_hud_element_visible(element, enabled)
+
+
+func _hud_toggle_name(element: String) -> String:
+	var parts := element.split("_")
+	var result := "Hud"
+	for part in parts:
+		result += part.capitalize()
+	return "%sToggle" % result

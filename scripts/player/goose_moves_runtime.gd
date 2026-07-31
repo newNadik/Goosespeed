@@ -46,6 +46,7 @@ func spawn_controller(placeholder: Node3D) -> Node:
 	parent.move_child(active_controller, sibling_index)
 	(active_controller as Node3D).global_transform = spawn_transform
 	active_controller.set_spawn_transform(spawn_transform)
+	active_controller.set_debug_hud_visible(false)
 	return active_controller
 
 

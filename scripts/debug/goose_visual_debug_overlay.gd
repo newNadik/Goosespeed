@@ -8,15 +8,18 @@ var label: RichTextLabel
 
 
 func _ready() -> void:
-	_setup_canvas()
+	visible = false
 	set_process(false)
+	_setup_canvas()
+	_connect_settings()
+	_apply_visibility()
 
 
 func set_player(value: Node) -> void:
 	player = value
 	state_bridge = player.get_node_or_null("MovementStateBridge") if player != null else null
 	visual_controller = player.get_node_or_null("GooseVisual") if player != null else null
-	set_process(player != null and state_bridge != null)
+	_apply_visibility()
 
 
 func _process(_delta: float) -> void:
@@ -29,6 +32,7 @@ func _process(_delta: float) -> void:
 func _setup_canvas() -> void:
 	var canvas := CanvasLayer.new()
 	canvas.name = "DebugCanvas"
+	canvas.visible = false
 	add_child(canvas)
 
 	var root := Control.new()
@@ -62,6 +66,31 @@ func _setup_canvas() -> void:
 	label.autowrap_mode = TextServer.AUTOWRAP_OFF
 	label.add_theme_font_size_override("font_size", 15)
 	margin.add_child(label)
+
+
+func _connect_settings() -> void:
+	var settings := get_node_or_null("/root/GooseGameSettings")
+	if settings != null and settings.has_signal("settings_changed"):
+		if not settings.is_connected("settings_changed", _on_settings_changed):
+			settings.connect("settings_changed", _on_settings_changed)
+
+
+func _on_settings_changed() -> void:
+	_apply_visibility()
+
+
+func _apply_visibility() -> void:
+	var settings := get_node_or_null("/root/GooseGameSettings")
+	var debug_visible := false
+	if settings != null:
+		debug_visible = settings.is_hud_element_visible(
+			GooseGameSettings.HUD_DEBUG_STATE_VIEW
+		) if settings.has_method("is_hud_element_visible") else false
+	visible = debug_visible
+	var canvas := get_node_or_null("DebugCanvas") as CanvasLayer
+	if canvas != null:
+		canvas.visible = debug_visible
+	set_process(debug_visible and player != null and state_bridge != null)
 
 
 func _update_label(state: RefCounted) -> void:

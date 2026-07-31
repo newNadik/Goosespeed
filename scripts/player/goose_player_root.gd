@@ -44,11 +44,7 @@ func set_spawn_transform(value: Transform3D) -> void:
 
 
 func _apply_backend_debug_visibility() -> void:
-	var debug_visible := true
-	var game_settings := get_node_or_null("/root/GooseGameSettings")
-	if game_settings != null:
-		debug_visible = bool(game_settings.get("debug_hud_visible"))
-	goose_moves_runtime.apply_debug_visibility(debug_visible)
+	goose_moves_runtime.apply_debug_visibility(false)
 
 
 func _connect_settings_changed() -> void:
