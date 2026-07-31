@@ -4,13 +4,15 @@ extends CanvasLayer
 signal back_requested
 
 const GooseMovesRuntimeScript := preload("res://scripts/player/goose_moves_runtime.gd")
+const GooseMovesSettingsScene := preload("res://addons/goose-moves/scenes/settings_menu.tscn")
 const TAB_FONT := preload("res://assets/ui/fonts/Condor Medium Condensed.otf")
 
 const TAB_CONTROLS := "Controls"
 const TAB_VISUAL := "Visual"
 const TAB_HUD := "HUD"
+const TAB_GOOSE_MOVES := "Goose Moves"
 const TAB_AUDIO := "Audio"
-const TABS := [TAB_VISUAL, TAB_CONTROLS, TAB_HUD, TAB_AUDIO]
+const TABS := [TAB_VISUAL, TAB_CONTROLS, TAB_HUD, TAB_GOOSE_MOVES, TAB_AUDIO]
 const LISTENING_TEXT := "Press input..."
 
 const INK := GooseSpeedPalette.INK
@@ -31,6 +33,7 @@ var syncing_hud_settings_controls := false
 var syncing_game_settings_controls := false
 var fullscreen_toggle: CheckButton
 var hud_toggles := {}
+var goose_moves_settings_menu: Control
 var readable_ui_font: SystemFont
 var listening_action := ""
 var listening_slot := -1
@@ -159,6 +162,8 @@ func _show_tab(tab_name: String) -> void:
 			_build_visual_tab()
 		TAB_HUD:
 			_build_hud_tab()
+		TAB_GOOSE_MOVES:
+			_build_goose_moves_tab()
 		TAB_AUDIO:
 			_build_audio_tab()
 	_sync_game_settings_controls()
@@ -175,6 +180,7 @@ func _clear_content() -> void:
 	_stop_listening_for_binding(false)
 	binding_buttons.clear()
 	fullscreen_toggle = null
+	goose_moves_settings_menu = null
 	for child in content_box.get_children():
 		child.queue_free()
 
@@ -280,6 +286,33 @@ func _build_audio_tab() -> void:
 	var spacer := Control.new()
 	spacer.custom_minimum_size = Vector2(0.0, 1.0)
 	content_box.add_child(spacer)
+
+
+func _build_goose_moves_tab() -> void:
+	goose_moves_settings_menu = GooseMovesSettingsScene.instantiate() as Control
+	goose_moves_settings_menu.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	goose_moves_settings_menu.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	content_box.add_child(goose_moves_settings_menu)
+	_configure_goose_moves_settings_menu.call_deferred(goose_moves_settings_menu)
+
+
+func _configure_goose_moves_settings_menu(menu: Control) -> void:
+	if not is_instance_valid(menu):
+		return
+	if menu.has_method("show_character_settings"):
+		menu.show_character_settings()
+	var title := menu.get_node_or_null("Panel/Margin/VBox/Title") as Control
+	if title != null:
+		title.visible = false
+	var back := menu.get_node_or_null("Panel/Margin/VBox/BackButton") as Control
+	if back != null:
+		back.visible = false
+	var keybindings := menu.get_node_or_null("Panel/Margin/VBox/SettingsTabs/Character/KeybindingsButton") as Control
+	if keybindings != null:
+		keybindings.visible = false
+	var panel := menu.get_node_or_null("Panel") as PanelContainer
+	if panel != null:
+		panel.add_theme_stylebox_override("panel", _embedded_panel_style())
 
 
 func _add_hud_group(items: Array) -> void:
@@ -550,6 +583,17 @@ func _panel_style() -> StyleBoxFlat:
 	style.corner_radius_top_right = 4
 	style.corner_radius_bottom_right = 4
 	style.corner_radius_bottom_left = 4
+	return style
+
+
+func _embedded_panel_style() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color.TRANSPARENT
+	style.border_color = Color.TRANSPARENT
+	style.content_margin_left = 0
+	style.content_margin_top = 0
+	style.content_margin_right = 0
+	style.content_margin_bottom = 0
 	return style
 
 
