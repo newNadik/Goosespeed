@@ -23,6 +23,7 @@ mouse_filter = 2
 
 [node name="CompassStrip" type="Control" parent="CompassClip" unique_id=1771379211]
 layout_mode = 1
+anchors_preset = 0
 offset_left = -390.0
 offset_right = 1368.0
 offset_bottom = 44.0
@@ -37,9 +38,9 @@ color = Color(0.60784316, 0.7764706, 0.88235295, 0.92)
 
 [node name="Tick0" type="ColorRect" parent="CompassClip/CompassStrip" unique_id=327285199]
 layout_mode = 1
-offset_top = 18.0
+offset_top = 22.0
 offset_right = 2.0
-offset_bottom = 44.0
+offset_bottom = 40.0
 color = Color(0.60784316, 0.7764706, 0.88235295, 1)
 
 [node name="Tick1" type="ColorRect" parent="CompassClip/CompassStrip" unique_id=592257801]
@@ -53,9 +54,9 @@ color = Color(0.60784316, 0.7764706, 0.88235295, 0.92)
 [node name="Tick2" type="ColorRect" parent="CompassClip/CompassStrip" unique_id=241521519]
 layout_mode = 1
 offset_left = 228.0
-offset_top = 18.0
+offset_top = 22.0
 offset_right = 230.0
-offset_bottom = 44.0
+offset_bottom = 40.0
 color = Color(0.60784316, 0.7764706, 0.88235295, 0.92)
 
 [node name="Tick3" type="ColorRect" parent="CompassClip/CompassStrip" unique_id=1495171421]
@@ -69,9 +70,9 @@ color = Color(0.60784316, 0.7764706, 0.88235295, 0.92)
 [node name="Tick4" type="ColorRect" parent="CompassClip/CompassStrip" unique_id=375244197]
 layout_mode = 1
 offset_left = 456.0
-offset_top = 18.0
+offset_top = 22.0
 offset_right = 458.0
-offset_bottom = 44.0
+offset_bottom = 40.0
 color = Color(0.60784316, 0.7764706, 0.88235295, 1)
 
 [node name="Tick5" type="ColorRect" parent="CompassClip/CompassStrip" unique_id=2047494809]
@@ -85,9 +86,9 @@ color = Color(0.60784316, 0.7764706, 0.88235295, 0.92)
 [node name="Tick6" type="ColorRect" parent="CompassClip/CompassStrip" unique_id=116882362]
 layout_mode = 1
 offset_left = 684.0
-offset_top = 18.0
+offset_top = 22.0
 offset_right = 686.0
-offset_bottom = 44.0
+offset_bottom = 40.0
 color = Color(0.60784316, 0.7764706, 0.88235295, 0.92)
 
 [node name="Tick7" type="ColorRect" parent="CompassClip/CompassStrip" unique_id=874865732]
@@ -101,17 +102,16 @@ color = Color(0.60784316, 0.7764706, 0.88235295, 0.92)
 [node name="Tick8" type="ColorRect" parent="CompassClip/CompassStrip" unique_id=329577591]
 layout_mode = 1
 offset_left = 912.0
-offset_top = 18.0
+offset_top = 22.0
 offset_right = 914.0
-offset_bottom = 44.0
+offset_bottom = 40.0
 color = Color(0.60784316, 0.7764706, 0.88235295, 1)
 
 [node name="NorthLabelLeft" type="Label" parent="CompassClip/CompassStrip" unique_id=1336623250]
 layout_mode = 1
 offset_left = -14.0
-offset_top = -2.0
 offset_right = 16.0
-offset_bottom = 28.0
+offset_bottom = 25.0
 theme_override_colors/font_color = Color(0.60784316, 0.7764706, 0.88235295, 1)
 theme_override_colors/font_outline_color = Color(0.09411765, 0.18431373, 0.26666668, 0.95)
 theme_override_constants/outline_size = 3
@@ -162,9 +162,8 @@ horizontal_alignment = 1
 [node name="NorthLabelCenter" type="Label" parent="CompassClip/CompassStrip" unique_id=846712945]
 layout_mode = 1
 offset_left = 442.0
-offset_top = -2.0
 offset_right = 472.0
-offset_bottom = 28.0
+offset_bottom = 25.0
 theme_override_colors/font_color = Color(0.60784316, 0.7764706, 0.88235295, 1)
 theme_override_colors/font_outline_color = Color(0.09411765, 0.18431373, 0.26666668, 0.95)
 theme_override_constants/outline_size = 3
@@ -215,9 +214,8 @@ horizontal_alignment = 1
 [node name="NorthLabelRight" type="Label" parent="CompassClip/CompassStrip" unique_id=1722124644]
 layout_mode = 1
 offset_left = 898.0
-offset_top = -2.0
 offset_right = 928.0
-offset_bottom = 28.0
+offset_bottom = 30.0
 theme_override_colors/font_color = Color(0.60784316, 0.7764706, 0.88235295, 1)
 theme_override_colors/font_outline_color = Color(0.09411765, 0.18431373, 0.26666668, 0.95)
 theme_override_constants/outline_size = 3
