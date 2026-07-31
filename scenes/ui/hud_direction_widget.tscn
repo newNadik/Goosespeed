@@ -1,0 +1,251 @@
+[gd_scene format=3 uid="uid://dawdk5itlhoft"]
+
+[ext_resource type="FontFile" uid="uid://bkdpp3abo73lr" path="res://assets/ui/fonts/Condor Medium Condensed.otf" id="1_font"]
+[ext_resource type="Texture2D" uid="uid://cy3g6fcux67d6" path="res://assets/ui/icons/ic_finish.png" id="2_finish_icon"]
+
+[node name="HudDirectionWidget" type="Control" unique_id=1204915038]
+custom_minimum_size = Vector2(520, 84)
+layout_mode = 3
+anchors_preset = 0
+offset_right = 520.0
+offset_bottom = 84.0
+mouse_filter = 2
+
+[node name="CompassClip" type="Control" parent="." unique_id=323172223]
+custom_minimum_size = Vector2(456, 44)
+clip_contents = true
+layout_mode = 1
+anchors_preset = 0
+offset_left = 32.0
+offset_right = 488.0
+offset_bottom = 44.0
+mouse_filter = 2
+
+[node name="CompassStrip" type="Control" parent="CompassClip" unique_id=1771379211]
+layout_mode = 1
+offset_left = -390.0
+offset_right = 1368.0
+offset_bottom = 44.0
+mouse_filter = 2
+
+[node name="CompassLine" type="ColorRect" parent="CompassClip/CompassStrip" unique_id=188056062]
+layout_mode = 1
+offset_top = 30.0
+offset_right = 1368.0
+offset_bottom = 32.0
+color = Color(0.60784316, 0.7764706, 0.88235295, 0.92)
+
+[node name="Tick0" type="ColorRect" parent="CompassClip/CompassStrip" unique_id=327285199]
+layout_mode = 1
+offset_top = 18.0
+offset_right = 2.0
+offset_bottom = 44.0
+color = Color(0.60784316, 0.7764706, 0.88235295, 1)
+
+[node name="Tick1" type="ColorRect" parent="CompassClip/CompassStrip" unique_id=592257801]
+layout_mode = 1
+offset_left = 114.0
+offset_top = 22.0
+offset_right = 116.0
+offset_bottom = 40.0
+color = Color(0.60784316, 0.7764706, 0.88235295, 0.92)
+
+[node name="Tick2" type="ColorRect" parent="CompassClip/CompassStrip" unique_id=241521519]
+layout_mode = 1
+offset_left = 228.0
+offset_top = 18.0
+offset_right = 230.0
+offset_bottom = 44.0
+color = Color(0.60784316, 0.7764706, 0.88235295, 0.92)
+
+[node name="Tick3" type="ColorRect" parent="CompassClip/CompassStrip" unique_id=1495171421]
+layout_mode = 1
+offset_left = 342.0
+offset_top = 22.0
+offset_right = 344.0
+offset_bottom = 40.0
+color = Color(0.60784316, 0.7764706, 0.88235295, 0.92)
+
+[node name="Tick4" type="ColorRect" parent="CompassClip/CompassStrip" unique_id=375244197]
+layout_mode = 1
+offset_left = 456.0
+offset_top = 18.0
+offset_right = 458.0
+offset_bottom = 44.0
+color = Color(0.60784316, 0.7764706, 0.88235295, 1)
+
+[node name="Tick5" type="ColorRect" parent="CompassClip/CompassStrip" unique_id=2047494809]
+layout_mode = 1
+offset_left = 570.0
+offset_top = 22.0
+offset_right = 572.0
+offset_bottom = 40.0
+color = Color(0.60784316, 0.7764706, 0.88235295, 0.92)
+
+[node name="Tick6" type="ColorRect" parent="CompassClip/CompassStrip" unique_id=116882362]
+layout_mode = 1
+offset_left = 684.0
+offset_top = 18.0
+offset_right = 686.0
+offset_bottom = 44.0
+color = Color(0.60784316, 0.7764706, 0.88235295, 0.92)
+
+[node name="Tick7" type="ColorRect" parent="CompassClip/CompassStrip" unique_id=874865732]
+layout_mode = 1
+offset_left = 798.0
+offset_top = 22.0
+offset_right = 800.0
+offset_bottom = 40.0
+color = Color(0.60784316, 0.7764706, 0.88235295, 0.92)
+
+[node name="Tick8" type="ColorRect" parent="CompassClip/CompassStrip" unique_id=329577591]
+layout_mode = 1
+offset_left = 912.0
+offset_top = 18.0
+offset_right = 914.0
+offset_bottom = 44.0
+color = Color(0.60784316, 0.7764706, 0.88235295, 1)
+
+[node name="NorthLabelLeft" type="Label" parent="CompassClip/CompassStrip" unique_id=1336623250]
+layout_mode = 1
+offset_left = -14.0
+offset_top = -2.0
+offset_right = 16.0
+offset_bottom = 28.0
+theme_override_colors/font_color = Color(0.60784316, 0.7764706, 0.88235295, 1)
+theme_override_colors/font_outline_color = Color(0.09411765, 0.18431373, 0.26666668, 0.95)
+theme_override_constants/outline_size = 3
+theme_override_fonts/font = ExtResource("1_font")
+theme_override_font_sizes/font_size = 24
+text = "N"
+horizontal_alignment = 1
+
+[node name="EastLabelLeft" type="Label" parent="CompassClip/CompassStrip" unique_id=878575300]
+layout_mode = 1
+offset_left = 100.0
+offset_right = 130.0
+offset_bottom = 24.0
+theme_override_colors/font_color = Color(0.60784316, 0.7764706, 0.88235295, 1)
+theme_override_colors/font_outline_color = Color(0.09411765, 0.18431373, 0.26666668, 0.95)
+theme_override_constants/outline_size = 3
+theme_override_fonts/font = ExtResource("1_font")
+theme_override_font_sizes/font_size = 20
+text = "E"
+horizontal_alignment = 1
+
+[node name="SouthLabelLeft" type="Label" parent="CompassClip/CompassStrip" unique_id=1231618543]
+layout_mode = 1
+offset_left = 214.0
+offset_right = 244.0
+offset_bottom = 24.0
+theme_override_colors/font_color = Color(0.60784316, 0.7764706, 0.88235295, 1)
+theme_override_colors/font_outline_color = Color(0.09411765, 0.18431373, 0.26666668, 0.95)
+theme_override_constants/outline_size = 3
+theme_override_fonts/font = ExtResource("1_font")
+theme_override_font_sizes/font_size = 20
+text = "S"
+horizontal_alignment = 1
+
+[node name="WestLabelLeft" type="Label" parent="CompassClip/CompassStrip" unique_id=1896350072]
+layout_mode = 1
+offset_left = 328.0
+offset_right = 358.0
+offset_bottom = 24.0
+theme_override_colors/font_color = Color(0.60784316, 0.7764706, 0.88235295, 1)
+theme_override_colors/font_outline_color = Color(0.09411765, 0.18431373, 0.26666668, 0.95)
+theme_override_constants/outline_size = 3
+theme_override_fonts/font = ExtResource("1_font")
+theme_override_font_sizes/font_size = 20
+text = "W"
+horizontal_alignment = 1
+
+[node name="NorthLabelCenter" type="Label" parent="CompassClip/CompassStrip" unique_id=846712945]
+layout_mode = 1
+offset_left = 442.0
+offset_top = -2.0
+offset_right = 472.0
+offset_bottom = 28.0
+theme_override_colors/font_color = Color(0.60784316, 0.7764706, 0.88235295, 1)
+theme_override_colors/font_outline_color = Color(0.09411765, 0.18431373, 0.26666668, 0.95)
+theme_override_constants/outline_size = 3
+theme_override_fonts/font = ExtResource("1_font")
+theme_override_font_sizes/font_size = 24
+text = "N"
+horizontal_alignment = 1
+
+[node name="EastLabelRight" type="Label" parent="CompassClip/CompassStrip" unique_id=913486820]
+layout_mode = 1
+offset_left = 556.0
+offset_right = 586.0
+offset_bottom = 24.0
+theme_override_colors/font_color = Color(0.60784316, 0.7764706, 0.88235295, 1)
+theme_override_colors/font_outline_color = Color(0.09411765, 0.18431373, 0.26666668, 0.95)
+theme_override_constants/outline_size = 3
+theme_override_fonts/font = ExtResource("1_font")
+theme_override_font_sizes/font_size = 20
+text = "E"
+horizontal_alignment = 1
+
+[node name="SouthLabelRight" type="Label" parent="CompassClip/CompassStrip" unique_id=1615736146]
+layout_mode = 1
+offset_left = 670.0
+offset_right = 700.0
+offset_bottom = 24.0
+theme_override_colors/font_color = Color(0.60784316, 0.7764706, 0.88235295, 1)
+theme_override_colors/font_outline_color = Color(0.09411765, 0.18431373, 0.26666668, 0.95)
+theme_override_constants/outline_size = 3
+theme_override_fonts/font = ExtResource("1_font")
+theme_override_font_sizes/font_size = 20
+text = "S"
+horizontal_alignment = 1
+
+[node name="WestLabelRight" type="Label" parent="CompassClip/CompassStrip" unique_id=1299983697]
+layout_mode = 1
+offset_left = 784.0
+offset_right = 814.0
+offset_bottom = 24.0
+theme_override_colors/font_color = Color(0.60784316, 0.7764706, 0.88235295, 1)
+theme_override_colors/font_outline_color = Color(0.09411765, 0.18431373, 0.26666668, 0.95)
+theme_override_constants/outline_size = 3
+theme_override_fonts/font = ExtResource("1_font")
+theme_override_font_sizes/font_size = 20
+text = "W"
+horizontal_alignment = 1
+
+[node name="NorthLabelRight" type="Label" parent="CompassClip/CompassStrip" unique_id=1722124644]
+layout_mode = 1
+offset_left = 898.0
+offset_top = -2.0
+offset_right = 928.0
+offset_bottom = 28.0
+theme_override_colors/font_color = Color(0.60784316, 0.7764706, 0.88235295, 1)
+theme_override_colors/font_outline_color = Color(0.09411765, 0.18431373, 0.26666668, 0.95)
+theme_override_constants/outline_size = 3
+theme_override_fonts/font = ExtResource("1_font")
+theme_override_font_sizes/font_size = 24
+text = "N"
+horizontal_alignment = 1
+
+[node name="FinishIcon" type="TextureRect" parent="CompassClip" unique_id=1998506682]
+layout_mode = 1
+offset_left = 212.0
+offset_top = -8.0
+offset_right = 262.0
+offset_bottom = 42.0
+mouse_filter = 2
+texture = ExtResource("2_finish_icon")
+expand_mode = 1
+stretch_mode = 5
+
+[node name="FinishLabel" type="Label" parent="." unique_id=1892713278]
+layout_mode = 1
+offset_left = 178.0
+offset_top = 50.0
+offset_right = 342.0
+offset_bottom = 84.0
+theme_override_colors/font_color = Color(0.60784316, 0.7764706, 0.88235295, 1)
+theme_override_colors/font_outline_color = Color(0.09411765, 0.18431373, 0.26666668, 0.95)
+theme_override_constants/outline_size = 4
+theme_override_font_sizes/font_size = 24
+text = "FINISH 0m"
+horizontal_alignment = 1

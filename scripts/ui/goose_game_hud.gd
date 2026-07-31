@@ -3,23 +3,32 @@ extends CanvasLayer
 
 const MovementStateScript := preload("res://scripts/player/movement_state.gd")
 
-const PANEL_MARGIN := 16.0
+const COMPASS_CLIP_CENTER_X := 228.0
+const COMPASS_CYCLE_WIDTH := 456.0
+const COMPASS_CENTER_N_X := 456.0
 
-@onready var direction_panel: PanelContainer = $Root/DirectionPanel
-@onready var direction_arrow: Label = $Root/DirectionPanel/Margin/DirectionBox/DirectionArrow
-@onready var direction_label: Label = $Root/DirectionPanel/Margin/DirectionBox/DirectionLabel
+@onready var direction_panel: Control = $Root/DirectionWidget
+@onready var compass_clip: Control = $Root/DirectionWidget/CompassClip
+@onready var compass_strip: Control = $Root/DirectionWidget/CompassClip/CompassStrip
+@onready var finish_icon: TextureRect = $Root/DirectionWidget/CompassClip/FinishIcon
+@onready var direction_label: Label = $Root/DirectionWidget/FinishLabel
 @onready var state_details_panel: PanelContainer = $Root/StateDetailsPanel
 @onready var state_details_label: RichTextLabel = $Root/StateDetailsPanel/Margin/StateDetailsLabel
-@onready var timer_panel: PanelContainer = $Root/TimerPanel
-@onready var timer_label: Label = $Root/TimerPanel/Margin/VBox/TimerLabel
-@onready var movement_panel: PanelContainer = $Root/MovementPanel
-@onready var speed_label: Label = $Root/MovementPanel/Margin/VBox/SpeedLabel
-@onready var flight_widget: VBoxContainer = $Root/MovementPanel/Margin/VBox/FlightWidget
-@onready var flight_label: Label = $Root/MovementPanel/Margin/VBox/FlightWidget/FlightLabel
-@onready var flight_progress: ProgressBar = $Root/MovementPanel/Margin/VBox/FlightWidget/FlightProgress
-@onready var vertical_speed_label: Label = $Root/MovementPanel/Margin/VBox/VerticalSpeedLabel
-@onready var acceleration_label: Label = $Root/MovementPanel/Margin/VBox/AccelerationLabel
-@onready var surface_label: Label = $Root/MovementPanel/Margin/VBox/SurfaceLabel
+@onready var timer_panel: Control = $Root/TimerWidget
+@onready var timer_label: Label = $Root/TimerWidget/TimerLabel
+@onready var movement_panel: Control = $Root/MovementWidget
+@onready var speed_label: Label = $Root/MovementWidget/SpeedLabel
+@onready var speed_unit_label: Label = $Root/MovementWidget/SpeedUnitLabel
+@onready var gauge_arc_label: Label = $Root/MovementWidget/GaugeArcLabel
+@onready var gauge_needle: ColorRect = $Root/MovementWidget/GaugeNeedle
+@onready var flight_widget: Control = $Root/MovementWidget/FlightWidget
+@onready var flight_label: Label = $Root/MovementWidget/FlightWidget/FlightLabel
+@onready var flight_progress: ProgressBar = $Root/MovementWidget/FlightWidget/FlightProgress
+@onready var vertical_speed_label: Label = $Root/MovementWidget/VerticalSpeedLabel
+@onready var vertical_arrow_label: Label = $Root/MovementWidget/VerticalArrowLabel
+@onready var acceleration_label: Label = $Root/MovementWidget/AccelerationLabel
+@onready var surface_panel: PanelContainer = $Root/MovementWidget/SurfacePanel
+@onready var surface_label: Label = $Root/MovementWidget/SurfacePanel/SurfaceLabel
 @onready var debug_panel: PanelContainer = $Root/DebugPanel
 @onready var state_label: Label = $Root/DebugPanel/Margin/VBox/StateLabel
 @onready var fps_label: Label = $Root/DebugPanel/Margin/VBox/FpsLabel
@@ -36,9 +45,11 @@ var run_finished := false
 var previous_velocity := Vector3.ZERO
 var acceleration := 0.0
 var has_previous_velocity := false
+var finish_icon_base_y := 0.0
 
 
 func _ready() -> void:
+	finish_icon_base_y = finish_icon.position.y
 	_connect_settings()
 	_update_visibility()
 
@@ -99,11 +110,15 @@ func _update_visibility() -> void:
 	timer_label.visible = timer_visible
 	timer_panel.visible = timer_visible
 	speed_label.visible = speed_visible
+	speed_unit_label.visible = speed_visible
+	gauge_arc_label.visible = speed_visible
+	gauge_needle.visible = speed_visible
 	flight_widget.visible = flight_visible and _has_flight_widget_data()
 
 	vertical_speed_label.visible = vertical_speed_visible
+	vertical_arrow_label.visible = vertical_speed_visible
 	acceleration_label.visible = acceleration_visible
-	surface_label.visible = surface_visible
+	surface_panel.visible = surface_visible
 	movement_panel.visible = (
 		speed_label.visible
 		or flight_widget.visible
@@ -124,12 +139,13 @@ func _update_labels() -> void:
 	var state := _get_movement_state()
 	_update_visibility()
 	_update_direction_marker(state)
-	speed_label.text = "Speed  %.1f m/s" % state.horizontal_speed
-	timer_label.text = "Run  %05.2f%s" % [elapsed_time, "  FINISH" if run_finished else ""]
+	speed_label.text = "%.1f" % state.horizontal_speed
+	timer_label.text = "RUN %05.2f%s" % [elapsed_time, " FINISH" if run_finished else ""]
 	_update_flight_widget()
-	vertical_speed_label.text = "Vertical  %+.1f m/s" % state.vertical_speed
-	acceleration_label.text = "Accel  %.1f m/s2" % acceleration
-	surface_label.text = "Surface  %s" % _surface_text(state)
+	vertical_speed_label.text = "%+.1f" % state.vertical_speed
+	vertical_arrow_label.text = "^" if state.vertical_speed >= 0.0 else "v"
+	acceleration_label.text = _acceleration_chevrons(acceleration)
+	surface_label.text = _surface_text(state).to_upper()
 	state_label.text = "State  %s" % _state_text(state)
 	fps_label.text = "FPS  %d" % Engine.get_frames_per_second()
 	raw_movement_label.text = "Raw  %.1f u/s  %.1f m/s  %.1f accel" % [
@@ -167,38 +183,56 @@ func _update_direction_marker(state: RefCounted) -> void:
 		direction_panel.visible = false
 		return
 
-	var viewport_size := get_viewport().get_visible_rect().size
 	var target_position := finish_target.global_position
-	var screen_position := camera.unproject_position(target_position)
-	var center := viewport_size * 0.5
-	var direction := screen_position - center
-	if camera.is_position_behind(target_position):
-		direction = -direction
-	if direction.length_squared() < 1.0:
-		direction = Vector2.UP
+	var target_delta := target_position - active_controller.global_position
+	target_delta.y = 0.0
+	if target_delta.length_squared() < 0.001:
+		target_delta = -camera.global_transform.basis.z
+	target_delta = target_delta.normalized()
 
-	var marker_position := screen_position
-	var panel_size := direction_panel.size
-	var min_position := Vector2(PANEL_MARGIN, PANEL_MARGIN)
-	var max_position := viewport_size - panel_size - Vector2(PANEL_MARGIN, PANEL_MARGIN)
-	if (
-		camera.is_position_behind(target_position)
-		or screen_position.x < min_position.x
-		or screen_position.y < min_position.y
-		or screen_position.x > max_position.x
-		or screen_position.y > max_position.y
-	):
-		var edge_direction := direction.normalized()
-		var edge_radius := (viewport_size - panel_size - Vector2(PANEL_MARGIN * 2.0, PANEL_MARGIN * 2.0)) * 0.5
-		var scale: float = min(
-			edge_radius.x / max(abs(edge_direction.x), 0.001),
-			edge_radius.y / max(abs(edge_direction.y), 0.001)
-		)
-		marker_position = center + edge_direction * scale
+	var camera_forward := -camera.global_transform.basis.z
+	camera_forward.y = 0.0
+	if camera_forward.length_squared() < 0.001:
+		camera_forward = Vector3.FORWARD
+	camera_forward = camera_forward.normalized()
 
-	direction_panel.position = marker_position.clamp(min_position, max_position)
-	direction_arrow.rotation = direction.angle()
-	direction_label.text = "%dm" % int(round(active_controller.global_position.distance_to(target_position)))
+	var camera_heading := _world_bearing(camera_forward)
+	var target_heading := _world_bearing(target_delta)
+	_roll_compass_strip(camera_heading)
+	_update_finish_icon_position(target_heading, camera_heading)
+	direction_label.text = "FINISH %dm" % int(round(active_controller.global_position.distance_to(target_position)))
+
+
+func _roll_compass_strip(signed_angle: float) -> void:
+	var target_x := _compass_target_x(signed_angle)
+	compass_strip.position.x = COMPASS_CLIP_CENTER_X - target_x
+
+
+func _update_finish_icon_position(target_heading: float, camera_heading: float) -> void:
+	var relative_angle := _wrap_angle(target_heading - camera_heading)
+	var visible_half_width := compass_clip.size.x * 0.5
+	var marker_center_x := visible_half_width + (relative_angle / PI) * visible_half_width
+	var icon_width := finish_icon.size.x
+	if icon_width <= 0.0:
+		icon_width = 50.0
+	var max_x: float = max(compass_clip.size.x - icon_width, 0.0)
+	finish_icon.position = Vector2(
+		clampf(marker_center_x - icon_width * 0.5, 0.0, max_x),
+		finish_icon_base_y
+	)
+
+
+func _compass_target_x(signed_angle: float) -> float:
+	var wrapped_angle := _wrap_angle(signed_angle)
+	return COMPASS_CENTER_N_X + (wrapped_angle / TAU) * COMPASS_CYCLE_WIDTH
+
+
+func _wrap_angle(angle: float) -> float:
+	return fposmod(angle + PI, TAU) - PI
+
+
+func _world_bearing(direction: Vector3) -> float:
+	return atan2(direction.dot(Vector3.RIGHT), direction.dot(Vector3.FORWARD))
 
 
 func _update_flight_widget() -> void:
@@ -212,7 +246,7 @@ func _update_flight_widget() -> void:
 		return
 	flight_progress.max_value = cooldown
 	flight_progress.value = cooldown - remaining
-	flight_label.text = "Flap  ready" if remaining <= 0.0 else "Flap  %.1fs" % remaining
+	flight_label.text = "FLAP READY" if remaining <= 0.0 else "FLAP %.1fs" % remaining
 
 
 func _has_flight_widget_data() -> bool:
@@ -314,6 +348,11 @@ func _surface_text(state: RefCounted) -> String:
 	if state.surface_type != &"":
 		return str(state.surface_type)
 	return str(state.medium_type)
+
+
+func _acceleration_chevrons(value: float) -> String:
+	var active_count := clampi(int(round(value / 8.0)), 1, 5)
+	return ">".repeat(active_count)
 
 
 func _format_surface_flags(state: RefCounted) -> String:

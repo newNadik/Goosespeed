@@ -1,0 +1,46 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="FontFile" path="res://assets/ui/fonts/Condor Medium Condensed.otf" id="1_font"]
+
+[node name="HudTimerWidget" type="Control"]
+custom_minimum_size = Vector2(300, 64)
+layout_mode = 3
+offset_right = 300.0
+offset_bottom = 64.0
+mouse_filter = 2
+
+[node name="TimerLabel" type="Label" parent="."]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_right = 0.0
+offset_bottom = 44.0
+grow_horizontal = 2
+theme_override_colors/font_color = Color(0.09411765, 0.18431373, 0.26666668, 1)
+theme_override_colors/font_outline_color = Color(0.94509804, 0.8745098, 0.7411765, 0.95)
+theme_override_fonts/font = ExtResource("1_font")
+theme_override_font_sizes/font_size = 40
+theme_override_constants/outline_size = 4
+text = "RUN 00:00.00"
+
+[node name="Underline" type="ColorRect" parent="."]
+layout_mode = 1
+offset_left = 3.0
+offset_top = 48.0
+offset_right = 112.0
+offset_bottom = 52.0
+color = Color(0.99607843, 0.46666667, 0.2627451, 1)
+
+[node name="WingMark" type="Label" parent="."]
+layout_mode = 1
+offset_left = 245.0
+offset_top = 5.0
+offset_right = 294.0
+offset_bottom = 43.0
+theme_override_colors/font_color = Color(0.99607843, 0.46666667, 0.2627451, 1)
+theme_override_colors/font_outline_color = Color(0.94509804, 0.8745098, 0.7411765, 0.95)
+theme_override_fonts/font = ExtResource("1_font")
+theme_override_font_sizes/font_size = 30
+theme_override_constants/outline_size = 3
+text = ">>"
+horizontal_alignment = 1

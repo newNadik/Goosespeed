@@ -1,18 +1,9 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene format=3 uid="uid://mj5be17mpbx0"]
 
-[ext_resource type="Script" path="res://scripts/ui/goose_game_hud.gd" id="1_hud"]
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hud_panel"]
-bg_color = Color(0.94509804, 0.8745098, 0.7411765, 0.88)
-border_width_left = 2
-border_width_top = 2
-border_width_right = 2
-border_width_bottom = 2
-border_color = Color(0.09411765, 0.18431373, 0.26666668, 0.95)
-corner_radius_top_left = 4
-corner_radius_top_right = 4
-corner_radius_bottom_right = 4
-corner_radius_bottom_left = 4
+[ext_resource type="Script" uid="uid://c37hmmhy0q1xh" path="res://scripts/ui/goose_game_hud.gd" id="1_hud"]
+[ext_resource type="PackedScene" path="res://scenes/ui/hud_direction_widget.tscn" id="2_direction"]
+[ext_resource type="PackedScene" path="res://scenes/ui/hud_timer_widget.tscn" id="3_timer"]
+[ext_resource type="PackedScene" path="res://scenes/ui/hud_movement_widget.tscn" id="4_movement"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hud_panel_dark"]
 bg_color = Color(0.09411765, 0.18431373, 0.26666668, 0.82)
@@ -26,11 +17,11 @@ corner_radius_top_right = 4
 corner_radius_bottom_right = 4
 corner_radius_bottom_left = 4
 
-[node name="GooseGameHud" type="CanvasLayer"]
+[node name="GooseGameHud" type="CanvasLayer" unique_id=1863358241]
 layer = 2
 script = ExtResource("1_hud")
 
-[node name="Root" type="Control" parent="."]
+[node name="Root" type="Control" parent="." unique_id=1787696054]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -39,173 +30,66 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 
-[node name="StateDetailsPanel" type="PanelContainer" parent="Root"]
+[node name="StateDetailsPanel" type="PanelContainer" parent="Root" unique_id=316263056]
 custom_minimum_size = Vector2(720, 114)
 layout_mode = 1
-anchors_preset = 5
-anchor_left = 0.5
-anchor_right = 0.5
-offset_left = -360.0
-offset_top = 12.0
-offset_right = 360.0
-offset_bottom = 126.0
-grow_horizontal = 2
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -720.0
+offset_bottom = 114.0
+grow_horizontal = 0
 mouse_filter = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_hud_panel_dark")
 
-[node name="Margin" type="MarginContainer" parent="Root/StateDetailsPanel"]
+[node name="Margin" type="MarginContainer" parent="Root/StateDetailsPanel" unique_id=269046267]
 layout_mode = 2
 theme_override_constants/margin_left = 12
 theme_override_constants/margin_top = 8
 theme_override_constants/margin_right = 12
 theme_override_constants/margin_bottom = 8
 
-[node name="StateDetailsLabel" type="RichTextLabel" parent="Root/StateDetailsPanel/Margin"]
+[node name="StateDetailsLabel" type="RichTextLabel" parent="Root/StateDetailsPanel/Margin" unique_id=203193147]
 layout_mode = 2
 bbcode_enabled = true
 fit_content = true
 scroll_active = false
 autowrap_mode = 0
-theme_override_font_sizes/font_size = 15
 
-[node name="DirectionPanel" type="PanelContainer" parent="Root"]
-custom_minimum_size = Vector2(132, 46)
+[node name="DirectionWidget" parent="Root" unique_id=1133261040 instance=ExtResource("2_direction")]
 layout_mode = 1
 anchors_preset = 5
 anchor_left = 0.5
 anchor_right = 0.5
-offset_left = -66.0
+offset_left = -260.0
 offset_top = 16.0
-offset_right = 66.0
-offset_bottom = 62.0
+offset_right = 260.0
+offset_bottom = 100.0
 grow_horizontal = 2
-mouse_filter = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_hud_panel_dark")
 
-[node name="Margin" type="MarginContainer" parent="Root/DirectionPanel"]
-layout_mode = 2
-theme_override_constants/margin_left = 12
-theme_override_constants/margin_top = 7
-theme_override_constants/margin_right = 12
-theme_override_constants/margin_bottom = 7
-
-[node name="DirectionBox" type="HBoxContainer" parent="Root/DirectionPanel/Margin"]
-layout_mode = 2
-theme_override_constants/separation = 8
-
-[node name="DirectionArrow" type="Label" parent="Root/DirectionPanel/Margin/DirectionBox"]
-custom_minimum_size = Vector2(24, 24)
-layout_mode = 2
-theme_override_colors/font_color = Color(0.94509804, 0.8745098, 0.7411765, 1)
-theme_override_font_sizes/font_size = 22
-text = ">"
-horizontal_alignment = 1
-vertical_alignment = 1
-
-[node name="DirectionLabel" type="Label" parent="Root/DirectionPanel/Margin/DirectionBox"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.94509804, 0.8745098, 0.7411765, 1)
-theme_override_font_sizes/font_size = 16
-text = "0m"
-vertical_alignment = 1
-
-[node name="TimerPanel" type="PanelContainer" parent="Root"]
-custom_minimum_size = Vector2(180, 0)
+[node name="TimerWidget" parent="Root" unique_id=95327482 instance=ExtResource("3_timer")]
 layout_mode = 1
+anchors_preset = 0
 offset_left = 16.0
-offset_top = 16.0
-offset_right = 196.0
-offset_bottom = 58.0
-mouse_filter = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_hud_panel")
+offset_top = 14.0
+offset_right = 316.0
+offset_bottom = 78.0
 
-[node name="Margin" type="MarginContainer" parent="Root/TimerPanel"]
-layout_mode = 2
-theme_override_constants/margin_left = 14
-theme_override_constants/margin_top = 8
-theme_override_constants/margin_right = 14
-theme_override_constants/margin_bottom = 8
-
-[node name="VBox" type="VBoxContainer" parent="Root/TimerPanel/Margin"]
-layout_mode = 2
-theme_override_constants/separation = 5
-
-[node name="TimerLabel" type="Label" parent="Root/TimerPanel/Margin/VBox"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.99607843, 0.46666667, 0.2627451, 1)
-text = "Run  00.00"
-horizontal_alignment = 1
-
-[node name="MovementPanel" type="PanelContainer" parent="Root"]
-custom_minimum_size = Vector2(250, 0)
+[node name="MovementWidget" parent="Root" unique_id=1469909384 instance=ExtResource("4_movement")]
 layout_mode = 1
 anchors_preset = 3
 anchor_left = 1.0
 anchor_top = 1.0
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = -266.0
-offset_top = -160.0
+offset_left = -376.0
+offset_top = -228.0
 offset_right = -16.0
 offset_bottom = -16.0
 grow_horizontal = 0
 grow_vertical = 0
-mouse_filter = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_hud_panel")
 
-[node name="Margin" type="MarginContainer" parent="Root/MovementPanel"]
-layout_mode = 2
-theme_override_constants/margin_left = 14
-theme_override_constants/margin_top = 10
-theme_override_constants/margin_right = 14
-theme_override_constants/margin_bottom = 10
-
-[node name="VBox" type="VBoxContainer" parent="Root/MovementPanel/Margin"]
-layout_mode = 2
-theme_override_constants/separation = 5
-
-[node name="SpeedLabel" type="Label" parent="Root/MovementPanel/Margin/VBox"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.09411765, 0.18431373, 0.26666668, 1)
-text = "Speed  0.0 m/s"
-horizontal_alignment = 2
-
-[node name="FlightWidget" type="VBoxContainer" parent="Root/MovementPanel/Margin/VBox"]
-layout_mode = 2
-theme_override_constants/separation = 3
-
-[node name="FlightLabel" type="Label" parent="Root/MovementPanel/Margin/VBox/FlightWidget"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.09411765, 0.18431373, 0.26666668, 1)
-text = "Flap  ready"
-horizontal_alignment = 2
-
-[node name="FlightProgress" type="ProgressBar" parent="Root/MovementPanel/Margin/VBox/FlightWidget"]
-custom_minimum_size = Vector2(0, 8)
-layout_mode = 2
-max_value = 1.0
-value = 1.0
-show_percentage = false
-
-[node name="VerticalSpeedLabel" type="Label" parent="Root/MovementPanel/Margin/VBox"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.09411765, 0.18431373, 0.26666668, 1)
-text = "Vertical  +0.0 m/s"
-horizontal_alignment = 2
-
-[node name="AccelerationLabel" type="Label" parent="Root/MovementPanel/Margin/VBox"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.09411765, 0.18431373, 0.26666668, 1)
-text = "Accel  0.0 m/s2"
-horizontal_alignment = 2
-
-[node name="SurfaceLabel" type="Label" parent="Root/MovementPanel/Margin/VBox"]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.09411765, 0.18431373, 0.26666668, 1)
-text = "Surface  ground"
-horizontal_alignment = 2
-
-[node name="DebugPanel" type="PanelContainer" parent="Root"]
+[node name="DebugPanel" type="PanelContainer" parent="Root" unique_id=926726965]
 custom_minimum_size = Vector2(288, 0)
 layout_mode = 1
 anchors_preset = 2
@@ -219,38 +103,38 @@ grow_vertical = 0
 mouse_filter = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_hud_panel_dark")
 
-[node name="Margin" type="MarginContainer" parent="Root/DebugPanel"]
+[node name="Margin" type="MarginContainer" parent="Root/DebugPanel" unique_id=1060896194]
 layout_mode = 2
 theme_override_constants/margin_left = 14
 theme_override_constants/margin_top = 10
 theme_override_constants/margin_right = 14
 theme_override_constants/margin_bottom = 10
 
-[node name="VBox" type="VBoxContainer" parent="Root/DebugPanel/Margin"]
+[node name="VBox" type="VBoxContainer" parent="Root/DebugPanel/Margin" unique_id=1984108221]
 layout_mode = 2
 theme_override_constants/separation = 4
 
-[node name="StateLabel" type="Label" parent="Root/DebugPanel/Margin/VBox"]
+[node name="StateLabel" type="Label" parent="Root/DebugPanel/Margin/VBox" unique_id=670282068]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.94509804, 0.8745098, 0.7411765, 1)
 text = "State  ground"
 
-[node name="FpsLabel" type="Label" parent="Root/DebugPanel/Margin/VBox"]
+[node name="FpsLabel" type="Label" parent="Root/DebugPanel/Margin/VBox" unique_id=682669939]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.94509804, 0.8745098, 0.7411765, 1)
 text = "FPS  60"
 
-[node name="RawMovementLabel" type="Label" parent="Root/DebugPanel/Margin/VBox"]
+[node name="RawMovementLabel" type="Label" parent="Root/DebugPanel/Margin/VBox" unique_id=408011489]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.94509804, 0.8745098, 0.7411765, 1)
 text = "Raw  0.0 u/s  0.0 m/s  0.0 accel"
 
-[node name="SurfaceFlagsLabel" type="Label" parent="Root/DebugPanel/Margin/VBox"]
+[node name="SurfaceFlagsLabel" type="Label" parent="Root/DebugPanel/Margin/VBox" unique_id=1254655679]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.94509804, 0.8745098, 0.7411765, 1)
 text = "Flags  none"
 
-[node name="InputStateLabel" type="Label" parent="Root/DebugPanel/Margin/VBox"]
+[node name="InputStateLabel" type="Label" parent="Root/DebugPanel/Margin/VBox" unique_id=1080329117]
 layout_mode = 2
 theme_override_colors/font_color = Color(0.94509804, 0.8745098, 0.7411765, 1)
 text = "Input  none"
