@@ -25,6 +25,13 @@ adjustment_saturation = 0.85
 [sub_resource type="BoxShape3D" id="BoxShape3D_ka346"]
 size = Vector3(233.26416, 1, 184.7633)
 
+[sub_resource type="BoxShape3D" id="BoxShape3D_hy1i6"]
+size = Vector3(10, 6, 2)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_yv8vh"]
+albedo_color = Color(0.95, 0.72, 0.22, 1)
+roughness = 0.72
+
 [node name="farm_level" type="StaticBody3D" unique_id=2011784816]
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=1839492639]
@@ -46,3 +53,14 @@ directional_shadow_max_distance = 180.0
 [node name="Sky" parent="." unique_id=1485111407 instance=ExtResource("2_sky")]
 cloudiness = 5
 wind = 5
+
+[node name="FinishTrigger" type="Area3D" parent="." unique_id=630054242]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.5, 119.89586)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="FinishTrigger" unique_id=1745405367]
+shape = SubResource("BoxShape3D_hy1i6")
+
+[node name="FinishMarker" type="CSGBox3D" parent="." unique_id=2068755126]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 119.89586)
+size = Vector3(10, 6, 0.3)
+material = SubResource("StandardMaterial3D_yv8vh")
