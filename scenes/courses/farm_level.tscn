@@ -44,4 +44,5 @@ shadow_enabled = true
 directional_shadow_max_distance = 180.0
 
 [node name="Sky" parent="." unique_id=1485111407 instance=ExtResource("2_sky")]
+cloudiness = 5
 wind = 5

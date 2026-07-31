@@ -4,38 +4,85 @@ extends CanvasLayer
 signal back_requested
 
 const GooseMovesRuntimeScript := preload("res://scripts/player/goose_moves_runtime.gd")
+const TAB_FONT := preload("res://assets/ui/fonts/Condor Medium Condensed.otf")
+
+const TAB_CONTROLS := "Controls"
+const TAB_VISUAL := "Visual"
+const TAB_HUD := "HUD"
+const TAB_AUDIO := "Audio"
+const TABS := [TAB_VISUAL, TAB_CONTROLS, TAB_HUD, TAB_AUDIO]
+const LISTENING_TEXT := "Press input..."
+
+const INK := GooseSpeedPalette.INK
+const ORANGE := GooseSpeedPalette.ORANGE
+const PAPER := GooseSpeedPalette.PAPER_CREAM
+const PAPER_LIGHT := GooseSpeedPalette.HIGHLIGHT_CREAM
+const DISABLED_INK := GooseSpeedPalette.MID_SHADOW_BLUE_GREY
+const TAB_BORDER := Color("#a8a192")
 
 @onready var root: Control = $Root
-@onready var settings_menu = $Root/SettingsMenu
-@onready var keybindings_menu = $Root/KeybindingsMenu
+@onready var back_button: Button = $Root/MarginContainer/Margin/VBox/Header/BackButton
+@onready var tabs_row: HBoxContainer = $Root/MarginContainer/Margin/VBox/TabsArea/Tabs
+@onready var content_box: VBoxContainer = $Root/MarginContainer/Margin/VBox/FolderBody/FolderMargin/ContentScroll/ContentCenter/ContentBox
 
-var syncing_visual_settings_controls := false
+var current_tab := TAB_VISUAL
+var tab_buttons: Dictionary = {}
 var syncing_hud_settings_controls := false
-var head_look_toggle: CheckButton
-var head_look_intensity_slider: HSlider
-var head_look_intensity_value: Label
-var head_look_smoothness_slider: HSlider
-var head_look_smoothness_value: Label
+var syncing_game_settings_controls := false
+var fullscreen_toggle: CheckButton
 var hud_toggles := {}
+var readable_ui_font: SystemFont
+var listening_action := ""
+var listening_slot := -1
+var binding_buttons: Dictionary = {}
 
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
-	settings_menu.back_requested.connect(on_settings_back_requested)
-	settings_menu.keybindings_requested.connect(on_keybindings_requested)
-	keybindings_menu.back_requested.connect(on_keybindings_back_requested)
-	_apply_game_settings_scope(false)
+	readable_ui_font = _create_readable_ui_font()
+	back_button.pressed.connect(on_settings_back_requested)
+	_connect_settings_signals()
+	_build_tabs()
 	hide_settings()
+
+
+func _input(event: InputEvent) -> void:
+	if listening_action.is_empty():
+		return
+
+	var binding: Variant
+	if event is InputEventKey:
+		var key_event := event as InputEventKey
+		if not key_event.pressed or key_event.echo:
+			return
+		if key_event.keycode == KEY_ESCAPE:
+			_stop_listening_for_binding()
+			get_viewport().set_input_as_handled()
+			return
+		var keycode := int(key_event.physical_keycode)
+		if keycode == 0:
+			keycode = int(key_event.keycode)
+		binding = keycode
+	elif event is InputEventMouseButton:
+		var mouse_event := event as InputEventMouseButton
+		if not mouse_event.pressed:
+			return
+		binding = {
+			"type": "mouse",
+			"button_index": int(mouse_event.button_index),
+		}
+	else:
+		return
+
+	KeybindingsSettings.set_binding(listening_action, listening_slot, binding)
+	_stop_listening_for_binding()
+	get_viewport().set_input_as_handled()
 
 
 func _unhandled_input(event: InputEvent) -> void:
 	if not visible:
 		return
 	if event is InputEventKey and event.pressed and not event.echo and Input.is_action_just_pressed(&"ui_cancel"):
-		if keybindings_menu.visible:
-			on_keybindings_back_requested()
-			get_viewport().set_input_as_handled()
-			return
 		on_settings_back_requested()
 		get_viewport().set_input_as_handled()
 
@@ -50,16 +97,12 @@ func show_settings() -> void:
 	visible = true
 	root.visible = true
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
-	settings_menu.visible = true
-	keybindings_menu.visible = false
-	settings_menu.show_character_settings()
-	_apply_game_settings_scope()
-	_focus_character_settings()
+	_show_tab(current_tab)
+	_focus_current_tab()
 
 
 func hide_settings() -> void:
-	settings_menu.visible = false
-	keybindings_menu.visible = false
+	_stop_listening_for_binding(false)
 	root.visible = false
 	visible = false
 
@@ -69,160 +112,161 @@ func on_settings_back_requested() -> void:
 	back_requested.emit()
 
 
-func on_keybindings_requested() -> void:
-	settings_menu.visible = false
-	keybindings_menu.visible = true
-	keybindings_menu.focus_first()
+func _connect_settings_signals() -> void:
+	var settings := get_node_or_null("/root/Settings")
+	if settings != null and settings.has_signal("settings_changed"):
+		if not settings.is_connected("settings_changed", _on_external_settings_changed):
+			settings.connect("settings_changed", _on_external_settings_changed)
+	if not GooseGameSettings.settings_changed.is_connected(_on_external_settings_changed):
+		GooseGameSettings.settings_changed.connect(_on_external_settings_changed)
+	if not KeybindingsSettings.bindings_changed.is_connected(_refresh_keybinding_labels):
+		KeybindingsSettings.bindings_changed.connect(_refresh_keybinding_labels)
 
 
-func on_keybindings_back_requested() -> void:
-	keybindings_menu.visible = false
-	settings_menu.visible = true
-	_lock_movement_settings()
-	settings_menu.show_character_settings()
-	_apply_game_settings_scope()
-	_focus_character_settings()
-
-
-func _apply_game_settings_scope(include_visual_settings := true) -> void:
-	var character_row := settings_menu.get_node_or_null("Panel/Margin/VBox/SettingsTabs/Character/CharacterRow") as Control
-	if character_row != null:
-		character_row.visible = false
-
-	var character_option := settings_menu.get_node_or_null("Panel/Margin/VBox/SettingsTabs/Character/CharacterRow/CharacterOption") as BaseButton
-	if character_option != null:
-		character_option.disabled = true
-	if not include_visual_settings:
-		return
-	_ensure_visual_settings_controls()
-	_sync_visual_settings_controls()
-	_ensure_hud_settings_controls()
+func _on_external_settings_changed() -> void:
+	_sync_game_settings_controls()
 	_sync_hud_settings_controls()
-
-
-func _focus_character_settings() -> void:
-	var preset_option := settings_menu.get_node_or_null("Panel/Margin/VBox/SettingsTabs/Character/PresetRow/PresetOption") as Control
-	if preset_option != null and preset_option.visible:
-		preset_option.grab_focus()
-		return
-
-	var keybindings_button := settings_menu.get_node_or_null("Panel/Margin/VBox/SettingsTabs/Character/KeybindingsButton") as Control
-	if keybindings_button != null:
-		keybindings_button.grab_focus()
 
 
 func _lock_movement_settings() -> void:
 	GooseMovesRuntimeScript.lock_settings_backend(get_node_or_null("/root/Settings"))
 
 
-func _ensure_visual_settings_controls() -> void:
-	var settings_box := settings_menu.get_node_or_null(
-		"Panel/Margin/VBox/SettingsTabs/Character/ScrollContainer/ControllerSettingsBox"
-	) as VBoxContainer
-	if settings_box == null:
-		return
-
-	var existing_section := settings_box.get_node_or_null("GooseVisualSettings") as VBoxContainer
-	if existing_section != null:
-		if existing_section.is_queued_for_deletion():
-			existing_section.name = "QueuedGooseVisualSettings"
-		else:
-			_bind_visual_settings_controls(existing_section)
-			return
-
-	var section := VBoxContainer.new()
-	section.name = "GooseVisualSettings"
-	section.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	section.add_theme_constant_override("separation", 8)
-
-	var spacer := Control.new()
-	spacer.custom_minimum_size = Vector2(0.0, 8.0)
-	section.add_child(spacer)
-
-	var title := Label.new()
-	title.name = "Title"
-	title.text = "Goose visual"
-	title.add_theme_font_size_override("font_size", 18)
-	section.add_child(title)
-
-	section.add_child(_create_visual_toggle_row(
-		"Head look",
-		"HeadLookToggle",
-		_on_head_look_enabled_changed,
-	))
-	section.add_child(_create_visual_slider_row(
-		"Head look intensity",
-		"HeadLookIntensitySlider",
-		"HeadLookIntensityValue",
-		0.0,
-		1.0,
-		0.05,
-		_on_head_look_intensity_changed,
-	))
-	section.add_child(_create_visual_slider_row(
-		"Head look smoothness",
-		"HeadLookSmoothnessSlider",
-		"HeadLookSmoothnessValue",
-		1.0,
-		20.0,
-		0.5,
-		_on_head_look_smoothness_changed,
-	))
-
-	settings_box.add_child(section)
-	_bind_visual_settings_controls(section)
+func _build_tabs() -> void:
+	for child in tabs_row.get_children():
+		child.queue_free()
+	tab_buttons.clear()
+	for tab_name in TABS:
+		var button := Button.new()
+		button.text = tab_name
+		button.custom_minimum_size = Vector2(160.0, 56.0)
+		button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		button.pressed.connect(_show_tab.bind(tab_name))
+		tabs_row.add_child(button)
+		tab_buttons[tab_name] = button
+	_style_icon_button(back_button)
 
 
-func _ensure_hud_settings_controls() -> void:
-	var settings_box := settings_menu.get_node_or_null(
-		"Panel/Margin/VBox/SettingsTabs/Character/ScrollContainer/ControllerSettingsBox"
-	) as VBoxContainer
-	if settings_box == null:
-		return
+func _show_tab(tab_name: String) -> void:
+	current_tab = tab_name
+	_clear_content()
+	hud_toggles.clear()
+	_update_tab_styles()
+	match tab_name:
+		TAB_CONTROLS:
+			_build_controls_tab()
+		TAB_VISUAL:
+			_build_visual_tab()
+		TAB_HUD:
+			_build_hud_tab()
+		TAB_AUDIO:
+			_build_audio_tab()
+	_sync_game_settings_controls()
+	_sync_hud_settings_controls()
 
-	var existing_section := settings_box.get_node_or_null("GooseHudSettings") as VBoxContainer
-	if existing_section != null:
-		if existing_section.is_queued_for_deletion():
-			existing_section.name = "QueuedGooseHudSettings"
-		else:
-			_bind_hud_settings_controls(existing_section)
-			return
 
-	var section := VBoxContainer.new()
-	section.name = "GooseHudSettings"
-	section.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	section.add_theme_constant_override("separation", 8)
+func _focus_current_tab() -> void:
+	var tab_button := tab_buttons.get(current_tab) as Button
+	if tab_button != null:
+		tab_button.grab_focus()
 
-	var spacer := Control.new()
-	spacer.custom_minimum_size = Vector2(0.0, 8.0)
-	section.add_child(spacer)
 
-	var title := Label.new()
-	title.name = "Title"
-	title.text = "HUD"
-	title.add_theme_font_size_override("font_size", 18)
-	section.add_child(title)
+func _clear_content() -> void:
+	_stop_listening_for_binding(false)
+	binding_buttons.clear()
+	fullscreen_toggle = null
+	for child in content_box.get_children():
+		child.queue_free()
 
+
+func _update_tab_styles() -> void:
+	for tab_name in TABS:
+		var button := tab_buttons.get(tab_name) as Button
+		if button != null:
+			_style_tab_button(button, tab_name == current_tab)
+
+
+func _build_visual_tab() -> void:
+	var settings := get_node_or_null("/root/Settings")
+	var fullscreen := bool(settings.get("fullscreen")) if settings != null else false
+	var row := _create_toggle_row("Fullscreen", fullscreen, _on_fullscreen_changed)
+	fullscreen_toggle = row.get_node("Toggle") as CheckButton
+	content_box.add_child(row)
+
+
+func _build_controls_tab() -> void:
+	_build_keybinding_rows()
+
+
+func _build_keybinding_rows() -> void:
+	binding_buttons.clear()
+
+	var hint := _create_label("Select a binding slot, then press a key or mouse button.")
+	hint.add_theme_color_override("font_color", DISABLED_INK)
+	content_box.add_child(hint)
+
+	var grid := GridContainer.new()
+	grid.columns = 4
+	grid.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	grid.add_theme_constant_override("h_separation", 16)
+	grid.add_theme_constant_override("v_separation", 8)
+	content_box.add_child(grid)
+
+	for action in KeybindingsSettings.get_actions():
+		var label := _create_label(_get_action_display_label(action))
+		label.custom_minimum_size = Vector2(220.0, 40.0)
+		grid.add_child(label)
+
+		var buttons: Array[Button] = []
+		for slot in KeybindingsSettings.MAX_BINDINGS:
+			var button := Button.new()
+			button.custom_minimum_size = Vector2(130.0, 40.0)
+			button.pressed.connect(_on_bind_pressed.bind(action, slot))
+			_style_button(button, false)
+			grid.add_child(button)
+			buttons.append(button)
+		binding_buttons[action] = buttons
+
+		var clear_button := Button.new()
+		clear_button.text = "Clear"
+		clear_button.custom_minimum_size = Vector2(90.0, 40.0)
+		clear_button.pressed.connect(_on_clear_binding_pressed.bind(action))
+		_style_button(clear_button, false)
+		grid.add_child(clear_button)
+
+	var reset_button := Button.new()
+	reset_button.text = "Reset Defaults"
+	reset_button.custom_minimum_size = Vector2(180.0, 44.0)
+	reset_button.pressed.connect(_on_reset_bindings_pressed)
+	_style_button(reset_button, false)
+	content_box.add_child(reset_button)
+	_refresh_keybinding_labels()
+
+
+func _build_hud_tab() -> void:
 	var presets := HBoxContainer.new()
-	presets.name = "PresetButtons"
-	presets.add_theme_constant_override("separation", 8)
-	section.add_child(presets)
+	presets.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	presets.add_theme_constant_override("separation", 10)
 	presets.add_child(_create_hud_preset_button("Core", "core"))
 	presets.add_child(_create_hud_preset_button("Detailed", "detailed"))
 	presets.add_child(_create_hud_preset_button("Debug", "debug"))
+	content_box.add_child(presets)
 
-	_add_hud_group(section, "Core", [
+	content_box.add_child(_create_group_title("Core"))
+	_add_hud_group([
 		[GooseGameSettings.HUD_DIRECTION_TO_FINISH, "Direction to finish"],
 		[GooseGameSettings.HUD_TIMER, "Timer"],
 		[GooseGameSettings.HUD_SPEED, "Speed"],
 		[GooseGameSettings.HUD_FLIGHT_WIDGET, "Flight widget"],
 	])
-	_add_hud_group(section, "Detailed", [
+	content_box.add_child(_create_group_title("Detailed"))
+	_add_hud_group([
 		[GooseGameSettings.HUD_VERTICAL_SPEED, "Vertical speed"],
 		[GooseGameSettings.HUD_ACCELERATION, "Acceleration"],
 		[GooseGameSettings.HUD_SURFACE_GRIP, "Surface / grip"],
 	])
-	_add_hud_group(section, "Debug", [
+	content_box.add_child(_create_group_title("Debug"))
+	_add_hud_group([
 		[GooseGameSettings.HUD_STATE, "State"],
 		[GooseGameSettings.HUD_FPS, "FPS"],
 		[GooseGameSettings.HUD_RAW_MOVEMENT, "Raw movement"],
@@ -231,60 +275,51 @@ func _ensure_hud_settings_controls() -> void:
 		[GooseGameSettings.HUD_DEBUG_STATE_VIEW, "Debug state view"],
 	])
 
-	settings_box.add_child(section)
-	_bind_hud_settings_controls(section)
+
+func _build_audio_tab() -> void:
+	var spacer := Control.new()
+	spacer.custom_minimum_size = Vector2(0.0, 1.0)
+	content_box.add_child(spacer)
 
 
-func _create_visual_slider_row(
-	label_text: String,
-	slider_name: String,
-	value_name: String,
-	min_value: float,
-	max_value: float,
-	step: float,
-	callback: Callable
-) -> HBoxContainer:
+func _add_hud_group(items: Array) -> void:
+	for item in items:
+		var element := str(item[0])
+		var label_text := str(item[1])
+		var row := _create_hud_toggle_row(label_text, element)
+		content_box.add_child(row)
+
+
+func _create_group_title(text: String) -> Label:
+	var label := Label.new()
+	label.text = text
+	label.add_theme_color_override("font_color", ORANGE)
+	_apply_readable_font(label, 23)
+	return label
+
+
+func _create_label(text: String) -> Label:
+	var label := Label.new()
+	label.text = text
+	label.custom_minimum_size = Vector2(260.0, 0.0)
+	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	label.add_theme_color_override("font_color", INK)
+	_apply_readable_font(label, 22)
+	label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	return label
+
+
+func _create_toggle_row(label_text: String, pressed: bool, callback: Callable) -> HBoxContainer:
 	var row := HBoxContainer.new()
 	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	row.add_theme_constant_override("separation", 12)
-
-	var label := Label.new()
-	label.text = label_text
-	label.custom_minimum_size = Vector2(150.0, 0.0)
-	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	row.add_child(label)
-
-	var slider := HSlider.new()
-	slider.name = slider_name
-	slider.custom_minimum_size = Vector2(180.0, 0.0)
-	slider.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	slider.min_value = min_value
-	slider.max_value = max_value
-	slider.step = step
-	slider.value_changed.connect(callback)
-	row.add_child(slider)
-
-	var value_label := Label.new()
-	value_label.name = value_name
-	value_label.custom_minimum_size = Vector2(54.0, 0.0)
-	row.add_child(value_label)
-	return row
-
-
-func _create_visual_toggle_row(label_text: String, toggle_name: String, callback: Callable) -> HBoxContainer:
-	var row := HBoxContainer.new()
-	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	row.add_theme_constant_override("separation", 12)
-
-	var label := Label.new()
-	label.text = label_text
-	label.custom_minimum_size = Vector2(150.0, 0.0)
-	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	row.add_child(label)
+	row.add_child(_create_label(label_text))
 
 	var toggle := CheckButton.new()
-	toggle.name = toggle_name
+	toggle.name = "Toggle"
+	toggle.button_pressed = pressed
 	toggle.toggled.connect(callback)
+	_style_check_button(toggle)
 	row.add_child(toggle)
 	return row
 
@@ -292,130 +327,52 @@ func _create_visual_toggle_row(label_text: String, toggle_name: String, callback
 func _create_hud_preset_button(label_text: String, preset: String) -> Button:
 	var button := Button.new()
 	button.text = label_text
+	button.custom_minimum_size = Vector2(0.0, 44.0)
 	button.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	button.pressed.connect(_on_hud_preset_pressed.bind(preset))
+	_style_button(button, false)
 	return button
 
 
-func _add_hud_group(section: VBoxContainer, title_text: String, items: Array) -> void:
-	var title := Label.new()
-	title.text = title_text
-	title.add_theme_font_size_override("font_size", 14)
-	section.add_child(title)
-
-	for item in items:
-		var element := str(item[0])
-		var label_text := str(item[1])
-		section.add_child(_create_hud_toggle_row(label_text, element))
-
-
 func _create_hud_toggle_row(label_text: String, element: String) -> HBoxContainer:
-	var row := HBoxContainer.new()
-	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	row.add_theme_constant_override("separation", 12)
-
-	var label := Label.new()
-	label.text = label_text
-	label.custom_minimum_size = Vector2(150.0, 0.0)
-	label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	row.add_child(label)
-
-	var toggle := CheckButton.new()
+	var row := _create_toggle_row(
+		label_text,
+		GooseGameSettings.is_hud_element_visible(element),
+		_on_hud_toggle_changed.bind(element)
+	)
+	var toggle := row.get_node("Toggle") as CheckButton
 	toggle.name = _hud_toggle_name(element)
 	toggle.set_meta("hud_element", element)
-	toggle.toggled.connect(_on_hud_toggle_changed.bind(element))
-	row.add_child(toggle)
+	hud_toggles[element] = toggle
 	return row
 
 
-func _bind_visual_settings_controls(section: Node) -> void:
-	head_look_toggle = section.find_child(
-		"HeadLookToggle",
-		true,
-		false,
-	) as CheckButton
-	head_look_intensity_slider = section.find_child(
-		"HeadLookIntensitySlider",
-		true,
-		false,
-	) as HSlider
-	head_look_intensity_value = section.find_child(
-		"HeadLookIntensityValue",
-		true,
-		false,
-	) as Label
-	head_look_smoothness_slider = section.find_child(
-		"HeadLookSmoothnessSlider",
-		true,
-		false,
-	) as HSlider
-	head_look_smoothness_value = section.find_child(
-		"HeadLookSmoothnessValue",
-		true,
-		false,
-	) as Label
-
-
-func _bind_hud_settings_controls(section: Node) -> void:
-	hud_toggles.clear()
-	for element in GooseGameSettings.HUD_ELEMENTS:
-		var toggle := section.find_child(_hud_toggle_name(element), true, false) as CheckButton
-		if toggle != null:
-			hud_toggles[element] = toggle
-
-
-func _sync_visual_settings_controls() -> void:
-	if (
-		head_look_toggle == null
-		or head_look_intensity_slider == null
-		or head_look_smoothness_slider == null
-	):
+func _sync_game_settings_controls() -> void:
+	if fullscreen_toggle == null:
 		return
-	syncing_visual_settings_controls = true
-	head_look_toggle.set_pressed_no_signal(GooseGameSettings.head_look_enabled)
-	head_look_intensity_slider.set_value_no_signal(GooseGameSettings.head_look_intensity)
-	head_look_smoothness_slider.set_value_no_signal(GooseGameSettings.head_look_smoothness)
-	syncing_visual_settings_controls = false
-	_update_visual_settings_value_labels()
+	var settings := get_node_or_null("/root/Settings")
+	syncing_game_settings_controls = true
+	fullscreen_toggle.set_pressed_no_signal(bool(settings.get("fullscreen")) if settings != null else false)
+	syncing_game_settings_controls = false
 
 
 func _sync_hud_settings_controls() -> void:
 	if hud_toggles.is_empty():
 		return
 	syncing_hud_settings_controls = true
-	for element in GooseGameSettings.HUD_ELEMENTS:
+	for element in hud_toggles:
 		var toggle := hud_toggles.get(element) as CheckButton
 		if toggle != null:
 			toggle.set_pressed_no_signal(GooseGameSettings.is_hud_element_visible(element))
 	syncing_hud_settings_controls = false
 
 
-func _update_visual_settings_value_labels() -> void:
-	if head_look_intensity_value != null:
-		head_look_intensity_value.text = "%.2f" % GooseGameSettings.head_look_intensity
-	if head_look_smoothness_value != null:
-		head_look_smoothness_value.text = "%.1f" % GooseGameSettings.head_look_smoothness
-
-
-func _on_head_look_enabled_changed(enabled: bool) -> void:
-	if syncing_visual_settings_controls:
+func _on_fullscreen_changed(enabled: bool) -> void:
+	if syncing_game_settings_controls:
 		return
-	GooseGameSettings.set_head_look_enabled(enabled)
-	_update_visual_settings_value_labels()
-
-
-func _on_head_look_intensity_changed(value: float) -> void:
-	if syncing_visual_settings_controls:
-		return
-	GooseGameSettings.set_head_look_intensity(value)
-	_update_visual_settings_value_labels()
-
-
-func _on_head_look_smoothness_changed(value: float) -> void:
-	if syncing_visual_settings_controls:
-		return
-	GooseGameSettings.set_head_look_smoothness(value)
-	_update_visual_settings_value_labels()
+	var settings := get_node_or_null("/root/Settings")
+	if settings != null and settings.has_method("set_fullscreen"):
+		settings.set_fullscreen(enabled)
 
 
 func _on_hud_preset_pressed(preset: String) -> void:
@@ -429,9 +386,207 @@ func _on_hud_toggle_changed(enabled: bool, element: String) -> void:
 	GooseGameSettings.set_hud_element_visible(element, enabled)
 
 
+func _on_bind_pressed(action: String, slot: int) -> void:
+	_stop_listening_for_binding()
+	listening_action = action
+	listening_slot = slot
+	((binding_buttons[action] as Array)[slot] as Button).text = LISTENING_TEXT
+
+
+func _on_clear_binding_pressed(action: String) -> void:
+	if listening_action == action:
+		_stop_listening_for_binding()
+	KeybindingsSettings.clear_action(action)
+
+
+func _on_reset_bindings_pressed() -> void:
+	_stop_listening_for_binding()
+	KeybindingsSettings.reset_to_defaults()
+
+
+func _stop_listening_for_binding(refresh_labels := true) -> void:
+	listening_action = ""
+	listening_slot = -1
+	if refresh_labels:
+		_refresh_keybinding_labels()
+
+
+func _refresh_keybinding_labels() -> void:
+	for action in KeybindingsSettings.get_actions():
+		if not binding_buttons.has(action):
+			continue
+		var buttons := binding_buttons[action] as Array
+		var bindings := KeybindingsSettings.get_bindings(action)
+		for slot in KeybindingsSettings.MAX_BINDINGS:
+			if action == listening_action and slot == listening_slot:
+				continue
+			if slot >= buttons.size():
+				continue
+			var button := buttons[slot] as Button
+			if not is_instance_valid(button):
+				continue
+			button.text = _get_binding_label(bindings[slot])
+
+
+func _get_binding_label(binding: Variant) -> String:
+	if binding is int:
+		var keycode := int(binding)
+		return OS.get_keycode_string(keycode as Key) if keycode > 0 else "---"
+	if binding is Dictionary and str((binding as Dictionary).get("type", "")) == "mouse":
+		var button_index := int((binding as Dictionary).get("button_index", -1))
+		match button_index:
+			MOUSE_BUTTON_LEFT:
+				return "M1"
+			MOUSE_BUTTON_RIGHT:
+				return "M2"
+			MOUSE_BUTTON_MIDDLE:
+				return "M3"
+			MOUSE_BUTTON_WHEEL_UP:
+				return "Wheel Up"
+			MOUSE_BUTTON_WHEEL_DOWN:
+				return "Wheel Down"
+			_:
+				return "M%d" % button_index
+	return "---"
+
+
+func _get_action_display_label(action: String) -> String:
+	match action:
+		"player_reset_camera":
+			return "Reset Camera"
+		"player_toggle_camera":
+			return "Toggle Camera"
+	var label := KeybindingsSettings.get_action_label(action)
+	if label != action:
+		return label
+	return action.replace("_", " ").capitalize()
+
+
 func _hud_toggle_name(element: String) -> String:
 	var parts := element.split("_")
 	var result := "Hud"
 	for part in parts:
 		result += part.capitalize()
 	return "%sToggle" % result
+
+
+func _style_button(button: Button, active: bool) -> void:
+	button.add_theme_color_override("font_color", PAPER if active else INK)
+	button.add_theme_color_override("font_focus_color", ORANGE)
+	button.add_theme_color_override("font_pressed_color", PAPER)
+	button.add_theme_color_override("font_hover_color", ORANGE)
+	button.add_theme_color_override("font_disabled_color", DISABLED_INK)
+	button.add_theme_font_override("font", readable_ui_font)
+	button.add_theme_font_size_override("font_size", 22)
+	button.add_theme_stylebox_override("normal", _button_style(ORANGE if active else Color("#f3e6d4"), true, TAB_BORDER))
+	button.add_theme_stylebox_override("hover", _button_style(PAPER_LIGHT, true, ORANGE))
+	button.add_theme_stylebox_override("pressed", _button_style(ORANGE, true, ORANGE))
+	button.add_theme_stylebox_override("focus", _button_style(PAPER_LIGHT, true, ORANGE))
+
+
+func _style_icon_button(button: Button) -> void:
+	button.add_theme_color_override("font_color", INK)
+	button.add_theme_color_override("font_focus_color", ORANGE)
+	button.add_theme_color_override("font_pressed_color", ORANGE)
+	button.add_theme_color_override("font_hover_color", ORANGE)
+	button.add_theme_stylebox_override("normal", _button_style(Color.TRANSPARENT, false, Color.TRANSPARENT))
+	button.add_theme_stylebox_override("hover", _button_style(Color.TRANSPARENT, false, Color.TRANSPARENT))
+	button.add_theme_stylebox_override("pressed", _button_style(Color.TRANSPARENT, false, Color.TRANSPARENT))
+	button.add_theme_stylebox_override("focus", _button_style(Color.TRANSPARENT, false, Color.TRANSPARENT))
+
+
+func _style_tab_button(button: Button, active: bool) -> void:
+	button.flat = false
+	button.add_theme_color_override("font_color", ORANGE if active else INK)
+	button.add_theme_color_override("font_focus_color", ORANGE)
+	button.add_theme_color_override("font_pressed_color", ORANGE)
+	button.add_theme_color_override("font_hover_color", ORANGE)
+	button.add_theme_color_override("font_disabled_color", DISABLED_INK)
+	button.add_theme_font_override("font", TAB_FONT)
+	button.add_theme_font_size_override("font_size", 28)
+	button.add_theme_stylebox_override("normal", _tab_style(active, false))
+	button.add_theme_stylebox_override("hover", _tab_style(active, true))
+	button.add_theme_stylebox_override("pressed", _tab_style(true, false))
+	button.add_theme_stylebox_override("focus", _tab_style(active, true))
+
+
+func _style_check_button(button: CheckButton) -> void:
+	button.add_theme_font_override("font", readable_ui_font)
+	button.add_theme_font_size_override("font_size", 20)
+	button.add_theme_color_override("font_color", INK)
+	button.add_theme_color_override("font_pressed_color", ORANGE)
+	button.add_theme_color_override("font_hover_color", ORANGE)
+	button.add_theme_color_override("font_focus_color", ORANGE)
+
+
+func _button_style(color: Color, border_visible: bool, border_color := ORANGE) -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = color
+	style.border_width_left = 2 if border_visible else 0
+	style.border_width_top = 2 if border_visible else 0
+	style.border_width_right = 2 if border_visible else 0
+	style.border_width_bottom = 2 if border_visible else 0
+	style.border_color = border_color
+	style.corner_radius_top_left = 4
+	style.corner_radius_top_right = 4
+	style.corner_radius_bottom_right = 4
+	style.corner_radius_bottom_left = 4
+	style.content_margin_left = 12
+	style.content_margin_right = 12
+	style.content_margin_top = 6
+	style.content_margin_bottom = 6
+	return style
+
+
+func _panel_style() -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = PAPER
+	style.border_width_left = 2
+	style.border_width_top = 2
+	style.border_width_right = 2
+	style.border_width_bottom = 2
+	style.border_color = INK
+	style.corner_radius_top_left = 4
+	style.corner_radius_top_right = 4
+	style.corner_radius_bottom_right = 4
+	style.corner_radius_bottom_left = 4
+	return style
+
+
+func _tab_style(active: bool, hovered: bool) -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = Color("#f3e6d4") if active else Color("#eadcc7")
+	style.border_width_left = 2
+	style.border_width_top = 2
+	style.border_width_right = 2
+	style.border_width_bottom = 0 if active else 2
+	style.border_color = TAB_BORDER
+	style.corner_radius_top_left = 12
+	style.corner_radius_top_right = 12
+	style.corner_radius_bottom_right = 0
+	style.corner_radius_bottom_left = 0
+	style.content_margin_left = 18
+	style.content_margin_right = 18
+	style.content_margin_top = 13 if active else 12
+	style.content_margin_bottom = 13 if active else 5
+	if active:
+		style.expand_margin_bottom = 5
+	if hovered:
+		style.bg_color = Color("#f5ead8")
+	return style
+
+
+func _create_readable_ui_font() -> SystemFont:
+	var font := SystemFont.new()
+	font.font_names = PackedStringArray([
+		"Avenir Next",
+		"Helvetica Neue",
+		"Arial",
+		"Verdana",
+	])
+	return font
+
+
+func _apply_readable_font(control: Control, size: int) -> void:
+	control.add_theme_font_override("font", readable_ui_font)
+	control.add_theme_font_size_override("font_size", size)

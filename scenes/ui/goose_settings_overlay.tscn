@@ -1,41 +1,155 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene format=3 uid="uid://dt8lhq8b4sld2"]
 
-[ext_resource type="Script" path="res://scripts/ui/goose_settings_overlay.gd" id="1_overlay"]
-[ext_resource type="PackedScene" path="res://addons/goose-moves/scenes/settings_menu.tscn" id="2_settings"]
+[ext_resource type="Script" uid="uid://cjh8s2ygrm74x" path="res://scripts/ui/goose_settings_overlay.gd" id="1_overlay"]
+[ext_resource type="Texture2D" uid="uid://depajd2c8awq" path="res://assets/ui/icons/ic_left_arrow.png" id="3_df03q"]
+[ext_resource type="StyleBox" uid="uid://du4vo2hlxf76g" path="res://tab_flat.tres" id="3_odurj"]
 [ext_resource type="Theme" path="res://themes/goosespeed_theme.tres" id="3_theme"]
-[ext_resource type="PackedScene" path="res://addons/goose-moves/scenes/keybindings_menu.tscn" id="4_keybindings"]
+[ext_resource type="FontFile" uid="uid://bkdpp3abo73lr" path="res://assets/ui/fonts/Condor Medium Condensed.otf" id="4_odurj"]
+[ext_resource type="Script" uid="uid://cujp2m1w06sjl" path="res://scripts/ui/menu_paper_fitter.gd" id="5_fitter"]
 
-[node name="GooseSettingsOverlay" type="CanvasLayer"]
-visible = false
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_dwtjk"]
+bg_color = Color(0.09411765, 0.18431373, 0.26666668, 0.39215687)
+border_color = Color(0.8, 0.8, 0.8, 0)
+corner_radius_top_left = 48
+corner_radius_top_right = 48
+shadow_color = Color(0, 0, 0, 0)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_transparent_panel"]
+bg_color = Color(0.9529412, 0.9019608, 0.83137256, 1)
+border_width_left = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.65882355, 0.6313726, 0.57254905, 0.72)
+
+[node name="GooseSettingsOverlay" type="CanvasLayer" unique_id=1858243128]
 process_mode = 3
 layer = 20
 script = ExtResource("1_overlay")
 
-[node name="Root" type="Control" parent="."]
-visible = false
+[node name="Root" type="Control" parent="." unique_id=1498344686]
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-mouse_filter = 0
 theme = ExtResource("3_theme")
 
-[node name="Scrim" type="ColorRect" parent="Root"]
+[node name="Control" type="Panel" parent="Root" unique_id=1848777985]
+custom_minimum_size = Vector2(1800, 960)
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 80.0
+offset_top = 80.0
+offset_right = 80.0
+offset_bottom = 80.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_dwtjk")
+
+[node name="MarginContainer" type="MarginContainer" parent="Root" unique_id=1378155897]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-mouse_filter = 0
-color = Color(0.09411765, 0.18431373, 0.26666668, 0.42)
+theme_override_constants/margin_left = 48
+theme_override_constants/margin_top = 48
+theme_override_constants/margin_right = 48
 
-[node name="SettingsMenu" parent="Root" instance=ExtResource("2_settings")]
-visible = false
-layout_mode = 1
+[node name="Margin" type="PanelContainer" parent="Root/MarginContainer" unique_id=811570808]
+layout_mode = 2
+theme_override_styles/panel = ExtResource("3_odurj")
 
-[node name="KeybindingsMenu" parent="Root" instance=ExtResource("4_keybindings")]
-visible = false
+[node name="VBox" type="VBoxContainer" parent="Root/MarginContainer/Margin" unique_id=1898789937]
+layout_mode = 2
+theme_override_constants/separation = 0
+
+[node name="Header" type="HBoxContainer" parent="Root/MarginContainer/Margin/VBox" unique_id=643067418]
+layout_mode = 2
+theme_override_constants/separation = 16
+alignment = 1
+
+[node name="BackButton" type="Button" parent="Root/MarginContainer/Margin/VBox/Header" unique_id=721481338]
+custom_maximum_size = Vector2(150, 150)
+layout_mode = 2
+theme_override_constants/icon_max_width = 100
+icon = ExtResource("3_df03q")
+flat = true
+icon_alignment = 1
+
+[node name="Title" type="Label" parent="Root/MarginContainer/Margin/VBox/Header" unique_id=147434434]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.09411765, 0.18431373, 0.26666668, 1)
+theme_override_fonts/font = ExtResource("4_odurj")
+theme_override_font_sizes/font_size = 60
+text = "Settings"
+vertical_alignment = 1
+
+[node name="TabsArea" type="Control" parent="Root/MarginContainer/Margin/VBox" unique_id=1971810320]
+custom_minimum_size = Vector2(0, 58)
+layout_mode = 2
+
+[node name="TabBaseline" type="ColorRect" parent="Root/MarginContainer/Margin/VBox/TabsArea" unique_id=1545893383]
 layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = -2.0
+grow_horizontal = 2
+grow_vertical = 0
+color = Color(0.65882355, 0.6313726, 0.57254905, 0.72)
+
+[node name="Tabs" type="HBoxContainer" parent="Root/MarginContainer/Margin/VBox/TabsArea" unique_id=378235255]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 6
+
+[node name="FolderBody" type="PanelContainer" parent="Root/MarginContainer/Margin/VBox" unique_id=894406954]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_transparent_panel")
+
+[node name="FolderMargin" type="MarginContainer" parent="Root/MarginContainer/Margin/VBox/FolderBody" unique_id=829902316]
+layout_mode = 2
+theme_override_constants/margin_left = 28
+theme_override_constants/margin_top = 24
+theme_override_constants/margin_right = 28
+theme_override_constants/margin_bottom = 24
+
+[node name="ContentScroll" type="ScrollContainer" parent="Root/MarginContainer/Margin/VBox/FolderBody/FolderMargin" unique_id=2069741600]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="ContentCenter" type="HBoxContainer" parent="Root/MarginContainer/Margin/VBox/FolderBody/FolderMargin/ContentScroll"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 0
+
+[node name="LeftSpacer" type="Control" parent="Root/MarginContainer/Margin/VBox/FolderBody/FolderMargin/ContentScroll/ContentCenter"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="ContentBox" type="VBoxContainer" parent="Root/MarginContainer/Margin/VBox/FolderBody/FolderMargin/ContentScroll/ContentCenter" unique_id=207169915]
+custom_minimum_size = Vector2(880, 0)
+layout_mode = 2
+theme_override_constants/separation = 14
+
+[node name="RightSpacer" type="Control" parent="Root/MarginContainer/Margin/VBox/FolderBody/FolderMargin/ContentScroll/ContentCenter"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="MenuPaperFitter" type="Node" parent="Root" unique_id=1891179258]
+script = ExtResource("5_fitter")
+design_height = 1004.0
+min_scale = 0.62
