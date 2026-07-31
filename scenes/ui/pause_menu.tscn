@@ -34,10 +34,10 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-color = Color(0.26666668, 0.49019608, 0.60784316, 0.39215687)
+color = Color(0.09411765, 0.18431373, 0.26666668, 0.42)
 
 [node name="MenuBackgroundShadow" type="TextureRect" parent="MenuRoot" unique_id=1474700416]
-modulate = Color(0, 0, 0, 0.13725491)
+modulate = Color(0.09411765, 0.18431373, 0.26666668, 0.18)
 layout_mode = 0
 offset_left = -32.0
 offset_top = 18.0
@@ -80,7 +80,7 @@ theme_override_constants/separation = 15
 
 [node name="Label" type="Label" parent="MenuRoot/MenuBackground/MarginContainer/VBoxContainer" unique_id=317124534]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.15294118, 0.24705882, 0.30980393, 1)
+theme_override_colors/font_color = Color(0.09411765, 0.18431373, 0.26666668, 1)
 theme_override_fonts/font = ExtResource("3_7yca1")
 theme_override_font_sizes/font_size = 72
 text = "Paused"
@@ -88,7 +88,7 @@ horizontal_alignment = 1
 
 [node name="Label2" type="Label" parent="MenuRoot/MenuBackground/MarginContainer/VBoxContainer" unique_id=1024262313]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.15294118, 0.24705882, 0.30980393, 1)
+theme_override_colors/font_color = Color(0.09411765, 0.18431373, 0.26666668, 1)
 theme_override_fonts/font = ExtResource("3_7yca1")
 theme_override_font_sizes/font_size = 72
 horizontal_alignment = 1
@@ -142,7 +142,7 @@ button_icon = ExtResource("10_ukr1j")
 
 [node name="Label3" type="Label" parent="MenuRoot/MenuBackground/MarginContainer/VBoxContainer" unique_id=1166935026]
 layout_mode = 2
-theme_override_colors/font_color = Color(0.15294118, 0.24705882, 0.30980393, 1)
+theme_override_colors/font_color = Color(0.09411765, 0.18431373, 0.26666668, 1)
 theme_override_fonts/font = ExtResource("3_7yca1")
 theme_override_font_sizes/font_size = 72
 horizontal_alignment = 1

@@ -30,7 +30,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 0
-color = Color(0.15294118, 0.24705882, 0.30980393, 0.42)
+color = Color(0.09411765, 0.18431373, 0.26666668, 0.42)
 
 [node name="SettingsMenu" parent="Root" instance=ExtResource("2_settings")]
 visible = false

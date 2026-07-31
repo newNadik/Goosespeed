@@ -1,6 +1,8 @@
 class_name GooseGameHud
 extends CanvasLayer
 
+const HINT_FONT_COLOR := GooseSpeedPalette.PAPER_CREAM
+
 @onready var speed_label: Label = $Root/TopRightPanel/Margin/VBox/SpeedLabel
 @onready var state_label: Label = $Root/TopRightPanel/Margin/VBox/StateLabel
 @onready var timer_label: Label = $Root/TopRightPanel/Margin/VBox/TimerLabel
@@ -46,6 +48,7 @@ func _update_hints() -> void:
 	var hints := _control_hints()
 	while hints_list.get_child_count() < hints.size():
 		var label := Label.new()
+		label.add_theme_color_override("font_color", HINT_FONT_COLOR)
 		hints_list.add_child(label)
 	for index in hints_list.get_child_count():
 		var label := hints_list.get_child(index) as Label

@@ -31,7 +31,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
-color = Color(0.9529412, 0.91764706, 0.8745098, 1)
+color = Color(0.94509804, 0.8745098, 0.7411765, 1)
 
 [node name="BackgroundImage" type="TextureRect" parent="." unique_id=539308480]
 layout_mode = 1
@@ -45,7 +45,7 @@ expand_mode = 1
 stretch_mode = 6
 
 [node name="MenuBackgroundShadow" type="TextureRect" parent="." unique_id=610999285]
-modulate = Color(0, 0, 0, 0.13725491)
+modulate = Color(0.09411765, 0.18431373, 0.26666668, 0.18)
 layout_mode = 1
 offset_left = -32.0
 offset_top = 18.0

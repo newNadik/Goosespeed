@@ -1,6 +1,30 @@
-[gd_scene load_steps=2 format=3]
+[gd_scene load_steps=4 format=3]
 
 [ext_resource type="Script" path="res://scripts/ui/goose_game_hud.gd" id="1_hud"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hud_panel"]
+bg_color = Color(0.94509804, 0.8745098, 0.7411765, 0.88)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.09411765, 0.18431373, 0.26666668, 0.95)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hud_panel_dark"]
+bg_color = Color(0.09411765, 0.18431373, 0.26666668, 0.82)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.94509804, 0.8745098, 0.7411765, 0.72)
+corner_radius_top_left = 4
+corner_radius_top_right = 4
+corner_radius_bottom_right = 4
+corner_radius_bottom_left = 4
 
 [node name="GooseGameHud" type="CanvasLayer"]
 layer = 2
@@ -25,6 +49,7 @@ offset_left = -276.0
 offset_top = 16.0
 offset_right = -16.0
 offset_bottom = 110.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_hud_panel")
 
 [node name="Margin" type="MarginContainer" parent="Root/TopRightPanel"]
 layout_mode = 2
@@ -38,16 +63,19 @@ layout_mode = 2
 
 [node name="SpeedLabel" type="Label" parent="Root/TopRightPanel/Margin/VBox"]
 layout_mode = 2
+theme_override_colors/font_color = Color(0.09411765, 0.18431373, 0.26666668, 1)
 text = "Speed  0.0 m/s"
 horizontal_alignment = 2
 
 [node name="StateLabel" type="Label" parent="Root/TopRightPanel/Margin/VBox"]
 layout_mode = 2
+theme_override_colors/font_color = Color(0.09411765, 0.18431373, 0.26666668, 1)
 text = "State  ground"
 horizontal_alignment = 2
 
 [node name="TimerLabel" type="Label" parent="Root/TopRightPanel/Margin/VBox"]
 layout_mode = 2
+theme_override_colors/font_color = Color(0.99607843, 0.46666667, 0.2627451, 1)
 text = "Run  00.00"
 horizontal_alignment = 2
 
@@ -61,6 +89,7 @@ offset_left = -276.0
 offset_top = 126.0
 offset_right = -16.0
 offset_bottom = 394.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_hud_panel_dark")
 
 [node name="Margin" type="MarginContainer" parent="Root/HintsPanel"]
 layout_mode = 2
@@ -75,40 +104,50 @@ theme_override_constants/separation = 4
 
 [node name="MoveLabel" type="Label" parent="Root/HintsPanel/Margin/HintsList"]
 layout_mode = 2
+theme_override_colors/font_color = Color(0.94509804, 0.8745098, 0.7411765, 1)
 text = "WASD  Move"
 
 [node name="LookLabel" type="Label" parent="Root/HintsPanel/Margin/HintsList"]
 layout_mode = 2
+theme_override_colors/font_color = Color(0.94509804, 0.8745098, 0.7411765, 1)
 text = "Mouse  Look"
 
 [node name="JumpLabel" type="Label" parent="Root/HintsPanel/Margin/HintsList"]
 layout_mode = 2
+theme_override_colors/font_color = Color(0.94509804, 0.8745098, 0.7411765, 1)
 text = "Space  Jump"
 
 [node name="CrouchLabel" type="Label" parent="Root/HintsPanel/Margin/HintsList"]
 layout_mode = 2
+theme_override_colors/font_color = Color(0.94509804, 0.8745098, 0.7411765, 1)
 text = "Ctrl  Slide / Tuck"
 
 [node name="WalkLabel" type="Label" parent="Root/HintsPanel/Margin/HintsList"]
 layout_mode = 2
+theme_override_colors/font_color = Color(0.94509804, 0.8745098, 0.7411765, 1)
 text = "Shift  Walk"
 
 [node name="SpecialLabel" type="Label" parent="Root/HintsPanel/Margin/HintsList"]
 layout_mode = 2
+theme_override_colors/font_color = Color(0.94509804, 0.8745098, 0.7411765, 1)
 text = "E  Special"
 
 [node name="RestartLabel" type="Label" parent="Root/HintsPanel/Margin/HintsList"]
 layout_mode = 2
+theme_override_colors/font_color = Color(0.94509804, 0.8745098, 0.7411765, 1)
 text = "R  Restart"
 
 [node name="CameraLabel" type="Label" parent="Root/HintsPanel/Margin/HintsList"]
 layout_mode = 2
+theme_override_colors/font_color = Color(0.94509804, 0.8745098, 0.7411765, 1)
 text = "C  Recenter Camera"
 
 [node name="CameraModeLabel" type="Label" parent="Root/HintsPanel/Margin/HintsList"]
 layout_mode = 2
+theme_override_colors/font_color = Color(0.94509804, 0.8745098, 0.7411765, 1)
 text = "V  Toggle Camera"
 
 [node name="PauseLabel" type="Label" parent="Root/HintsPanel/Margin/HintsList"]
 layout_mode = 2
+theme_override_colors/font_color = Color(0.94509804, 0.8745098, 0.7411765, 1)
 text = "Esc  Pause"
