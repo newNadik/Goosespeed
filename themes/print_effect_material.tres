@@ -1,0 +1,15 @@
+[gd_resource type="ShaderMaterial" load_steps=2 format=3]
+
+[ext_resource type="Shader" path="res://themes/print_effect.gdshader" id="1_print_shader"]
+
+[resource]
+shader = ExtResource("1_print_shader")
+shader_parameter/colour_levels = 7.0
+shader_parameter/effect_strength = 0.65
+shader_parameter/dither_strength = 0.45
+shader_parameter/pattern_scale = 1.0
+shader_parameter/shadow_start = 0.35
+shader_parameter/shadow_end = 0.85
+shader_parameter/paper_tint = Color(0.945, 0.875, 0.741, 1)
+shader_parameter/shadow_tint = Color(0.094, 0.184, 0.267, 1)
+shader_parameter/tint_strength = 0.14
