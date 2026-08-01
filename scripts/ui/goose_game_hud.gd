@@ -26,8 +26,6 @@ const COMPASS_CENTER_N_X := 456.0
 @onready var vertical_speed_label: Label = $Root/MovementWidget/VerticalSpeedLabel
 @onready var vertical_arrow_label: Label = $Root/MovementWidget/VerticalArrowLabel
 @onready var acceleration_label: Label = $Root/MovementWidget/AccelerationLabel
-@onready var surface_panel: PanelContainer = $Root/MovementWidget/SurfacePanel
-@onready var surface_label: Label = $Root/MovementWidget/SurfacePanel/SurfaceLabel
 @onready var debug_panel: PanelContainer = $Root/DebugPanel
 @onready var state_label: Label = $Root/DebugPanel/Margin/VBox/StateLabel
 @onready var fps_label: Label = $Root/DebugPanel/Margin/VBox/FpsLabel
@@ -96,7 +94,6 @@ func _update_visibility() -> void:
 	var flight_visible := _hud_visible(GooseGameSettings.HUD_FLIGHT_WIDGET)
 	var vertical_speed_visible := _hud_visible(GooseGameSettings.HUD_VERTICAL_SPEED)
 	var acceleration_visible := _hud_visible(GooseGameSettings.HUD_ACCELERATION)
-	var surface_visible := _hud_visible(GooseGameSettings.HUD_SURFACE_GRIP)
 	var state_visible := _hud_visible(GooseGameSettings.HUD_STATE)
 	var fps_visible := _hud_visible(GooseGameSettings.HUD_FPS)
 	var raw_visible := _hud_visible(GooseGameSettings.HUD_RAW_MOVEMENT)
@@ -116,13 +113,11 @@ func _update_visibility() -> void:
 	vertical_speed_label.visible = vertical_speed_visible
 	vertical_arrow_label.visible = vertical_speed_visible
 	acceleration_label.visible = acceleration_visible
-	surface_panel.visible = surface_visible
 	movement_panel.visible = (
 		speed_label.visible
 		or flight_widget.visible
 		or vertical_speed_visible
 		or acceleration_visible
-		or surface_visible
 	)
 
 	state_label.visible = state_visible
@@ -145,7 +140,6 @@ func _update_labels() -> void:
 	vertical_speed_label.text = "%+.1f" % state.vertical_speed
 	vertical_arrow_label.text = "^" if state.vertical_speed >= 0.0 else "v"
 	acceleration_label.text = _acceleration_chevrons(acceleration)
-	surface_label.text = _surface_text(state).to_upper()
 	state_label.text = "State  %s" % _state_text(state)
 	fps_label.text = "FPS  %d" % Engine.get_frames_per_second()
 	raw_movement_label.text = "Raw  %.1f u/s  %.1f m/s  %.1f accel" % [
@@ -342,12 +336,6 @@ func _state_text(state: RefCounted) -> String:
 	if state.grounded:
 		return "ground"
 	return "air"
-
-
-func _surface_text(state: RefCounted) -> String:
-	if state.surface_type != &"":
-		return str(state.surface_type)
-	return str(state.medium_type)
 
 
 func _acceleration_chevrons(value: float) -> String:

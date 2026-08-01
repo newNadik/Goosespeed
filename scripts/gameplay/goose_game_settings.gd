@@ -14,7 +14,6 @@ const HUD_SPEED := "speed"
 const HUD_FLIGHT_WIDGET := "flight_widget"
 const HUD_VERTICAL_SPEED := "vertical_speed"
 const HUD_ACCELERATION := "acceleration"
-const HUD_SURFACE_GRIP := "surface_grip"
 const HUD_STATE := "state"
 const HUD_FPS := "fps"
 const HUD_RAW_MOVEMENT := "raw_movement"
@@ -28,7 +27,6 @@ const HUD_ELEMENTS := [
 	HUD_FLIGHT_WIDGET,
 	HUD_VERTICAL_SPEED,
 	HUD_ACCELERATION,
-	HUD_SURFACE_GRIP,
 	HUD_STATE,
 	HUD_FPS,
 	HUD_RAW_MOVEMENT,
@@ -45,7 +43,6 @@ const HUD_CORE_ELEMENTS := [
 const HUD_DETAILED_ELEMENTS := [
 	HUD_VERTICAL_SPEED,
 	HUD_ACCELERATION,
-	HUD_SURFACE_GRIP,
 ]
 const HUD_DEBUG_ELEMENTS := [
 	HUD_STATE,

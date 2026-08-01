@@ -269,7 +269,6 @@ func _build_hud_tab() -> void:
 	_add_hud_group([
 		[GooseGameSettings.HUD_VERTICAL_SPEED, "Vertical speed"],
 		[GooseGameSettings.HUD_ACCELERATION, "Acceleration"],
-		[GooseGameSettings.HUD_SURFACE_GRIP, "Surface / grip"],
 	])
 	content_box.add_child(_create_group_title("Debug"))
 	_add_hud_group([
