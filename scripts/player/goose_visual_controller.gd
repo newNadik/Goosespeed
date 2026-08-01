@@ -1,6 +1,18 @@
 class_name GooseVisualController
 extends Node3D
 
+
+class JumpSecondaryMotionApplier:
+	extends Node
+
+	var visual_controller: GooseVisualController
+
+
+	func _process(delta: float) -> void:
+		if visual_controller != null:
+			visual_controller._update_jump_secondary_motion(delta)
+
+
 const MovementStateScript := preload("res://scripts/player/movement_state.gd")
 const HeadLookControllerScript := preload("res://scripts/player/goose_head_look_controller.gd")
 
@@ -28,6 +40,13 @@ const ANIM_LAND := &"Goose|A_Landing_Touch"
 const ANIM_TAKEOFF_BOUNCE := &"Goose|A_TakeOff_BounceOff"
 const ANIM_TAKEOFF_RUNUP := &"Goose|A_TakeOff_RunUp"
 const ANIM_SLIDE := &"Goose|A_Sliding"
+const JUMP_SECONDARY_BONE_NAMES := [
+	&"Chest",
+	&"ArmL1",
+	&"ArmR1",
+	&"WingL_G1",
+	&"WingR_G1",
+]
 const LOOPING_ANIMATIONS := [
 	ANIM_IDLE,
 	ANIM_IDLE_ALT,
@@ -70,8 +89,11 @@ const LOOPING_ANIMATIONS := [
 @export var head_look_enabled := true
 @export_range(0.0, 1.0, 0.05) var head_look_intensity := 0.65
 @export var head_look_smoothness := 10.0
+@export var jump_secondary_motion_enabled := true
+@export_range(0.0, 1.5, 0.05) var jump_secondary_motion_intensity := 0.65
 
 @onready var animation_player: AnimationPlayer = get_node_or_null("AnimationPlayer") as AnimationPlayer
+@onready var skeleton: Skeleton3D = get_node_or_null("Goose/Skeleton3D") as Skeleton3D
 
 var state_bridge: Node
 var transform_source: Node3D
@@ -86,13 +108,17 @@ var jump_sequence_index := 0
 var jump_takeoff_was_consumed := false
 var intended_movement_time := 0.0
 var tracked_intended_movement_direction := Vector3.ZERO
+var jump_secondary_motion_controller: Node
 var head_look_controller: Node
 var smoothed_visual_y := 0.0
 var visual_y_initialized := false
+var jump_secondary_bone_indices: Dictionary = {}
 
 
 func _ready() -> void:
 	_configure_animation_player()
+	_cache_jump_secondary_bones()
+	_ensure_jump_secondary_motion_controller()
 	_ensure_head_look_controller()
 	if state_bridge:
 		_connect_bridge()
@@ -591,6 +617,131 @@ func _ensure_head_look_controller() -> void:
 	head_look_controller.setup(self)
 
 
+func _ensure_jump_secondary_motion_controller() -> void:
+	jump_secondary_motion_controller = get_node_or_null("JumpSecondaryMotionApplier")
+	if jump_secondary_motion_controller == null:
+		var applier := JumpSecondaryMotionApplier.new()
+		applier.name = "JumpSecondaryMotionApplier"
+		applier.visual_controller = self
+		jump_secondary_motion_controller = applier
+		add_child(jump_secondary_motion_controller)
+	elif jump_secondary_motion_controller is JumpSecondaryMotionApplier:
+		(jump_secondary_motion_controller as JumpSecondaryMotionApplier).visual_controller = self
+
+
+func _cache_jump_secondary_bones() -> void:
+	jump_secondary_bone_indices.clear()
+	if skeleton == null:
+		return
+	for bone_name in JUMP_SECONDARY_BONE_NAMES:
+		var bone_index := skeleton.find_bone(String(bone_name))
+		if bone_index >= 0:
+			jump_secondary_bone_indices[bone_name] = bone_index
+
+
+func _update_jump_secondary_motion(_delta: float) -> void:
+	if not _should_apply_jump_secondary_motion(latest_state):
+		return
+	var phase := _current_animation_phase()
+	var side := _jump_secondary_side_for_animation(animation_player.current_animation)
+	var weight := _jump_secondary_motion_weight(latest_state)
+	var hop := sin(TAU * phase)
+	var hop_soft := sin(TAU * phase + 0.65)
+	var settle := sin(TAU * phase + PI)
+	var alternating_side := side if side != 0.0 else sin(TAU * phase)
+
+	_apply_jump_secondary_rotation(
+		&"Chest",
+		Vector3(
+			deg_to_rad(2.2) * settle,
+			deg_to_rad(1.5) * alternating_side * hop_soft,
+			deg_to_rad(2.2) * alternating_side * hop,
+		) * weight,
+	)
+	_apply_jump_secondary_rotation(
+		&"ArmL1",
+		Vector3(
+			deg_to_rad(1.7) * -hop_soft,
+			deg_to_rad(2.4) * hop,
+			deg_to_rad(1.9) * -alternating_side * settle,
+		) * weight,
+	)
+	_apply_jump_secondary_rotation(
+		&"ArmR1",
+		Vector3(
+			deg_to_rad(1.7) * -hop_soft,
+			deg_to_rad(2.4) * -hop,
+			deg_to_rad(1.9) * alternating_side * settle,
+		) * weight,
+	)
+	_apply_jump_secondary_rotation(
+		&"WingL_G1",
+		Vector3(
+			deg_to_rad(2.0) * -hop,
+			deg_to_rad(1.5) * hop_soft,
+			deg_to_rad(3.0) * -settle,
+		) * weight,
+	)
+	_apply_jump_secondary_rotation(
+		&"WingR_G1",
+		Vector3(
+			deg_to_rad(2.0) * -hop,
+			deg_to_rad(1.5) * -hop_soft,
+			deg_to_rad(3.0) * settle,
+		) * weight,
+	)
+	if skeleton.has_method("force_update_all_bone_transforms"):
+		skeleton.call("force_update_all_bone_transforms")
+
+
+func _apply_jump_secondary_rotation(bone_name: StringName, euler: Vector3) -> void:
+	var bone_index := int(jump_secondary_bone_indices.get(bone_name, -1))
+	if bone_index < 0:
+		return
+	var pose_rotation := skeleton.get_bone_pose_rotation(bone_index)
+	var offset := (
+		Quaternion(Vector3.RIGHT, euler.x)
+		* Quaternion(Vector3.UP, euler.y)
+		* Quaternion(Vector3.BACK, euler.z)
+	)
+	skeleton.set_bone_pose_rotation(bone_index, (pose_rotation * offset).normalized())
+
+
+func _should_apply_jump_secondary_motion(state: RefCounted) -> bool:
+	return (
+		jump_secondary_motion_enabled
+		and skeleton != null
+		and animation_player != null
+		and animation_player.is_playing()
+		and _is_jump_animation_name(animation_player.current_animation)
+		and _is_jump_secondary_motion_state(state)
+	)
+
+
+func _is_jump_secondary_motion_state(state: RefCounted) -> bool:
+	return (
+		state.mode != &"flight"
+		and not state.swimming
+		and state.jump_held
+		and jump_visual_hold_remaining > 0.0
+		and state.takeoff_vertical_speed > 0.1
+	)
+
+
+func _jump_secondary_motion_weight(state: RefCounted) -> float:
+	if not _is_jump_secondary_motion_state(state):
+		return 0.0
+	return clampf(jump_secondary_motion_intensity, 0.0, 1.5)
+
+
+func _jump_secondary_side_for_animation(animation_name: StringName) -> float:
+	if animation_name == ANIM_JUMP_2:
+		return 1.0
+	if animation_name == ANIM_JUMP_3:
+		return -1.0
+	return 0.0
+
+
 func _update_head_look(_delta: float) -> void:
 	if head_look_controller == null:
 		return
@@ -714,6 +865,8 @@ func _should_preserve_locomotion_phase(next_animation: StringName) -> bool:
 
 
 func _current_animation_phase() -> float:
+	if animation_player == null:
+		return 0.0
 	if animation_player.current_animation_length <= 0.0:
 		return 0.0
 	return fposmod(

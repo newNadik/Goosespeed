@@ -50,6 +50,7 @@ func _initialize() -> void:
 	_expect_q3_landing_hold_skipped(failures)
 	_expect_slide_animation_selection(failures)
 	_expect_jump_animation_selection(failures)
+	_expect_jump_secondary_motion(failures)
 	_expect_animation(
 		failures,
 		visual,
@@ -1142,6 +1143,72 @@ func _expect_jump_animation_selection(failures: Array[String]) -> void:
 
 	visual.free()
 	fallback_visual.free()
+
+
+func _expect_jump_secondary_motion(failures: Array[String]) -> void:
+	var visual := VisualControllerScript.new()
+	visual.jump_visual_hold_remaining = visual.jump_autohop_hold_time
+	visual.jump_secondary_motion_intensity = 0.6
+
+	var held_jump_state := _state({
+		"mode": &"q3",
+		"grounded": false,
+		"jump_held": true,
+		"vertical_speed": 2.0,
+		"takeoff_vertical_speed": 6.0,
+	})
+	if absf(visual._jump_secondary_motion_weight(held_jump_state) - 0.6) > 0.001:
+		failures.append("held autojump should enable jump secondary motion")
+	if visual._jump_secondary_side_for_animation(VisualControllerScript.ANIM_JUMP_2) <= 0.0:
+		failures.append("jump 2 secondary motion should lean to the right side")
+	if visual._jump_secondary_side_for_animation(VisualControllerScript.ANIM_JUMP_3) >= 0.0:
+		failures.append("jump 3 secondary motion should lean to the left side")
+	if absf(visual._jump_secondary_side_for_animation(VisualControllerScript.ANIM_JUMP)) > 0.001:
+		failures.append("base jump secondary side should stay centered")
+
+	visual.jump_visual_hold_remaining = 0.0
+	if visual._jump_secondary_motion_weight(held_jump_state) > 0.0:
+		failures.append("expired jump hold should disable jump secondary motion")
+	visual.jump_visual_hold_remaining = visual.jump_autohop_hold_time
+
+	var single_jump_state := _state({
+		"mode": &"q3",
+		"grounded": false,
+		"jump_held": false,
+		"vertical_speed": 2.0,
+		"takeoff_vertical_speed": 6.0,
+	})
+	if visual._jump_secondary_motion_weight(single_jump_state) > 0.0:
+		failures.append("single jump should not use held-hop secondary motion")
+
+	var flight_state := _state({
+		"mode": &"flight",
+		"grounded": false,
+		"jump_held": true,
+		"vertical_speed": 2.0,
+		"takeoff_vertical_speed": 6.0,
+	})
+	if visual._jump_secondary_motion_weight(flight_state) > 0.0:
+		failures.append("flight should not use jump secondary motion")
+
+	var ordered_visual := VisualControllerScript.new()
+	var player := AnimationPlayer.new()
+	player.name = "AnimationPlayer"
+	ordered_visual.animation_player = player
+	ordered_visual.add_child(player)
+	ordered_visual._ensure_jump_secondary_motion_controller()
+	ordered_visual._ensure_head_look_controller()
+	var secondary := ordered_visual.get_node_or_null("JumpSecondaryMotionApplier")
+	var head_look := ordered_visual.get_node_or_null("GooseHeadLookController")
+	if secondary == null:
+		failures.append("jump secondary motion applier was not created")
+	elif secondary.get_index() <= player.get_index():
+		failures.append("jump secondary motion applier should run after AnimationPlayer")
+	if secondary != null and head_look != null and head_look.get_index() <= secondary.get_index():
+		failures.append("head look should run after jump secondary motion")
+
+	visual.free()
+	ordered_visual.free()
 
 
 func _expect_jump_sequence(failures: Array[String]) -> void:
