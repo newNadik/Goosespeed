@@ -19,8 +19,7 @@ const COMPASS_CENTER_N_X := 456.0
 @onready var movement_panel: Control = $Root/MovementWidget
 @onready var speed_label: Label = $Root/MovementWidget/SpeedLabel
 @onready var speed_unit_label: Label = $Root/MovementWidget/SpeedUnitLabel
-@onready var gauge_arc_label: Label = $Root/MovementWidget/GaugeArcLabel
-@onready var gauge_needle: ColorRect = $Root/MovementWidget/GaugeNeedle
+@onready var speedometer_gauge: Control = $Root/MovementWidget/SpeedometerGauge
 @onready var flight_widget: Control = $Root/MovementWidget/FlightWidget
 @onready var flight_label: Label = $Root/MovementWidget/FlightWidget/FlightLabel
 @onready var flight_progress: ProgressBar = $Root/MovementWidget/FlightWidget/FlightProgress
@@ -111,8 +110,7 @@ func _update_visibility() -> void:
 	timer_panel.visible = timer_visible
 	speed_label.visible = speed_visible
 	speed_unit_label.visible = speed_visible
-	gauge_arc_label.visible = speed_visible
-	gauge_needle.visible = speed_visible
+	speedometer_gauge.visible = speed_visible
 	flight_widget.visible = flight_visible and _has_flight_widget_data()
 
 	vertical_speed_label.visible = vertical_speed_visible
@@ -140,6 +138,8 @@ func _update_labels() -> void:
 	_update_visibility()
 	_update_direction_marker(state)
 	speed_label.text = "%.1f" % state.horizontal_speed
+	if speedometer_gauge.has_method("set_speed"):
+		speedometer_gauge.set_speed(state.horizontal_speed)
 	timer_label.text = "%05.2fs %s" % [elapsed_time, " FINISH" if run_finished else ""]
 	_update_flight_widget()
 	vertical_speed_label.text = "%+.1f" % state.vertical_speed
