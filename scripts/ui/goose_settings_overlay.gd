@@ -14,6 +14,15 @@ const TAB_GOOSE_MOVES := "Goose Moves"
 const TAB_AUDIO := "Audio"
 const TABS := [TAB_VISUAL, TAB_CONTROLS, TAB_HUD, TAB_GOOSE_MOVES, TAB_AUDIO]
 const LISTENING_TEXT := "Press input..."
+const MOVEMENT_SETTINGS_CONTROLLER := "q3_n_flight"
+const VISUAL_MOVEMENT_SETTINGS := [
+	"fov",
+	"third_person_distance",
+	"camera_distance",
+]
+const CONTROL_MOVEMENT_SETTINGS := [
+	"mouse_sensitivity",
+]
 
 const INK := GooseSpeedPalette.INK
 const ORANGE := GooseSpeedPalette.ORANGE
@@ -32,6 +41,7 @@ var tab_buttons: Dictionary = {}
 var syncing_hud_settings_controls := false
 var syncing_game_settings_controls := false
 var fullscreen_toggle: CheckButton
+var movement_setting_controls := {}
 var hud_toggles := {}
 var goose_moves_settings_menu: Control
 var readable_ui_font: SystemFont
@@ -179,6 +189,7 @@ func _focus_current_tab() -> void:
 func _clear_content() -> void:
 	_stop_listening_for_binding(false)
 	binding_buttons.clear()
+	movement_setting_controls.clear()
 	fullscreen_toggle = null
 	goose_moves_settings_menu = null
 	for child in content_box.get_children():
@@ -198,9 +209,14 @@ func _build_visual_tab() -> void:
 	var row := _create_toggle_row("Fullscreen", fullscreen, _on_fullscreen_changed)
 	fullscreen_toggle = row.get_node("Toggle") as CheckButton
 	content_box.add_child(row)
+	content_box.add_child(_create_group_title("Camera"))
+	for key in VISUAL_MOVEMENT_SETTINGS:
+		_add_movement_setting_slider(key)
 
 
 func _build_controls_tab() -> void:
+	for key in CONTROL_MOVEMENT_SETTINGS:
+		_add_movement_setting_slider(key)
 	_build_keybinding_rows()
 
 
@@ -267,6 +283,7 @@ func _build_hud_tab() -> void:
 	_add_hud_group([
 		[GooseGameSettings.HUD_SPEED, "Speed"],
 		[GooseGameSettings.HUD_FLIGHT_WIDGET, "Flight widget"],
+		[GooseGameSettings.HUD_FLIGHT_AIM_DOT, "Flight aim dot"],
 		[GooseGameSettings.HUD_VERTICAL_SPEED, "Vertical speed"],
 		[GooseGameSettings.HUD_ACCELERATION, "Acceleration"],
 	])
@@ -379,12 +396,64 @@ func _create_hud_toggle_row(label_text: String, element: String) -> HBoxContaine
 	return row
 
 
+func _add_movement_setting_slider(key: String) -> void:
+	var def := _get_movement_setting_def(key)
+	if def.is_empty():
+		return
+	var value := _get_movement_setting_value(key, def)
+	var row := _create_movement_slider_row(str(def["label"]), value, def, _on_movement_setting_slider_changed.bind(key))
+	content_box.add_child(row)
+	movement_setting_controls[key] = {
+		"slider": row.get_node("Slider"),
+		"value_label": row.get_node("ValueLabel"),
+		"def": def,
+	}
+
+
+func _create_movement_slider_row(label_text: String, value: float, def: Dictionary, callback: Callable) -> HBoxContainer:
+	var row := HBoxContainer.new()
+	row.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	row.add_theme_constant_override("separation", 12)
+	row.add_child(_create_label(label_text))
+
+	var slider := HSlider.new()
+	slider.name = "Slider"
+	slider.custom_minimum_size = Vector2(320.0, 36.0)
+	slider.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	slider.min_value = float(def["min"])
+	slider.max_value = float(def["max"])
+	slider.step = float(def["step"])
+	slider.value = value
+	slider.value_changed.connect(callback)
+	_style_slider(slider)
+	row.add_child(slider)
+
+	var value_label := _create_label(_format_movement_setting_value(value, def))
+	value_label.name = "ValueLabel"
+	value_label.custom_minimum_size = Vector2(82.0, 36.0)
+	value_label.size_flags_horizontal = Control.SIZE_SHRINK_END
+	value_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	row.add_child(value_label)
+	return row
+
+
 func _sync_game_settings_controls() -> void:
-	if fullscreen_toggle == null:
+	if fullscreen_toggle == null and movement_setting_controls.is_empty():
 		return
 	var settings := get_node_or_null("/root/Settings")
 	syncing_game_settings_controls = true
-	fullscreen_toggle.set_pressed_no_signal(bool(settings.get("fullscreen")) if settings != null else false)
+	if fullscreen_toggle != null:
+		fullscreen_toggle.set_pressed_no_signal(bool(settings.get("fullscreen")) if settings != null else false)
+	for key in movement_setting_controls:
+		var control_data := movement_setting_controls.get(key, {}) as Dictionary
+		var slider := control_data.get("slider") as HSlider
+		var value_label := control_data.get("value_label") as Label
+		var def := control_data.get("def", {}) as Dictionary
+		if slider == null or value_label == null or def.is_empty():
+			continue
+		var value := _get_movement_setting_value(str(key), def)
+		slider.set_value_no_signal(value)
+		value_label.text = _format_movement_setting_value(value, def)
 	syncing_game_settings_controls = false
 
 
@@ -405,6 +474,19 @@ func _on_fullscreen_changed(enabled: bool) -> void:
 	var settings := get_node_or_null("/root/Settings")
 	if settings != null and settings.has_method("set_fullscreen"):
 		settings.set_fullscreen(enabled)
+
+
+func _on_movement_setting_slider_changed(value: float, key: String) -> void:
+	var control_data := movement_setting_controls.get(key, {}) as Dictionary
+	var value_label := control_data.get("value_label") as Label
+	var def := control_data.get("def", {}) as Dictionary
+	if value_label != null and not def.is_empty():
+		value_label.text = _format_movement_setting_value(value, def)
+	if syncing_game_settings_controls:
+		return
+	var settings := get_node_or_null("/root/Settings")
+	if settings != null and settings.has_method("set_controller_setting"):
+		settings.set_controller_setting(key, value, MOVEMENT_SETTINGS_CONTROLLER)
 
 
 func _on_hud_preset_pressed(preset: String) -> void:
@@ -549,6 +631,47 @@ func _style_check_button(button: CheckButton) -> void:
 	button.add_theme_color_override("font_pressed_color", ORANGE)
 	button.add_theme_color_override("font_hover_color", ORANGE)
 	button.add_theme_color_override("font_focus_color", ORANGE)
+
+
+func _style_slider(slider: HSlider) -> void:
+	slider.add_theme_stylebox_override("slider", _slider_track_style(DISABLED_INK, 2))
+	slider.add_theme_stylebox_override("grabber_area", _slider_track_style(ORANGE, 4))
+	slider.add_theme_stylebox_override("grabber_area_highlight", _slider_track_style(ORANGE, 4))
+
+
+func _slider_track_style(color: Color, thickness: int) -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = color
+	style.corner_radius_top_left = thickness
+	style.corner_radius_top_right = thickness
+	style.corner_radius_bottom_right = thickness
+	style.corner_radius_bottom_left = thickness
+	style.content_margin_top = thickness
+	style.content_margin_bottom = thickness
+	return style
+
+
+func _get_movement_setting_def(key: String) -> Dictionary:
+	var settings := get_node_or_null("/root/Settings")
+	if settings == null or not settings.has_method("get_controller_setting_defs"):
+		return {}
+	for def in settings.get_controller_setting_defs(MOVEMENT_SETTINGS_CONTROLLER):
+		if str(def.get("key", "")) == key:
+			return (def as Dictionary).duplicate(true)
+	return {}
+
+
+func _get_movement_setting_value(key: String, def: Dictionary) -> float:
+	var settings := get_node_or_null("/root/Settings")
+	if settings == null or not settings.has_method("get_controller_setting"):
+		return float(def.get("default", 0.0))
+	return float(settings.get_controller_setting(key, MOVEMENT_SETTINGS_CONTROLLER))
+
+
+func _format_movement_setting_value(value: float, def: Dictionary) -> String:
+	var format_text := str(def.get("format", "%.2f"))
+	var suffix := str(def.get("suffix", ""))
+	return (format_text % value) + suffix
 
 
 func _button_style(color: Color, border_visible: bool, border_color := ORANGE) -> StyleBoxFlat:

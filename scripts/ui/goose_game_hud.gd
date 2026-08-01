@@ -24,6 +24,7 @@ const COMPASS_CENTER_N_X := 456.0
 @onready var flap_cooldown_gauge: Control = $Root/MovementWidget/FlightWidget/FlapCooldownGauge
 @onready var vertical_speed_gauge: Control = $Root/MovementWidget/VerticalSpeedGauge
 @onready var acceleration_gauge: Control = $Root/MovementWidget/AccelerationGauge
+@onready var flight_aim_dot: Control = $Root/FlightAimDot
 @onready var debug_panel: PanelContainer = $Root/DebugPanel
 @onready var state_label: Label = $Root/DebugPanel/Margin/VBox/StateLabel
 @onready var fps_label: Label = $Root/DebugPanel/Margin/VBox/FpsLabel
@@ -90,6 +91,7 @@ func _update_visibility(state: RefCounted = null) -> void:
 	var timer_visible := _hud_visible(GooseGameSettings.HUD_TIMER)
 	var speed_visible := _hud_visible(GooseGameSettings.HUD_SPEED)
 	var flight_visible := _hud_visible(GooseGameSettings.HUD_FLIGHT_WIDGET)
+	var flight_aim_dot_visible := _hud_visible(GooseGameSettings.HUD_FLIGHT_AIM_DOT)
 	var vertical_speed_visible := _hud_visible(GooseGameSettings.HUD_VERTICAL_SPEED)
 	var acceleration_visible := _hud_visible(GooseGameSettings.HUD_ACCELERATION)
 	var state_visible := _hud_visible(GooseGameSettings.HUD_STATE)
@@ -107,6 +109,7 @@ func _update_visibility(state: RefCounted = null) -> void:
 	speed_unit_label.visible = speed_visible
 	speedometer_gauge.visible = speed_visible
 	flight_widget.visible = flight_visible and _should_show_flight_widget(state)
+	flight_aim_dot.visible = flight_aim_dot_visible and _should_show_flight_aim_dot(state)
 
 	var vertical_visible := vertical_speed_visible and _should_show_vertical_speed_widget(state)
 	vertical_speed_gauge.visible = vertical_visible
@@ -270,6 +273,10 @@ func _should_show_vertical_speed_widget(state: RefCounted) -> bool:
 		or bool(state.get("flapping"))
 		or bool(state.get("flight_activation_charging"))
 	)
+
+
+func _should_show_flight_aim_dot(state: RefCounted) -> bool:
+	return state != null and StringName(state.get("mode")) == &"flight"
 
 
 func _get_flight_debug_state() -> Dictionary:

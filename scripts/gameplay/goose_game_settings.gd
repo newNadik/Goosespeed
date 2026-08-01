@@ -12,6 +12,7 @@ const HUD_DIRECTION_TO_FINISH := "direction_to_finish"
 const HUD_TIMER := "timer"
 const HUD_SPEED := "speed"
 const HUD_FLIGHT_WIDGET := "flight_widget"
+const HUD_FLIGHT_AIM_DOT := "flight_aim_dot"
 const HUD_VERTICAL_SPEED := "vertical_speed"
 const HUD_ACCELERATION := "acceleration"
 const HUD_STATE := "state"
@@ -25,6 +26,7 @@ const HUD_ELEMENTS := [
 	HUD_TIMER,
 	HUD_SPEED,
 	HUD_FLIGHT_WIDGET,
+	HUD_FLIGHT_AIM_DOT,
 	HUD_VERTICAL_SPEED,
 	HUD_ACCELERATION,
 	HUD_STATE,
@@ -41,6 +43,7 @@ const HUD_CORE_ELEMENTS := [
 const HUD_DETAILED_ELEMENTS := [
 	HUD_SPEED,
 	HUD_FLIGHT_WIDGET,
+	HUD_FLIGHT_AIM_DOT,
 	HUD_VERTICAL_SPEED,
 	HUD_ACCELERATION,
 ]
