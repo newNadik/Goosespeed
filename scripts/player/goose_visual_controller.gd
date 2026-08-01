@@ -4,6 +4,7 @@ extends Node3D
 const MovementStateScript := preload("res://scripts/player/movement_state.gd")
 const HeadLookControllerScript := preload("res://scripts/player/goose_head_look_controller.gd")
 
+const ANIM_JUMP := &"Goose|A A_Jump"
 const ANIM_IDLE := &"Goose|A A_StandStraight_Idle1"
 const ANIM_IDLE_ALT := &"Goose|A_StandStraight_Breathing"
 const ANIM_WALK_SLOW := &"Goose|A_WalkSlow"
@@ -302,6 +303,8 @@ func visual_state_for_state(state: RefCounted) -> StringName:
 	if not state.grounded:
 		if state.just_entered_flight:
 			return &"takeoff"
+		if _should_use_jump_animation(state):
+			return &"jump"
 		return _ground_visual_state_for_speed(state.horizontal_speed)
 	if state.crouch_sliding or state.sliding:
 		return &"slide"
@@ -355,6 +358,8 @@ func _animation_for_state(state: RefCounted, use_ground_stability: bool) -> Stri
 			_clear_ground_locomotion()
 		if state.just_entered_flight:
 			return _first_available([ANIM_TAKEOFF_BOUNCE, ANIM_FLY_GLIDE])
+		if _should_use_jump_animation(state):
+			return _first_available([ANIM_JUMP, _ground_animation_for_speed(state.horizontal_speed)])
 		return _ground_animation_for_speed(state.horizontal_speed)
 
 	if state.crouch_sliding or state.sliding:
@@ -411,6 +416,27 @@ func _should_use_prelanding_animation(state: RefCounted) -> bool:
 		and not state.swimming
 		and state.falling
 		and state.ground_distance >= prelanding_ground_distance
+	)
+
+
+func _should_use_jump_animation(state: RefCounted) -> bool:
+	if (
+		state.mode == &"flight"
+		or state.grounded
+		or state.swimming
+		or state.falling
+		or state.vertical_speed <= 0.1
+	):
+		return false
+	if state.just_took_off and state.takeoff_vertical_speed > 0.1:
+		return true
+	return (
+		state.takeoff_vertical_speed > 0.1
+		or (
+			animation_player != null
+			and animation_player.current_animation == ANIM_JUMP
+			and animation_player.is_playing()
+		)
 	)
 
 
@@ -480,7 +506,7 @@ func _configure_animation_player() -> void:
 	for animation_name in LOOPING_ANIMATIONS:
 		if animation_player.has_animation(animation_name):
 			animation_player.get_animation(animation_name).loop_mode = Animation.LOOP_LINEAR
-	for animation_name in [ANIM_PRE_LAND, ANIM_TAKEOFF_BOUNCE, ANIM_SWIM_DIVE, ANIM_SWIM_TAKEOFF]:
+	for animation_name in [ANIM_JUMP, ANIM_PRE_LAND, ANIM_TAKEOFF_BOUNCE, ANIM_SWIM_DIVE, ANIM_SWIM_TAKEOFF]:
 		if animation_player.has_animation(animation_name):
 			animation_player.get_animation(animation_name).loop_mode = Animation.LOOP_NONE
 	if animation_player.has_animation(ANIM_LAND):

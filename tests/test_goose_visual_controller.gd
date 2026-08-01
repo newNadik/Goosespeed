@@ -49,6 +49,7 @@ func _initialize() -> void:
 	_expect_flight_exit_blend(failures)
 	_expect_q3_landing_hold_skipped(failures)
 	_expect_slide_animation_selection(failures)
+	_expect_jump_animation_selection(failures)
 	_expect_animation(
 		failures,
 		visual,
@@ -95,6 +96,21 @@ func _initialize() -> void:
 		_state({"mode": &"q3", "grounded": false, "horizontal_speed": 5.0, "velocity": Vector3.UP * 2.0}),
 		VisualControllerScript.ANIM_RUN_SLOW,
 		"uphill contact-airborne run",
+	)
+	_expect_animation(
+		failures,
+		visual,
+		_state({
+			"mode": &"q3",
+			"grounded": false,
+			"just_took_off": true,
+			"horizontal_speed": 5.0,
+			"vertical_speed": 5.0,
+			"takeoff_vertical_speed": 6.0,
+			"velocity": Vector3.UP * 5.0,
+		}),
+		VisualControllerScript.ANIM_JUMP,
+		"q3 jump",
 	)
 	_expect_animation(
 		failures,
@@ -244,6 +260,19 @@ func _initialize() -> void:
 		_state({"mode": &"flight", "grounded": false, "just_entered_flight": true, "flapping": true}),
 		&"flight_flap",
 		"flight flap beats entry visual state",
+	)
+	_expect_visual_state(
+		failures,
+		visual,
+		_state({
+			"mode": &"q3",
+			"grounded": false,
+			"just_took_off": true,
+			"vertical_speed": 5.0,
+			"takeoff_vertical_speed": 6.0,
+		}),
+		&"jump",
+		"q3 jump visual state",
 	)
 	_expect_visual_state(
 		failures,
@@ -979,6 +1008,95 @@ func _expect_slide_animation_selection(failures: Array[String]) -> void:
 	)
 	if fallback_slide != VisualControllerScript.ANIM_RUN_FAST:
 		failures.append("missing slide pose selected %s, expected fallback run fast" % fallback_slide)
+
+	visual.free()
+	fallback_visual.free()
+
+
+func _expect_jump_animation_selection(failures: Array[String]) -> void:
+	var visual := VisualControllerScript.new()
+	var player := AnimationPlayer.new()
+	visual.animation_player = player
+	visual.add_child(player)
+	var library := AnimationLibrary.new()
+	library.add_animation(VisualControllerScript.ANIM_JUMP, Animation.new())
+	library.add_animation(VisualControllerScript.ANIM_RUN_SLOW, Animation.new())
+	player.add_animation_library(&"", library)
+
+	var jump := visual._animation_for_state(
+		_state({
+			"mode": &"q3",
+			"grounded": false,
+			"just_took_off": true,
+			"horizontal_speed": 5.0,
+			"vertical_speed": 5.0,
+			"takeoff_vertical_speed": 6.0,
+		}),
+		true,
+	)
+	if jump != VisualControllerScript.ANIM_JUMP:
+		failures.append("jump takeoff selected %s, expected jump" % jump)
+
+	var sustained_jump := visual._animation_for_state(
+		_state({
+			"mode": &"q3",
+			"grounded": false,
+			"horizontal_speed": 8.0,
+			"vertical_speed": 3.0,
+			"takeoff_vertical_speed": 6.0,
+		}),
+		true,
+	)
+	if sustained_jump != VisualControllerScript.ANIM_JUMP:
+		failures.append("sustained autojump selected %s, expected jump" % sustained_jump)
+
+	player.play(VisualControllerScript.ANIM_JUMP)
+	var held_jump := visual._animation_for_state(
+		_state({
+			"mode": &"q3",
+			"grounded": false,
+			"horizontal_speed": 5.0,
+			"vertical_speed": 2.0,
+		}),
+		true,
+	)
+	if held_jump != VisualControllerScript.ANIM_JUMP:
+		failures.append("upward jump hold selected %s, expected jump" % held_jump)
+
+	var descent := visual._animation_for_state(
+		_state({
+			"mode": &"q3",
+			"grounded": false,
+			"falling": true,
+			"horizontal_speed": 5.0,
+			"vertical_speed": -1.0,
+			"ground_distance": 0.8,
+		}),
+		true,
+	)
+	if descent != VisualControllerScript.ANIM_RUN_SLOW:
+		failures.append("jump descent selected %s, expected run slow" % descent)
+
+	var fallback_visual := VisualControllerScript.new()
+	var fallback_player := AnimationPlayer.new()
+	fallback_visual.animation_player = fallback_player
+	fallback_visual.add_child(fallback_player)
+	var fallback_library := AnimationLibrary.new()
+	fallback_library.add_animation(VisualControllerScript.ANIM_RUN_SLOW, Animation.new())
+	fallback_player.add_animation_library(&"", fallback_library)
+	var fallback_jump := fallback_visual._animation_for_state(
+		_state({
+			"mode": &"q3",
+			"grounded": false,
+			"just_took_off": true,
+			"horizontal_speed": 5.0,
+			"vertical_speed": 5.0,
+			"takeoff_vertical_speed": 6.0,
+		}),
+		true,
+	)
+	if fallback_jump != VisualControllerScript.ANIM_RUN_SLOW:
+		failures.append("missing jump selected %s, expected fallback run slow" % fallback_jump)
 
 	visual.free()
 	fallback_visual.free()
