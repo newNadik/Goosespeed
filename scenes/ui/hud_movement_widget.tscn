@@ -50,9 +50,9 @@ script = ExtResource("2_speedometer")
 
 [node name="SpeedLabel" type="Label" parent="." unique_id=1616296828]
 layout_mode = 1
-offset_left = 100.0
+offset_left = 106.0
 offset_top = 135.0
-offset_right = 278.0
+offset_right = 284.0
 offset_bottom = 251.0
 theme_override_colors/font_color = Color(0.09411765, 0.18431373, 0.26666668, 1)
 theme_override_colors/font_outline_color = Color(0.94509804, 0.8745098, 0.7411765, 0.95)

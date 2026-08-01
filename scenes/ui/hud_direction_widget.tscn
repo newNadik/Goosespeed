@@ -2,6 +2,7 @@
 
 [ext_resource type="FontFile" uid="uid://bkdpp3abo73lr" path="res://assets/ui/fonts/Condor Medium Condensed.otf" id="1_font"]
 [ext_resource type="Texture2D" uid="uid://cy3g6fcux67d6" path="res://assets/ui/icons/ic_finish.png" id="2_finish_icon"]
+[ext_resource type="FontFile" uid="uid://w5x0f5kuolxq" path="res://assets/ui/fonts/Condor_Medium.otf" id="3_x0w3d"]
 
 [node name="HudDirectionWidget" type="Control" unique_id=1204915038]
 custom_minimum_size = Vector2(520, 84)
@@ -29,6 +30,13 @@ offset_right = 1368.0
 offset_bottom = 44.0
 mouse_filter = 2
 
+[node name="CompassLineShadow" type="ColorRect" parent="CompassClip/CompassStrip" unique_id=1270442277]
+layout_mode = 1
+offset_top = 30.0
+offset_right = 1368.0
+offset_bottom = 34.0
+color = Color(0.09411765, 0.18431373, 0.26666668, 0.55)
+
 [node name="CompassLine" type="ColorRect" parent="CompassClip/CompassStrip" unique_id=188056062]
 layout_mode = 1
 offset_top = 30.0
@@ -36,12 +44,27 @@ offset_right = 1368.0
 offset_bottom = 32.0
 color = Color(0.60784316, 0.7764706, 0.88235295, 0.92)
 
+[node name="Tick0Shadow" type="ColorRect" parent="CompassClip/CompassStrip" unique_id=1476832909]
+layout_mode = 1
+offset_top = 23.0
+offset_right = 4.0
+offset_bottom = 42.0
+color = Color(0.09411765, 0.18431373, 0.26666668, 0.58)
+
 [node name="Tick0" type="ColorRect" parent="CompassClip/CompassStrip" unique_id=327285199]
 layout_mode = 1
 offset_top = 22.0
 offset_right = 2.0
 offset_bottom = 40.0
 color = Color(0.60784316, 0.7764706, 0.88235295, 1)
+
+[node name="Tick1Shadow" type="ColorRect" parent="CompassClip/CompassStrip" unique_id=828180703]
+layout_mode = 1
+offset_left = 115.0
+offset_top = 23.0
+offset_right = 118.0
+offset_bottom = 42.0
+color = Color(0.09411765, 0.18431373, 0.26666668, 0.58)
 
 [node name="Tick1" type="ColorRect" parent="CompassClip/CompassStrip" unique_id=592257801]
 layout_mode = 1
@@ -51,6 +74,14 @@ offset_right = 116.0
 offset_bottom = 40.0
 color = Color(0.60784316, 0.7764706, 0.88235295, 0.92)
 
+[node name="Tick2Shadow" type="ColorRect" parent="CompassClip/CompassStrip" unique_id=491627076]
+layout_mode = 1
+offset_left = 229.0
+offset_top = 23.0
+offset_right = 232.0
+offset_bottom = 42.0
+color = Color(0.09411765, 0.18431373, 0.26666668, 0.58)
+
 [node name="Tick2" type="ColorRect" parent="CompassClip/CompassStrip" unique_id=241521519]
 layout_mode = 1
 offset_left = 228.0
@@ -58,6 +89,14 @@ offset_top = 22.0
 offset_right = 230.0
 offset_bottom = 40.0
 color = Color(0.60784316, 0.7764706, 0.88235295, 0.92)
+
+[node name="Tick3Shadow" type="ColorRect" parent="CompassClip/CompassStrip" unique_id=981273794]
+layout_mode = 1
+offset_left = 343.0
+offset_top = 23.0
+offset_right = 346.0
+offset_bottom = 42.0
+color = Color(0.09411765, 0.18431373, 0.26666668, 0.58)
 
 [node name="Tick3" type="ColorRect" parent="CompassClip/CompassStrip" unique_id=1495171421]
 layout_mode = 1
@@ -67,6 +106,14 @@ offset_right = 344.0
 offset_bottom = 40.0
 color = Color(0.60784316, 0.7764706, 0.88235295, 0.92)
 
+[node name="Tick4Shadow" type="ColorRect" parent="CompassClip/CompassStrip" unique_id=617324664]
+layout_mode = 1
+offset_left = 457.0
+offset_top = 23.0
+offset_right = 460.0
+offset_bottom = 42.0
+color = Color(0.09411765, 0.18431373, 0.26666668, 0.58)
+
 [node name="Tick4" type="ColorRect" parent="CompassClip/CompassStrip" unique_id=375244197]
 layout_mode = 1
 offset_left = 456.0
@@ -74,6 +121,14 @@ offset_top = 22.0
 offset_right = 458.0
 offset_bottom = 40.0
 color = Color(0.60784316, 0.7764706, 0.88235295, 1)
+
+[node name="Tick5Shadow" type="ColorRect" parent="CompassClip/CompassStrip" unique_id=515115938]
+layout_mode = 1
+offset_left = 571.0
+offset_top = 23.0
+offset_right = 574.0
+offset_bottom = 42.0
+color = Color(0.09411765, 0.18431373, 0.26666668, 0.58)
 
 [node name="Tick5" type="ColorRect" parent="CompassClip/CompassStrip" unique_id=2047494809]
 layout_mode = 1
@@ -83,6 +138,14 @@ offset_right = 572.0
 offset_bottom = 40.0
 color = Color(0.60784316, 0.7764706, 0.88235295, 0.92)
 
+[node name="Tick6Shadow" type="ColorRect" parent="CompassClip/CompassStrip" unique_id=213628867]
+layout_mode = 1
+offset_left = 685.0
+offset_top = 23.0
+offset_right = 688.0
+offset_bottom = 42.0
+color = Color(0.09411765, 0.18431373, 0.26666668, 0.58)
+
 [node name="Tick6" type="ColorRect" parent="CompassClip/CompassStrip" unique_id=116882362]
 layout_mode = 1
 offset_left = 684.0
@@ -91,6 +154,14 @@ offset_right = 686.0
 offset_bottom = 40.0
 color = Color(0.60784316, 0.7764706, 0.88235295, 0.92)
 
+[node name="Tick7Shadow" type="ColorRect" parent="CompassClip/CompassStrip" unique_id=1174779258]
+layout_mode = 1
+offset_left = 799.0
+offset_top = 23.0
+offset_right = 802.0
+offset_bottom = 42.0
+color = Color(0.09411765, 0.18431373, 0.26666668, 0.58)
+
 [node name="Tick7" type="ColorRect" parent="CompassClip/CompassStrip" unique_id=874865732]
 layout_mode = 1
 offset_left = 798.0
@@ -98,6 +169,14 @@ offset_top = 22.0
 offset_right = 800.0
 offset_bottom = 40.0
 color = Color(0.60784316, 0.7764706, 0.88235295, 0.92)
+
+[node name="Tick8Shadow" type="ColorRect" parent="CompassClip/CompassStrip" unique_id=1040605995]
+layout_mode = 1
+offset_left = 913.0
+offset_top = 23.0
+offset_right = 916.0
+offset_bottom = 42.0
+color = Color(0.09411765, 0.18431373, 0.26666668, 0.58)
 
 [node name="Tick8" type="ColorRect" parent="CompassClip/CompassStrip" unique_id=329577591]
 layout_mode = 1
@@ -242,8 +321,9 @@ offset_top = 50.0
 offset_right = 342.0
 offset_bottom = 84.0
 theme_override_colors/font_color = Color(0.60784316, 0.7764706, 0.88235295, 1)
-theme_override_colors/font_outline_color = Color(0.09411765, 0.18431373, 0.26666668, 0.95)
-theme_override_constants/outline_size = 4
+theme_override_colors/font_outline_color = Color(0.09411765, 0.18431373, 0.26666668, 1)
+theme_override_constants/outline_size = 5
+theme_override_fonts/font = ExtResource("3_x0w3d")
 theme_override_font_sizes/font_size = 24
-text = "FINISH 0m"
+text = "0m"
 horizontal_alignment = 1

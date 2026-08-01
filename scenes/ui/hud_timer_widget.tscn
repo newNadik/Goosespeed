@@ -1,7 +1,7 @@
-[gd_scene load_steps=3 format=3 uid="uid://bq12lxwjgwxye"]
+[gd_scene format=3 uid="uid://bq12lxwjgwxye"]
 
 [ext_resource type="Texture2D" uid="uid://dmo5o4dh1k6gw" path="res://assets/ui/icons/ic_timer.png" id="1_0mclp"]
-[ext_resource type="FontFile" path="res://assets/ui/fonts/Condor_Medium.otf" id="2_number_font"]
+[ext_resource type="FontFile" uid="uid://w5x0f5kuolxq" path="res://assets/ui/fonts/Condor_Medium.otf" id="2_number_font"]
 
 [node name="HudTimerWidget" type="Control" unique_id=95548818]
 custom_minimum_size = Vector2(300, 64)
@@ -40,4 +40,4 @@ offset_left = 15.0
 offset_top = 48.0
 offset_right = 165.0
 offset_bottom = 51.0
-color = Color(0.99607843, 0.46666667, 0.2627451, 1)
+color = Color(0.99607843, 0.46666667, 0.2627451, 0.6392157)
