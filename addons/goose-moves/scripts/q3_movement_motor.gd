@@ -73,6 +73,10 @@ const WARSOW_WALL_JUMP_PROBE_DIRECTIONS := 20
 const WARSOW_DASH_SPEED := 450.0 * Q3_METERS_PER_UNIT
 const WARSOW_DASH_UP_SPEED_THRESHOLD := 8.0 * Q3_METERS_PER_UNIT
 const DEBUG_COLOR_NET_ACCELERATION := Color(1.0, 0.55, 0.1)
+const THIRD_PERSON_AIRBORNE_CAMERA_LIFT := 0.35
+const THIRD_PERSON_LOW_CAMERA_PITCH_START := deg_to_rad(8.0)
+const THIRD_PERSON_LOW_CAMERA_PITCH_END := deg_to_rad(35.0)
+const THIRD_PERSON_MIN_SPRING_MARGIN := 0.25
 
 enum MovementMode {
 	VQ3,
@@ -299,6 +303,7 @@ func setup(
 	pitch = head.rotation.x
 	yaw = rotation.y
 	_ensure_camera_anchor()
+	_configure_third_person_spring_arm()
 	reset_camera_anchor_smoothing()
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
@@ -707,7 +712,9 @@ func _update_camera_anchor(delta: float, force_snap := false) -> void:
 		return
 	if not head.is_inside_tree() or not camera_anchor.is_inside_tree():
 		return
-	var target_position := head.global_position + (Vector3.UP * first_person_eye_height_offset)
+	var target_position := head.global_position + (
+		Vector3.UP * (first_person_eye_height_offset + _get_third_person_camera_lift())
+	)
 	if force_snap or not camera_anchor_initialized or not _should_smooth_camera_anchor():
 		smoothed_camera_anchor_y = target_position.y
 		camera_anchor_initialized = true
@@ -730,6 +737,27 @@ func _should_smooth_camera_anchor() -> bool:
 func _smooth_camera_anchor_y(current_y: float, target_y: float, delta: float) -> float:
 	var blend := 1.0 - exp(-maxf(camera_vertical_smoothness, 0.0) * delta)
 	return lerpf(current_y, target_y, blend)
+
+
+func _configure_third_person_spring_arm() -> void:
+	if third_person_spring_arm == null:
+		return
+	third_person_spring_arm.add_excluded_object(get_rid())
+	third_person_spring_arm.margin = maxf(
+		third_person_spring_arm.margin,
+		THIRD_PERSON_MIN_SPRING_MARGIN,
+	)
+
+
+func _get_third_person_camera_lift() -> float:
+	if not third_person_enabled or is_on_floor():
+		return 0.0
+	var low_camera_weight := smoothstep(
+		THIRD_PERSON_LOW_CAMERA_PITCH_START,
+		THIRD_PERSON_LOW_CAMERA_PITCH_END,
+		pitch,
+	)
+	return THIRD_PERSON_AIRBORNE_CAMERA_LIFT * low_camera_weight
 
 
 func set_character_size(value: Vector3) -> void:

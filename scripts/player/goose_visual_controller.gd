@@ -110,26 +110,33 @@ func _process(delta: float) -> void:
 	landing_hold_remaining = maxf(landing_hold_remaining - delta, 0.0)
 	run_fast_hold_remaining = maxf(run_fast_hold_remaining - delta, 0.0)
 	locomotion_hold_remaining = maxf(locomotion_hold_remaining - delta, 0.0)
-	_update_intended_movement_turn_state(delta)
-
-	global_position = _get_visual_position(delta)
-	if _uses_full_flight_orientation(latest_state):
-		global_basis = _get_flight_visual_target_basis_for_basis(_get_root_basis())
-	else:
-		var visual_facing_direction := _get_visual_facing_direction(latest_state)
-		if not visual_facing_direction.is_zero_approx():
-			var target_yaw := atan2(-visual_facing_direction.x, -visual_facing_direction.z)
-			global_rotation.y = lerp_angle(
-				global_rotation.y,
-				target_yaw,
-				minf(delta * _get_visual_turn_rate(latest_state), 1.0),
-			)
-			global_rotation.x = lerp_angle(global_rotation.x, 0.0, minf(delta * default_turn_rate, 1.0))
-			global_rotation.z = lerp_angle(global_rotation.z, 0.0, minf(delta * default_turn_rate, 1.0))
-
 	_update_animation()
 	_update_head_look(delta)
 	previous_grounded = latest_state.grounded
+
+
+func _physics_process(delta: float) -> void:
+	_update_intended_movement_turn_state(delta)
+	_sync_visual_transform(delta)
+
+
+func _sync_visual_transform(delta: float) -> void:
+	global_position = _get_visual_position(delta)
+	if _uses_full_flight_orientation(latest_state):
+		global_basis = _get_flight_visual_target_basis_for_basis(_get_root_basis())
+		return
+
+	var visual_facing_direction := _get_visual_facing_direction(latest_state)
+	if visual_facing_direction.is_zero_approx():
+		return
+	var target_yaw := atan2(-visual_facing_direction.x, -visual_facing_direction.z)
+	global_rotation.y = lerp_angle(
+		global_rotation.y,
+		target_yaw,
+		minf(delta * _get_visual_turn_rate(latest_state), 1.0),
+	)
+	global_rotation.x = lerp_angle(global_rotation.x, 0.0, minf(delta * default_turn_rate, 1.0))
+	global_rotation.z = lerp_angle(global_rotation.z, 0.0, minf(delta * default_turn_rate, 1.0))
 
 
 func _connect_bridge() -> void:
