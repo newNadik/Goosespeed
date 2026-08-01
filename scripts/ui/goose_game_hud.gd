@@ -21,8 +21,7 @@ const COMPASS_CENTER_N_X := 456.0
 @onready var speed_unit_label: Label = $Root/MovementWidget/SpeedUnitLabel
 @onready var speedometer_gauge: Control = $Root/MovementWidget/SpeedometerGauge
 @onready var flight_widget: Control = $Root/MovementWidget/FlightWidget
-@onready var flight_label: Label = $Root/MovementWidget/FlightWidget/FlightLabel
-@onready var flight_progress: ProgressBar = $Root/MovementWidget/FlightWidget/FlightProgress
+@onready var flap_cooldown_gauge: Control = $Root/MovementWidget/FlightWidget/FlapCooldownGauge
 @onready var vertical_speed_label: Label = $Root/MovementWidget/VerticalSpeedLabel
 @onready var vertical_arrow_label: Label = $Root/MovementWidget/VerticalArrowLabel
 @onready var acceleration_label: Label = $Root/MovementWidget/AccelerationLabel
@@ -87,7 +86,7 @@ func _on_settings_changed() -> void:
 	_update_labels()
 
 
-func _update_visibility() -> void:
+func _update_visibility(state: RefCounted = null) -> void:
 	var direction_visible := _hud_visible(GooseGameSettings.HUD_DIRECTION_TO_FINISH)
 	var timer_visible := _hud_visible(GooseGameSettings.HUD_TIMER)
 	var speed_visible := _hud_visible(GooseGameSettings.HUD_SPEED)
@@ -108,7 +107,7 @@ func _update_visibility() -> void:
 	speed_label.visible = speed_visible
 	speed_unit_label.visible = speed_visible
 	speedometer_gauge.visible = speed_visible
-	flight_widget.visible = flight_visible and _has_flight_widget_data()
+	flight_widget.visible = flight_visible and _should_show_flight_widget(state)
 
 	vertical_speed_label.visible = vertical_speed_visible
 	vertical_arrow_label.visible = vertical_speed_visible
@@ -130,13 +129,13 @@ func _update_visibility() -> void:
 
 func _update_labels() -> void:
 	var state := _get_movement_state()
-	_update_visibility()
+	_update_visibility(state)
 	_update_direction_marker(state)
 	speed_label.text = "%.1f" % state.horizontal_speed
 	if speedometer_gauge.has_method("set_speed"):
 		speedometer_gauge.set_speed(state.horizontal_speed)
 	timer_label.text = "%05.2fs %s" % [elapsed_time, " FINISH" if run_finished else ""]
-	_update_flight_widget()
+	_update_flight_widget(state)
 	vertical_speed_label.text = "%+.1f" % state.vertical_speed
 	vertical_arrow_label.text = "^" if state.vertical_speed >= 0.0 else "v"
 	acceleration_label.text = _acceleration_chevrons(acceleration)
@@ -229,22 +228,38 @@ func _world_bearing(direction: Vector3) -> float:
 	return atan2(direction.dot(Vector3.RIGHT), direction.dot(Vector3.FORWARD))
 
 
-func _update_flight_widget() -> void:
+func _update_flight_widget(state: RefCounted) -> void:
 	if not flight_widget.visible:
 		return
 	var flight_debug := _get_flight_debug_state()
 	var remaining := float(flight_debug.get("flap_cooldown_remaining", 0.0))
 	var cooldown := float(flight_debug.get("flap_cooldown", 0.0))
-	if cooldown <= 0.0:
+	if cooldown <= 0.0 or not _should_show_flight_widget(state):
 		flight_widget.visible = false
 		return
-	flight_progress.max_value = cooldown
-	flight_progress.value = cooldown - remaining
-	flight_label.text = "FLAP READY" if remaining <= 0.0 else "FLAP %.1fs" % remaining
+	if flap_cooldown_gauge.has_method("set_cooldown"):
+		flap_cooldown_gauge.set_cooldown(cooldown, remaining)
 
 
-func _has_flight_widget_data() -> bool:
-	return float(_get_flight_debug_state().get("flap_cooldown", 0.0)) > 0.0
+func _should_show_flight_widget(state: RefCounted = null) -> bool:
+	var flight_debug := _get_flight_debug_state()
+	var cooldown := float(flight_debug.get("flap_cooldown", 0.0))
+	var remaining := float(flight_debug.get("flap_cooldown_remaining", 0.0))
+	if cooldown <= 0.0:
+		return false
+	if remaining > 0.0:
+		return true
+	return _state_is_flight_relevant(state)
+
+
+func _state_is_flight_relevant(state: RefCounted) -> bool:
+	if state == null:
+		return false
+	return (
+		bool(state.get("flight_activation_charging"))
+		or bool(state.get("gliding"))
+		or bool(state.get("flapping"))
+	)
 
 
 func _get_flight_debug_state() -> Dictionary:

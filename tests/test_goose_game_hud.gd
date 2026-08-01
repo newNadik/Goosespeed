@@ -33,6 +33,19 @@ func _ready() -> void:
 		push_error("HUD speedometer gauge did not accept speed data")
 		get_tree().quit(1)
 		return
+	var flap_gauge := hud.get_node_or_null("Root/MovementWidget/FlightWidget/FlapCooldownGauge")
+	if flap_gauge == null or not flap_gauge.has_method("set_cooldown"):
+		push_error("HUD flap cooldown gauge is missing")
+		get_tree().quit(1)
+		return
+	flap_gauge.set_cooldown(2.0, 0.5)
+	if (
+		not is_equal_approx(float(flap_gauge.get("cooldown_duration")), 2.0)
+		or not is_equal_approx(float(flap_gauge.get("cooldown_remaining")), 0.5)
+	):
+		push_error("HUD flap cooldown gauge did not accept cooldown data")
+		get_tree().quit(1)
+		return
 	print("Goose game HUD OK")
 	get_tree().quit(0)
 
