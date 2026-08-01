@@ -24,7 +24,7 @@ const COMPASS_CENTER_N_X := 456.0
 @onready var flap_cooldown_gauge: Control = $Root/MovementWidget/FlightWidget/FlapCooldownGauge
 @onready var vertical_speed_label: Label = $Root/MovementWidget/VerticalSpeedLabel
 @onready var vertical_arrow_label: Label = $Root/MovementWidget/VerticalArrowLabel
-@onready var acceleration_label: Label = $Root/MovementWidget/AccelerationLabel
+@onready var acceleration_gauge: Control = $Root/MovementWidget/AccelerationGauge
 @onready var debug_panel: PanelContainer = $Root/DebugPanel
 @onready var state_label: Label = $Root/DebugPanel/Margin/VBox/StateLabel
 @onready var fps_label: Label = $Root/DebugPanel/Margin/VBox/FpsLabel
@@ -111,7 +111,7 @@ func _update_visibility(state: RefCounted = null) -> void:
 
 	vertical_speed_label.visible = vertical_speed_visible
 	vertical_arrow_label.visible = vertical_speed_visible
-	acceleration_label.visible = acceleration_visible
+	acceleration_gauge.visible = acceleration_visible
 	movement_panel.visible = (
 		speed_label.visible
 		or flight_widget.visible
@@ -138,7 +138,8 @@ func _update_labels() -> void:
 	_update_flight_widget(state)
 	vertical_speed_label.text = "%+.1f" % state.vertical_speed
 	vertical_arrow_label.text = "^" if state.vertical_speed >= 0.0 else "v"
-	acceleration_label.text = _acceleration_chevrons(acceleration)
+	if acceleration_gauge.has_method("set_acceleration"):
+		acceleration_gauge.set_acceleration(acceleration)
 	state_label.text = "State  %s" % _state_text(state)
 	fps_label.text = "FPS  %d" % Engine.get_frames_per_second()
 	raw_movement_label.text = "Raw  %.1f u/s  %.1f m/s  %.1f accel" % [
@@ -351,11 +352,6 @@ func _state_text(state: RefCounted) -> String:
 	if state.grounded:
 		return "ground"
 	return "air"
-
-
-func _acceleration_chevrons(value: float) -> String:
-	var active_count := clampi(int(round(value / 8.0)), 1, 5)
-	return ">".repeat(active_count)
 
 
 func _format_surface_flags(state: RefCounted) -> String:

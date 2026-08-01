@@ -46,6 +46,16 @@ func _ready() -> void:
 		push_error("HUD flap cooldown gauge did not accept cooldown data")
 		get_tree().quit(1)
 		return
+	var acceleration_gauge := hud.get_node_or_null("Root/MovementWidget/AccelerationGauge")
+	if acceleration_gauge == null or not acceleration_gauge.has_method("set_acceleration"):
+		push_error("HUD acceleration gauge is missing")
+		get_tree().quit(1)
+		return
+	acceleration_gauge.set_acceleration(16.0)
+	if not is_equal_approx(float(acceleration_gauge.get("current_acceleration")), 16.0):
+		push_error("HUD acceleration gauge did not accept acceleration data")
+		get_tree().quit(1)
+		return
 	print("Goose game HUD OK")
 	get_tree().quit(0)
 

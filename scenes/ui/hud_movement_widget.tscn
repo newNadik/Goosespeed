@@ -4,6 +4,7 @@
 [ext_resource type="Script" uid="uid://cyndx8ypbwbnm" path="res://scripts/ui/hud_speedometer_gauge.gd" id="2_speedometer"]
 [ext_resource type="FontFile" uid="uid://w5x0f5kuolxq" path="res://assets/ui/fonts/Condor_Medium.otf" id="3_number_font"]
 [ext_resource type="Script" path="res://scripts/ui/hud_flap_cooldown_gauge.gd" id="4_flap_gauge"]
+[ext_resource type="Script" path="res://scripts/ui/hud_acceleration_gauge.gd" id="5_acceleration_gauge"]
 
 [node name="HudMovementWidget" type="Control" unique_id=1909171421]
 custom_minimum_size = Vector2(460, 344)
@@ -96,16 +97,12 @@ theme_override_font_sizes/font_size = 34
 text = "^"
 horizontal_alignment = 1
 
-[node name="AccelerationLabel" type="Label" parent="." unique_id=1207346236]
+[node name="AccelerationGauge" type="Control" parent="."]
+custom_minimum_size = Vector2(152, 44)
 layout_mode = 1
 offset_left = 176.0
 offset_top = 286.0
-offset_right = 316.0
+offset_right = 328.0
 offset_bottom = 330.0
-theme_override_colors/font_color = Color(0.99607843, 0.46666667, 0.2627451, 1)
-theme_override_colors/font_outline_color = Color(0.94509804, 0.8745098, 0.7411765, 0.95)
-theme_override_constants/outline_size = 4
-theme_override_fonts/font = ExtResource("1_font")
-theme_override_font_sizes/font_size = 34
-text = ">>>>"
-horizontal_alignment = 1
+mouse_filter = 2
+script = ExtResource("5_acceleration_gauge")
