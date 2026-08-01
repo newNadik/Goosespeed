@@ -24,4 +24,4 @@ func _draw() -> void:
 
 	draw_arc(center, radius, 0.0, TAU, 48, bg_color, width, true)
 	if ready_ratio > 0.0:
-		draw_arc(center, radius, -PI * 0.5, -PI * 0.5 + TAU * ready_ratio, 48, fill_color, width, true)
+		draw_arc(center, radius, -PI * 0.5, -PI * 0.5 - TAU * ready_ratio, 48, fill_color, width, true)

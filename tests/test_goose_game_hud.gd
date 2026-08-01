@@ -56,6 +56,16 @@ func _ready() -> void:
 		push_error("HUD acceleration gauge did not accept acceleration data")
 		get_tree().quit(1)
 		return
+	var vertical_gauge := hud.get_node_or_null("Root/MovementWidget/VerticalSpeedGauge")
+	if vertical_gauge == null or not vertical_gauge.has_method("set_vertical_speed"):
+		push_error("HUD vertical speed gauge is missing")
+		get_tree().quit(1)
+		return
+	vertical_gauge.set_vertical_speed(-3.5)
+	if not is_equal_approx(float(vertical_gauge.get("current_vertical_speed")), -3.5):
+		push_error("HUD vertical speed gauge did not accept vertical speed data")
+		get_tree().quit(1)
+		return
 	print("Goose game HUD OK")
 	get_tree().quit(0)
 

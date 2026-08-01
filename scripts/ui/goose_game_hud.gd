@@ -22,8 +22,7 @@ const COMPASS_CENTER_N_X := 456.0
 @onready var speedometer_gauge: Control = $Root/MovementWidget/SpeedometerGauge
 @onready var flight_widget: Control = $Root/MovementWidget/FlightWidget
 @onready var flap_cooldown_gauge: Control = $Root/MovementWidget/FlightWidget/FlapCooldownGauge
-@onready var vertical_speed_label: Label = $Root/MovementWidget/VerticalSpeedLabel
-@onready var vertical_arrow_label: Label = $Root/MovementWidget/VerticalArrowLabel
+@onready var vertical_speed_gauge: Control = $Root/MovementWidget/VerticalSpeedGauge
 @onready var acceleration_gauge: Control = $Root/MovementWidget/AccelerationGauge
 @onready var debug_panel: PanelContainer = $Root/DebugPanel
 @onready var state_label: Label = $Root/DebugPanel/Margin/VBox/StateLabel
@@ -109,13 +108,13 @@ func _update_visibility(state: RefCounted = null) -> void:
 	speedometer_gauge.visible = speed_visible
 	flight_widget.visible = flight_visible and _should_show_flight_widget(state)
 
-	vertical_speed_label.visible = vertical_speed_visible
-	vertical_arrow_label.visible = vertical_speed_visible
+	var vertical_visible := vertical_speed_visible and _should_show_vertical_speed_widget(state)
+	vertical_speed_gauge.visible = vertical_visible
 	acceleration_gauge.visible = acceleration_visible
 	movement_panel.visible = (
 		speed_label.visible
 		or flight_widget.visible
-		or vertical_speed_visible
+		or vertical_visible
 		or acceleration_visible
 	)
 
@@ -136,8 +135,8 @@ func _update_labels() -> void:
 		speedometer_gauge.set_speed(state.horizontal_speed)
 	timer_label.text = "%05.2fs %s" % [elapsed_time, " FINISH" if run_finished else ""]
 	_update_flight_widget(state)
-	vertical_speed_label.text = "%+.1f" % state.vertical_speed
-	vertical_arrow_label.text = "^" if state.vertical_speed >= 0.0 else "v"
+	if vertical_speed_gauge.has_method("set_vertical_speed"):
+		vertical_speed_gauge.set_vertical_speed(state.vertical_speed)
 	if acceleration_gauge.has_method("set_acceleration"):
 		acceleration_gauge.set_acceleration(acceleration)
 	state_label.text = "State  %s" % _state_text(state)
@@ -260,6 +259,16 @@ func _state_is_flight_relevant(state: RefCounted) -> bool:
 		bool(state.get("flight_activation_charging"))
 		or bool(state.get("gliding"))
 		or bool(state.get("flapping"))
+	)
+
+
+func _should_show_vertical_speed_widget(state: RefCounted) -> bool:
+	if state == null:
+		return false
+	return (
+		bool(state.get("gliding"))
+		or bool(state.get("flapping"))
+		or bool(state.get("flight_activation_charging"))
 	)
 
 

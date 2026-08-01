@@ -262,11 +262,11 @@ func _build_hud_tab() -> void:
 	_add_hud_group([
 		[GooseGameSettings.HUD_DIRECTION_TO_FINISH, "Direction to finish"],
 		[GooseGameSettings.HUD_TIMER, "Timer"],
-		[GooseGameSettings.HUD_SPEED, "Speed"],
-		[GooseGameSettings.HUD_FLIGHT_WIDGET, "Flight widget"],
 	])
 	content_box.add_child(_create_group_title("Detailed"))
 	_add_hud_group([
+		[GooseGameSettings.HUD_SPEED, "Speed"],
+		[GooseGameSettings.HUD_FLIGHT_WIDGET, "Flight widget"],
 		[GooseGameSettings.HUD_VERTICAL_SPEED, "Vertical speed"],
 		[GooseGameSettings.HUD_ACCELERATION, "Acceleration"],
 	])
