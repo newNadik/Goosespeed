@@ -5,6 +5,8 @@ const MovementStateScript := preload("res://scripts/player/movement_state.gd")
 const HeadLookControllerScript := preload("res://scripts/player/goose_head_look_controller.gd")
 
 const ANIM_JUMP := &"Goose|A A_Jump"
+const ANIM_JUMP_2 := &"Goose|A A_Jump_2"
+const ANIM_JUMP_3 := &"Goose|A A_Jump_3"
 const ANIM_IDLE := &"Goose|A A_StandStraight_Idle1"
 const ANIM_IDLE_ALT := &"Goose|A_StandStraight_Breathing"
 const ANIM_WALK_SLOW := &"Goose|A_WalkSlow"
@@ -80,6 +82,8 @@ var active_locomotion_animation: StringName = &""
 var run_fast_hold_remaining := 0.0
 var locomotion_hold_remaining := 0.0
 var jump_visual_hold_remaining := 0.0
+var jump_sequence_index := 0
+var jump_takeoff_was_consumed := false
 var intended_movement_time := 0.0
 var tracked_intended_movement_direction := Vector3.ZERO
 var head_look_controller: Node
@@ -361,7 +365,7 @@ func _animation_for_state(state: RefCounted, use_ground_stability: bool) -> Stri
 	if _should_use_jump_animation(state):
 		if use_ground_stability:
 			_clear_ground_locomotion()
-		return _first_available([ANIM_JUMP, _ground_animation_for_speed(state.horizontal_speed)])
+		return _first_available([_get_jump_animation(state), ANIM_JUMP, _ground_animation_for_speed(state.horizontal_speed)])
 
 	if not state.grounded:
 		if use_ground_stability:
@@ -453,10 +457,17 @@ func _should_use_jump_animation(state: RefCounted) -> bool:
 func _update_jump_visual_state(delta: float) -> void:
 	if latest_state.mode == &"flight" or latest_state.swimming or not latest_state.jump_held:
 		jump_visual_hold_remaining = 0.0
+		if not latest_state.jump_held:
+			jump_sequence_index = 0
+		jump_takeoff_was_consumed = false
 		return
 	if latest_state.just_took_off and latest_state.takeoff_vertical_speed > 0.1:
+		if not jump_takeoff_was_consumed:
+			_advance_jump_sequence()
+			jump_takeoff_was_consumed = true
 		jump_visual_hold_remaining = jump_autohop_hold_time
 		return
+	jump_takeoff_was_consumed = false
 	if (
 		not latest_state.grounded
 		and latest_state.takeoff_vertical_speed > 0.1
@@ -533,7 +544,7 @@ func _configure_animation_player() -> void:
 	for animation_name in LOOPING_ANIMATIONS:
 		if animation_player.has_animation(animation_name):
 			animation_player.get_animation(animation_name).loop_mode = Animation.LOOP_LINEAR
-	for animation_name in [ANIM_JUMP, ANIM_PRE_LAND, ANIM_TAKEOFF_BOUNCE, ANIM_SWIM_DIVE, ANIM_SWIM_TAKEOFF]:
+	for animation_name in [ANIM_JUMP, ANIM_JUMP_2, ANIM_JUMP_3, ANIM_PRE_LAND, ANIM_TAKEOFF_BOUNCE, ANIM_SWIM_DIVE, ANIM_SWIM_TAKEOFF]:
 		if animation_player.has_animation(animation_name):
 			animation_player.get_animation(animation_name).loop_mode = Animation.LOOP_NONE
 	if animation_player.has_animation(ANIM_LAND):
@@ -616,7 +627,7 @@ func _blend_time_for_animation(animation_name: StringName) -> float:
 		return maxf(flight_exit_blend_time, animation_blend_time)
 	if _is_jump_exit_locomotion_blend(animation_name):
 		return maxf(jump_exit_blend_time, animation_blend_time)
-	if animation_name == ANIM_JUMP:
+	if _is_jump_animation_name(animation_name):
 		return minf(jump_blend_time, animation_blend_time)
 	if animation_name == ANIM_RUN_FAST:
 		return minf(run_fast_blend_time, animation_blend_time)
@@ -637,15 +648,15 @@ func _is_flight_exit_locomotion_blend(next_animation: StringName) -> bool:
 func _is_jump_exit_locomotion_blend(next_animation: StringName) -> bool:
 	return (
 		animation_player != null
-		and animation_player.current_animation == ANIM_JUMP
+		and _is_jump_animation_name(animation_player.current_animation)
 		and _is_ground_locomotion(next_animation)
 	)
 
 
 func _configure_runtime_animation_loop(animation_name: StringName) -> void:
-	if animation_name != ANIM_JUMP or not animation_player.has_animation(ANIM_JUMP):
+	if not _is_jump_animation_name(animation_name) or not animation_player.has_animation(animation_name):
 		return
-	var animation := animation_player.get_animation(ANIM_JUMP)
+	var animation := animation_player.get_animation(animation_name)
 	animation.loop_mode = (
 		Animation.LOOP_LINEAR
 		if _jump_should_loop(latest_state)
@@ -659,6 +670,25 @@ func _jump_should_loop(state: RefCounted) -> bool:
 		and jump_visual_hold_remaining > 0.0
 		and state.takeoff_vertical_speed > 0.1
 	)
+
+
+func _get_jump_animation(state: RefCounted) -> StringName:
+	if not state.jump_held:
+		return ANIM_JUMP
+	if jump_sequence_index <= 1:
+		return ANIM_JUMP
+	return ANIM_JUMP_2 if jump_sequence_index % 2 == 0 else ANIM_JUMP_3
+
+
+func _advance_jump_sequence() -> void:
+	if latest_state.jump_held:
+		jump_sequence_index += 1
+	else:
+		jump_sequence_index = 1
+
+
+func _is_jump_animation_name(animation_name: StringName) -> bool:
+	return animation_name in [ANIM_JUMP, ANIM_JUMP_2, ANIM_JUMP_3]
 
 
 func _is_flight_animation(animation_name: StringName) -> bool:

@@ -1020,6 +1020,8 @@ func _expect_jump_animation_selection(failures: Array[String]) -> void:
 	visual.add_child(player)
 	var library := AnimationLibrary.new()
 	library.add_animation(VisualControllerScript.ANIM_JUMP, Animation.new())
+	library.add_animation(VisualControllerScript.ANIM_JUMP_2, Animation.new())
+	library.add_animation(VisualControllerScript.ANIM_JUMP_3, Animation.new())
 	library.add_animation(VisualControllerScript.ANIM_RUN_SLOW, Animation.new())
 	player.add_animation_library(&"", library)
 
@@ -1038,6 +1040,7 @@ func _expect_jump_animation_selection(failures: Array[String]) -> void:
 		failures.append("jump takeoff selected %s, expected jump" % jump)
 
 	visual.jump_visual_hold_remaining = visual.jump_autohop_hold_time
+	visual.jump_sequence_index = 2
 	var sustained_jump := visual._animation_for_state(
 		_state({
 			"mode": &"q3",
@@ -1049,8 +1052,8 @@ func _expect_jump_animation_selection(failures: Array[String]) -> void:
 		}),
 		true,
 	)
-	if sustained_jump != VisualControllerScript.ANIM_JUMP:
-		failures.append("sustained autojump selected %s, expected jump" % sustained_jump)
+	if sustained_jump != VisualControllerScript.ANIM_JUMP_2:
+		failures.append("sustained autojump selected %s, expected jump 2" % sustained_jump)
 
 	player.play(VisualControllerScript.ANIM_JUMP)
 	var held_jump := visual._animation_for_state(
@@ -1135,5 +1138,79 @@ func _expect_jump_animation_selection(failures: Array[String]) -> void:
 	if fallback_jump != VisualControllerScript.ANIM_RUN_SLOW:
 		failures.append("missing jump selected %s, expected fallback run slow" % fallback_jump)
 
+	_expect_jump_sequence(failures)
+
 	visual.free()
 	fallback_visual.free()
+
+
+func _expect_jump_sequence(failures: Array[String]) -> void:
+	var visual := VisualControllerScript.new()
+	var player := AnimationPlayer.new()
+	visual.animation_player = player
+	visual.add_child(player)
+	var library := AnimationLibrary.new()
+	library.add_animation(VisualControllerScript.ANIM_JUMP, Animation.new())
+	library.add_animation(VisualControllerScript.ANIM_JUMP_2, Animation.new())
+	library.add_animation(VisualControllerScript.ANIM_JUMP_3, Animation.new())
+	player.add_animation_library(&"", library)
+
+	_expect_jump_sequence_step(failures, visual, VisualControllerScript.ANIM_JUMP, "first held jump")
+	_expect_jump_sequence_step(failures, visual, VisualControllerScript.ANIM_JUMP_2, "second held jump")
+	_expect_jump_sequence_step(failures, visual, VisualControllerScript.ANIM_JUMP_3, "third held jump")
+	_expect_jump_sequence_step(failures, visual, VisualControllerScript.ANIM_JUMP_2, "fourth held jump")
+	_expect_jump_sequence_step(failures, visual, VisualControllerScript.ANIM_JUMP_3, "fifth held jump")
+
+	visual.latest_state = _state({"mode": &"q3", "grounded": true, "jump_held": false})
+	visual._update_jump_visual_state(0.016)
+	_expect_jump_sequence_step(failures, visual, VisualControllerScript.ANIM_JUMP, "released jump reset")
+
+	var fallback_visual := VisualControllerScript.new()
+	var fallback_player := AnimationPlayer.new()
+	fallback_visual.animation_player = fallback_player
+	fallback_visual.add_child(fallback_player)
+	var fallback_library := AnimationLibrary.new()
+	fallback_library.add_animation(VisualControllerScript.ANIM_JUMP, Animation.new())
+	fallback_library.add_animation(VisualControllerScript.ANIM_RUN_SLOW, Animation.new())
+	fallback_player.add_animation_library(&"", fallback_library)
+	fallback_visual.jump_sequence_index = 2
+	fallback_visual.jump_visual_hold_remaining = fallback_visual.jump_autohop_hold_time
+	var fallback := fallback_visual._animation_for_state(
+		_state({
+			"mode": &"q3",
+			"grounded": false,
+			"jump_held": true,
+			"horizontal_speed": 5.0,
+			"vertical_speed": 3.0,
+			"takeoff_vertical_speed": 6.0,
+		}),
+		true,
+	)
+	if fallback != VisualControllerScript.ANIM_JUMP:
+		failures.append("missing jump variants selected %s, expected base jump fallback" % fallback)
+
+	visual.free()
+	fallback_visual.free()
+
+
+func _expect_jump_sequence_step(
+	failures: Array[String],
+	visual: Node,
+	expected: StringName,
+	label: String
+) -> void:
+	visual.latest_state = _state({
+		"mode": &"q3",
+		"grounded": false,
+		"jump_held": true,
+		"just_took_off": true,
+		"horizontal_speed": 5.0,
+		"vertical_speed": 5.0,
+		"takeoff_vertical_speed": 6.0,
+	})
+	visual._update_jump_visual_state(0.016)
+	var actual: StringName = visual._animation_for_state(visual.latest_state, true)
+	if actual != expected:
+		failures.append("%s selected %s, expected %s" % [label, actual, expected])
+	visual.latest_state.just_took_off = false
+	visual._update_jump_visual_state(0.016)
