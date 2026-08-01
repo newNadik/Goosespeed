@@ -15,7 +15,7 @@ const COMPASS_CENTER_N_X := 456.0
 @onready var state_details_panel: PanelContainer = $Root/StateDetailsPanel
 @onready var state_details_label: RichTextLabel = $Root/StateDetailsPanel/Margin/StateDetailsLabel
 @onready var timer_panel: Control = $Root/TimerWidget
-@onready var timer_label: Label = $Root/TimerWidget/TimerLabel
+@onready var timer_label: Label = $Root/TimerWidget/HBoxContainer/TimerLabel
 @onready var movement_panel: Control = $Root/MovementWidget
 @onready var speed_label: Label = $Root/MovementWidget/SpeedLabel
 @onready var speed_unit_label: Label = $Root/MovementWidget/SpeedUnitLabel
@@ -140,7 +140,7 @@ func _update_labels() -> void:
 	_update_visibility()
 	_update_direction_marker(state)
 	speed_label.text = "%.1f" % state.horizontal_speed
-	timer_label.text = "RUN %05.2f%s" % [elapsed_time, " FINISH" if run_finished else ""]
+	timer_label.text = "%05.2fs %s" % [elapsed_time, " FINISH" if run_finished else ""]
 	_update_flight_widget()
 	vertical_speed_label.text = "%+.1f" % state.vertical_speed
 	vertical_arrow_label.text = "^" if state.vertical_speed >= 0.0 else "v"
@@ -200,7 +200,7 @@ func _update_direction_marker(state: RefCounted) -> void:
 	var target_heading := _world_bearing(target_delta)
 	_roll_compass_strip(camera_heading)
 	_update_finish_icon_position(target_heading, camera_heading)
-	direction_label.text = "FINISH %dm" % int(round(active_controller.global_position.distance_to(target_position)))
+	direction_label.text = "%dm" % int(round(active_controller.global_position.distance_to(target_position)))
 
 
 func _roll_compass_strip(signed_angle: float) -> void:
