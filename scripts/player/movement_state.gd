@@ -23,6 +23,7 @@ var falling := false
 var ground_distance := INF
 var wall_contact := false
 var ceiling_contact := false
+var jump_held := false
 var flight_activation_charging := false
 var flight_activation_charge := 0.0
 var flight_activation_threshold := 0.0
@@ -74,6 +75,7 @@ func copy_from(other) -> void:
 	ground_distance = float(_read(other, "ground_distance", ground_distance))
 	wall_contact = bool(_read(other, "wall_contact", wall_contact))
 	ceiling_contact = bool(_read(other, "ceiling_contact", ceiling_contact))
+	jump_held = bool(_read(other, "jump_held", jump_held))
 	flight_activation_charging = bool(_read(other, "flight_activation_charging", flight_activation_charging))
 	flight_activation_charge = float(_read(other, "flight_activation_charge", flight_activation_charge))
 	flight_activation_threshold = float(_read(other, "flight_activation_threshold", flight_activation_threshold))

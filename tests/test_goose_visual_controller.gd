@@ -1037,10 +1037,12 @@ func _expect_jump_animation_selection(failures: Array[String]) -> void:
 	if jump != VisualControllerScript.ANIM_JUMP:
 		failures.append("jump takeoff selected %s, expected jump" % jump)
 
+	visual.jump_visual_hold_remaining = visual.jump_autohop_hold_time
 	var sustained_jump := visual._animation_for_state(
 		_state({
 			"mode": &"q3",
 			"grounded": false,
+			"jump_held": true,
 			"horizontal_speed": 8.0,
 			"vertical_speed": 3.0,
 			"takeoff_vertical_speed": 6.0,
@@ -1062,6 +1064,41 @@ func _expect_jump_animation_selection(failures: Array[String]) -> void:
 	)
 	if held_jump != VisualControllerScript.ANIM_JUMP:
 		failures.append("upward jump hold selected %s, expected jump" % held_jump)
+
+	visual.jump_visual_hold_remaining = visual.jump_autohop_hold_time
+	visual.latest_state = _state({
+		"mode": &"q3",
+		"grounded": false,
+		"jump_held": true,
+		"vertical_speed": 2.0,
+		"takeoff_vertical_speed": 6.0,
+	})
+	visual._play_animation(VisualControllerScript.ANIM_JUMP, 1.0)
+	if player.get_animation(VisualControllerScript.ANIM_JUMP).loop_mode != Animation.LOOP_LINEAR:
+		failures.append("held autojump should loop jump animation")
+
+	visual.jump_visual_hold_remaining = 0.0
+	visual.latest_state = _state({
+		"mode": &"q3",
+		"grounded": false,
+		"jump_held": false,
+		"vertical_speed": 2.0,
+		"takeoff_vertical_speed": 6.0,
+	})
+	visual._play_animation(VisualControllerScript.ANIM_JUMP, 1.0)
+	if player.get_animation(VisualControllerScript.ANIM_JUMP).loop_mode != Animation.LOOP_NONE:
+		failures.append("single jump should stay non-looping")
+
+	var jump_blend := visual._blend_time_for_animation(VisualControllerScript.ANIM_JUMP)
+	if absf(jump_blend - visual.jump_blend_time) > 0.001:
+		failures.append("jump blend %.3f should use configured %.3f" % [jump_blend, visual.jump_blend_time])
+	player.play(VisualControllerScript.ANIM_JUMP)
+	var jump_exit_blend := visual._blend_time_for_animation(VisualControllerScript.ANIM_RUN_SLOW)
+	if absf(jump_exit_blend - visual.jump_exit_blend_time) > 0.001:
+		failures.append("jump exit blend %.3f should use configured %.3f" % [
+			jump_exit_blend,
+			visual.jump_exit_blend_time,
+		])
 
 	var descent := visual._animation_for_state(
 		_state({

@@ -370,6 +370,7 @@ func get_movement_state() -> Dictionary:
 		"sliding": is_crouch_sliding or slick_sliding,
 		"wall_contact": is_on_wall(),
 		"ceiling_contact": is_on_ceiling(),
+		"jump_held": Input.is_action_pressed(&"player_jump"),
 	})
 
 

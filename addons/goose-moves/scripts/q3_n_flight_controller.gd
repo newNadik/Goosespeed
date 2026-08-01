@@ -430,6 +430,7 @@ func _get_movement_state_snapshot() -> Dictionary:
 		"sliding": q3_motor.is_crouch_sliding or slick_sliding,
 		"wall_contact": is_on_wall(),
 		"ceiling_contact": is_on_ceiling(),
+		"jump_held": Input.is_action_pressed(&"player_jump"),
 		"flight_activation_charging": mode == Mode.Q3 and flap_hold_time > 0.0,
 		"flight_activation_charge": flap_hold_time,
 		"flight_activation_threshold": flight_hold_threshold,

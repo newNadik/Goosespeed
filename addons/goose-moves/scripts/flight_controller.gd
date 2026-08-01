@@ -291,6 +291,7 @@ func get_movement_state() -> Dictionary:
 		"grounded": is_on_floor(),
 		"wall_contact": is_on_wall(),
 		"ceiling_contact": is_on_ceiling(),
+		"jump_held": Input.is_action_pressed(&"player_jump"),
 		"gliding": true,
 	})
 

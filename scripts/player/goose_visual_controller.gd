@@ -55,6 +55,9 @@ const LOOPING_ANIMATIONS := [
 @export var locomotion_blend_time := 0.08
 @export var run_fast_blend_time := 0.05
 @export var flight_exit_blend_time := 0.4
+@export var jump_blend_time := 0.1
+@export var jump_exit_blend_time := 0.22
+@export var jump_autohop_hold_time := 0.24
 @export var landing_hold_time := 0.22
 @export var prelanding_ground_distance := 2.5
 @export_range(0.0, 1.0, 0.05) var takeoff_runup_charge_ratio := 0.7
@@ -76,6 +79,7 @@ var landing_hold_remaining := 0.0
 var active_locomotion_animation: StringName = &""
 var run_fast_hold_remaining := 0.0
 var locomotion_hold_remaining := 0.0
+var jump_visual_hold_remaining := 0.0
 var intended_movement_time := 0.0
 var tracked_intended_movement_direction := Vector3.ZERO
 var head_look_controller: Node
@@ -111,6 +115,7 @@ func _process(delta: float) -> void:
 	landing_hold_remaining = maxf(landing_hold_remaining - delta, 0.0)
 	run_fast_hold_remaining = maxf(run_fast_hold_remaining - delta, 0.0)
 	locomotion_hold_remaining = maxf(locomotion_hold_remaining - delta, 0.0)
+	_update_jump_visual_state(delta)
 	_update_animation()
 	_update_head_look(delta)
 	previous_grounded = latest_state.grounded
@@ -300,11 +305,11 @@ func visual_state_for_state(state: RefCounted) -> StringName:
 		if state.horizontal_speed >= _walk_medium_speed():
 			return &"swim"
 		return &"swim_idle"
+	if _should_use_jump_animation(state):
+		return &"jump"
 	if not state.grounded:
 		if state.just_entered_flight:
 			return &"takeoff"
-		if _should_use_jump_animation(state):
-			return &"jump"
 		return _ground_visual_state_for_speed(state.horizontal_speed)
 	if state.crouch_sliding or state.sliding:
 		return &"slide"
@@ -353,13 +358,16 @@ func _animation_for_state(state: RefCounted, use_ground_stability: bool) -> Stri
 			return _first_available([ANIM_SWIM_MEDIUM, ANIM_SWIM_MOVE])
 		return _first_available([ANIM_SWIM_STEADY, ANIM_SWIM_MOVE])
 
+	if _should_use_jump_animation(state):
+		if use_ground_stability:
+			_clear_ground_locomotion()
+		return _first_available([ANIM_JUMP, _ground_animation_for_speed(state.horizontal_speed)])
+
 	if not state.grounded:
 		if use_ground_stability:
 			_clear_ground_locomotion()
 		if state.just_entered_flight:
 			return _first_available([ANIM_TAKEOFF_BOUNCE, ANIM_FLY_GLIDE])
-		if _should_use_jump_animation(state):
-			return _first_available([ANIM_JUMP, _ground_animation_for_speed(state.horizontal_speed)])
 		return _ground_animation_for_speed(state.horizontal_speed)
 
 	if state.crouch_sliding or state.sliding:
@@ -422,22 +430,41 @@ func _should_use_prelanding_animation(state: RefCounted) -> bool:
 func _should_use_jump_animation(state: RefCounted) -> bool:
 	if (
 		state.mode == &"flight"
-		or state.grounded
 		or state.swimming
-		or state.falling
-		or state.vertical_speed <= 0.1
 	):
 		return false
 	if state.just_took_off and state.takeoff_vertical_speed > 0.1:
 		return true
+	if (
+		state.jump_held
+		and jump_visual_hold_remaining > 0.0
+		and state.takeoff_vertical_speed > 0.1
+	):
+		return true
+	if state.grounded or state.falling or state.vertical_speed <= 0.1:
+		return false
 	return (
-		state.takeoff_vertical_speed > 0.1
-		or (
-			animation_player != null
-			and animation_player.current_animation == ANIM_JUMP
-			and animation_player.is_playing()
-		)
+		animation_player != null
+		and animation_player.current_animation == ANIM_JUMP
+		and animation_player.is_playing()
 	)
+
+
+func _update_jump_visual_state(delta: float) -> void:
+	if latest_state.mode == &"flight" or latest_state.swimming or not latest_state.jump_held:
+		jump_visual_hold_remaining = 0.0
+		return
+	if latest_state.just_took_off and latest_state.takeoff_vertical_speed > 0.1:
+		jump_visual_hold_remaining = jump_autohop_hold_time
+		return
+	if (
+		not latest_state.grounded
+		and latest_state.takeoff_vertical_speed > 0.1
+		and not _should_use_prelanding_animation(latest_state)
+	):
+		jump_visual_hold_remaining = jump_autohop_hold_time
+		return
+	jump_visual_hold_remaining = maxf(jump_visual_hold_remaining - delta, 0.0)
 
 
 func _should_use_flight_charge_animation(state: RefCounted) -> bool:
@@ -533,6 +560,7 @@ func _update_animation() -> void:
 
 func _play_animation(animation_name: StringName, speed_scale: float) -> void:
 	animation_player.speed_scale = speed_scale
+	_configure_runtime_animation_loop(animation_name)
 	if animation_player.current_animation == animation_name and animation_player.is_playing():
 		return
 	var preserve_locomotion_phase := _should_preserve_locomotion_phase(animation_name)
@@ -586,6 +614,10 @@ func _animation_speed_scale(animation_name: StringName) -> float:
 func _blend_time_for_animation(animation_name: StringName) -> float:
 	if _is_flight_exit_locomotion_blend(animation_name):
 		return maxf(flight_exit_blend_time, animation_blend_time)
+	if _is_jump_exit_locomotion_blend(animation_name):
+		return maxf(jump_exit_blend_time, animation_blend_time)
+	if animation_name == ANIM_JUMP:
+		return minf(jump_blend_time, animation_blend_time)
 	if animation_name == ANIM_RUN_FAST:
 		return minf(run_fast_blend_time, animation_blend_time)
 	if _is_ground_locomotion(animation_name):
@@ -599,6 +631,33 @@ func _is_flight_exit_locomotion_blend(next_animation: StringName) -> bool:
 		and latest_state.mode != &"flight"
 		and _is_flight_animation(animation_player.current_animation)
 		and _is_ground_locomotion(next_animation)
+	)
+
+
+func _is_jump_exit_locomotion_blend(next_animation: StringName) -> bool:
+	return (
+		animation_player != null
+		and animation_player.current_animation == ANIM_JUMP
+		and _is_ground_locomotion(next_animation)
+	)
+
+
+func _configure_runtime_animation_loop(animation_name: StringName) -> void:
+	if animation_name != ANIM_JUMP or not animation_player.has_animation(ANIM_JUMP):
+		return
+	var animation := animation_player.get_animation(ANIM_JUMP)
+	animation.loop_mode = (
+		Animation.LOOP_LINEAR
+		if _jump_should_loop(latest_state)
+		else Animation.LOOP_NONE
+	)
+
+
+func _jump_should_loop(state: RefCounted) -> bool:
+	return (
+		state.jump_held
+		and jump_visual_hold_remaining > 0.0
+		and state.takeoff_vertical_speed > 0.1
 	)
 
 

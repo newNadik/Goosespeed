@@ -72,6 +72,7 @@ func _capture_controller_state() -> RefCounted:
 	result.gliding = false
 	result.flapping = false
 	result.falling = not result.grounded and result.velocity.y < -0.2
+	result.jump_held = Input.is_action_pressed(&"player_jump")
 	var controller_surface = controller.get("current_surface")
 	result.surface_type = StringName(controller_surface) if controller_surface != null else &"default"
 	result.medium_type = &"water" if result.swimming else &"air"

@@ -202,6 +202,7 @@ func build_state(snapshot: Dictionary) -> Dictionary:
 		"sliding": bool(snapshot.get("sliding", false)),
 		"wall_contact": bool(snapshot.get("wall_contact", false)),
 		"ceiling_contact": bool(snapshot.get("ceiling_contact", false)),
+		"jump_held": bool(snapshot.get("jump_held", false)),
 		"flight_activation_charging": bool(snapshot.get("flight_activation_charging", false)),
 		"flight_activation_charge": float(snapshot.get("flight_activation_charge", 0.0)),
 		"flight_activation_threshold": float(snapshot.get("flight_activation_threshold", 0.0)),
