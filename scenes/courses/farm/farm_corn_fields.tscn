@@ -2,7 +2,7 @@
 
 [ext_resource type="ArrayMesh" uid="uid://c3fuac35qwd1o" path="res://assets/models/farm/corn.tres" id="1_2coab"]
 [ext_resource type="Script" uid="uid://d0afqm0oghbya" path="res://scripts/props/corn_multimesh_field.gd" id="2_igh77"]
-[ext_resource type="Material" path="res://themes/corn_wind_material.tres" id="3_cornwind"]
+[ext_resource type="Material" uid="uid://bdpa338e8xmah" path="res://themes/corn_wind_material.tres" id="3_cornwind"]
 
 [sub_resource type="MultiMesh" id="MultiMesh_3lmjw"]
 transform_format = 1
@@ -38,7 +38,6 @@ buffer = PackedFloat32Array(0.8, 0, 0, -40, 0, 0.8, 0, 0, 0, 0, 0.8, -90, 0.8, 0
 
 [node name="CornNorth03" type="MultiMeshInstance3D" parent="." unique_id=178581551]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 200)
-cast_shadow = 0
 material_override = ExtResource("3_cornwind")
 custom_aabb = AABB(-250, -4, -50, 500, 24, 100)
 visibility_range_end = 400.0
@@ -56,7 +55,6 @@ random_yaw = false
 
 [node name="CornNorth04" type="MultiMeshInstance3D" parent="." unique_id=1286768961]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -230)
-cast_shadow = 0
 material_override = ExtResource("3_cornwind")
 custom_aabb = AABB(-250, -4, -50, 500, 24, 100)
 visibility_range_end = 400.0
@@ -74,7 +72,6 @@ random_yaw = false
 
 [node name="CornW04" type="MultiMeshInstance3D" parent="." unique_id=1169764794]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -200, 0, 5)
-cast_shadow = 0
 material_override = ExtResource("3_cornwind")
 custom_aabb = AABB(-50, -4, -140, 100, 24, 280)
 visibility_range_end = 400.0
@@ -92,7 +89,6 @@ random_yaw = false
 
 [node name="Corne05" type="MultiMeshInstance3D" parent="." unique_id=1184789249]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 200, 0, 5)
-cast_shadow = 0
 material_override = ExtResource("3_cornwind")
 custom_aabb = AABB(-50, -4, -140, 100, 24, 280)
 visibility_range_end = 400.0
@@ -110,8 +106,8 @@ random_yaw = false
 
 [node name="CornNorth06" type="MultiMeshInstance3D" parent="." unique_id=269333168]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 300)
-cast_shadow = 0
 material_override = ExtResource("3_cornwind")
+cast_shadow = 0
 custom_aabb = AABB(-150, -4, -50, 300, 24, 100)
 visibility_range_end = 400.0
 visibility_range_end_margin = 80.0
@@ -128,8 +124,8 @@ random_yaw = false
 
 [node name="CornNorth09" type="MultiMeshInstance3D" parent="." unique_id=1937302022]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -341)
-cast_shadow = 0
 material_override = ExtResource("3_cornwind")
+cast_shadow = 0
 custom_aabb = AABB(-150, -4, -50, 300, 24, 100)
 visibility_range_end = 400.0
 visibility_range_end_margin = 80.0
@@ -146,8 +142,8 @@ random_yaw = false
 
 [node name="CornNorth07" type="MultiMeshInstance3D" parent="." unique_id=381960235]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 300, 0, 0)
-cast_shadow = 0
 material_override = ExtResource("3_cornwind")
+cast_shadow = 0
 custom_aabb = AABB(-50, -4, -100, 100, 24, 200)
 visibility_range_end = 400.0
 visibility_range_end_margin = 80.0
@@ -164,8 +160,8 @@ random_yaw = false
 
 [node name="CornNorth08" type="MultiMeshInstance3D" parent="." unique_id=1057886789]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -300, 0, 0)
-cast_shadow = 0
 material_override = ExtResource("3_cornwind")
+cast_shadow = 0
 custom_aabb = AABB(-50, -4, -100, 100, 24, 200)
 visibility_range_end = 400.0
 visibility_range_end_margin = 80.0
