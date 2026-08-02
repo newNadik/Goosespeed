@@ -1,17 +1,50 @@
 [gd_scene format=3 uid="uid://dbfll48sw4u4t"]
 
 [ext_resource type="Script" uid="uid://cypi7ygllao2b" path="res://scripts/gameplay/game_scene.gd" id="1_game"]
-[ext_resource type="PackedScene" path="res://scenes/ui/goose_game_hud.tscn" id="2_hud"]
+[ext_resource type="PackedScene" uid="uid://bu3wemfuknm8u" path="res://scenes/courses/farm/level_farm.tscn" id="2_6thfb"]
+[ext_resource type="PackedScene" uid="uid://mj5be17mpbx0" path="res://scenes/ui/goose_game_hud.tscn" id="2_hud"]
 [ext_resource type="PackedScene" uid="uid://r48mulvevh7j" path="res://scenes/courses/farm_level.tscn" id="2_p0de3"]
-[ext_resource type="PackedScene" uid="uid://c03rnu2cc85km" path="res://scenes/player/goose_player_root.tscn" id="3_player"]
+[ext_resource type="PackedScene" path="res://scenes/player/goose_player_root.tscn" id="3_player"]
 [ext_resource type="PackedScene" path="res://scenes/effects/print_effect.tscn" id="4_print"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_ka346"]
+size = Vector3(500, 1, 500)
 
 [node name="GooseGameScene" type="Node3D" unique_id=1187776317]
 script = ExtResource("1_game")
 
+[node name="world_borders" type="StaticBody3D" parent="." unique_id=883763185]
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="world_borders" unique_id=867451412]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.5, 0)
+shape = SubResource("BoxShape3D_ka346")
+
+[node name="CollisionShape3D2" type="CollisionShape3D" parent="world_borders" unique_id=1251512204]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 450, 0)
+shape = SubResource("BoxShape3D_ka346")
+
+[node name="CollisionShape3D3" type="CollisionShape3D" parent="world_borders" unique_id=1461589131]
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 225, 248)
+shape = SubResource("BoxShape3D_ka346")
+
+[node name="CollisionShape3D5" type="CollisionShape3D" parent="world_borders" unique_id=988993679]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, 248, 225, 0)
+shape = SubResource("BoxShape3D_ka346")
+
+[node name="CollisionShape3D6" type="CollisionShape3D" parent="world_borders" unique_id=996474543]
+transform = Transform3D(-4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 0, 0, 1, -248, 225, 0)
+shape = SubResource("BoxShape3D_ka346")
+
+[node name="CollisionShape3D4" type="CollisionShape3D" parent="world_borders" unique_id=602683730]
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 225, -248)
+shape = SubResource("BoxShape3D_ka346")
+
 [node name="CourseRoot" type="Node3D" parent="." unique_id=472786772]
 
+[node name="LevelFarm" parent="CourseRoot" unique_id=1956346249 instance=ExtResource("2_6thfb")]
+
 [node name="farm_level" parent="CourseRoot" unique_id=2011784816 instance=ExtResource("2_p0de3")]
+visible = false
 
 [node name="GoosePlayerRoot" parent="." unique_id=386113842 instance=ExtResource("3_player")]
 

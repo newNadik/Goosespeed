@@ -1,0 +1,83 @@
+[gd_scene format=3 uid="uid://bu3wemfuknm8u"]
+
+[ext_resource type="PackedScene" path="res://scenes/sky/sky_controller.tscn" id="1_kfime"]
+[ext_resource type="Texture2D" uid="uid://c3p2ks5ttpw1" path="res://assets/maps/route-map-1207.png" id="2_1dmaa"]
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_fydki"]
+sky_top_color = Color(0.35, 0.55, 0.72, 1)
+sky_horizon_color = Color(0.72, 0.82, 0.86, 1)
+ground_bottom_color = Color(0.09411765, 0.18431373, 0.26666668, 1)
+ground_horizon_color = Color(0.43529412, 0.5176471, 0.5647059, 1)
+
+[sub_resource type="Sky" id="Sky_1"]
+sky_material = SubResource("ProceduralSkyMaterial_fydki")
+
+[sub_resource type="Environment" id="Environment_sfk72"]
+background_mode = 2
+sky = SubResource("Sky_1")
+ambient_light_source = 3
+ambient_light_color = Color(0.43529412, 0.5176471, 0.5647059, 1)
+ambient_light_energy = 0.5
+reflected_light_source = 2
+adjustment_enabled = true
+adjustment_saturation = 0.85
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_ka346"]
+size = Vector2(300, 300)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_3lmjw"]
+albedo_texture = ExtResource("2_1dmaa")
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_604tm"]
+size = Vector3(10, 6, 2)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_c2ad4"]
+albedo_color = Color(0.95, 0.72, 0.22, 1)
+roughness = 0.72
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_ka346"]
+size = Vector3(300, 1, 300)
+
+[node name="LevelFarm" type="StaticBody3D" unique_id=1956346249]
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=2102402792]
+environment = SubResource("Environment_sfk72")
+
+[node name="Sun" type="DirectionalLight3D" parent="." unique_id=1941078061]
+transform = Transform3D(0.88294756, 0.36994863, -0.2890356, 0, 0.6156615, 0.7880107, 0.46947157, -0.6957722, 0.5435968, 0, 0, 0)
+light_color = Color(1, 0.9411765, 0.7882353, 1)
+shadow_enabled = true
+directional_shadow_max_distance = 180.0
+
+[node name="Sky" parent="." unique_id=1043574194 instance=ExtResource("1_kfime")]
+transform = Transform3D(-4.371139e-08, 0, -1, 0, 1, 0, 1, 0, -4.371139e-08, 0, 0, 0)
+cloudiness = 5
+wind = 5
+spawn_area_size = Vector2(500, 500)
+cloud_scale_in_seconds = 3.0
+cloud_scale_out_seconds = 3.0
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=269582474]
+mesh = SubResource("PlaneMesh_ka346")
+surface_material_override/0 = SubResource("StandardMaterial3D_3lmjw")
+
+[node name="Finish" type="Node3D" parent="." unique_id=1246259184]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 95.911545, 0, -140.90405)
+
+[node name="FinishTrigger" type="Area3D" parent="Finish" unique_id=338967243]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.5, 1.0984421)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="Finish/FinishTrigger" unique_id=1058991326]
+shape = SubResource("BoxShape3D_604tm")
+
+[node name="FinishMarker" type="CSGBox3D" parent="Finish" unique_id=707009819]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3, 1.0984421)
+size = Vector3(10, 6, 0.3)
+material = SubResource("StandardMaterial3D_c2ad4")
+
+[node name="SpawnPoint" type="Node3D" parent="." unique_id=1559306806]
+transform = Transform3D(-1, 0, -8.74228e-08, 0, 1, 0, 8.74228e-08, 0, -1, -101.38417, 1.2, 132.0662)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=1497682957]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.4, 0)
+shape = SubResource("BoxShape3D_ka346")
