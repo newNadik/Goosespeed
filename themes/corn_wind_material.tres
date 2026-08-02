@@ -1,0 +1,17 @@
+[gd_resource type="ShaderMaterial" load_steps=2 format=3]
+
+[ext_resource type="Shader" path="res://themes/corn_wind.gdshader" id="1_corn_wind_shader"]
+
+[resource]
+resource_name = "CornWindMaterial"
+shader = ExtResource("1_corn_wind_shader")
+shader_parameter/base_color = Color(0.30195454, 0.5576153, 0.34322643, 1)
+shader_parameter/top_color = Color(0.485, 0.71, 0.375, 1)
+shader_parameter/wind_direction = Vector2(1, 0.35)
+shader_parameter/wind_strength = 0.65
+shader_parameter/wind_speed = 1.35
+shader_parameter/wave_scale = 0.025
+shader_parameter/gust_strength = 0.65
+shader_parameter/base_y = -0.62
+shader_parameter/top_y = 12.9
+shader_parameter/root_stiffness = 0.16
