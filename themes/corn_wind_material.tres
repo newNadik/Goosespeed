@@ -1,9 +1,10 @@
-[gd_resource type="ShaderMaterial" load_steps=2 format=3]
+[gd_resource type="ShaderMaterial" format=3 uid="uid://bdpa338e8xmah"]
 
-[ext_resource type="Shader" path="res://themes/corn_wind.gdshader" id="1_corn_wind_shader"]
+[ext_resource type="Shader" uid="uid://ctpf1rbe8deik" path="res://themes/corn_wind.gdshader" id="1_corn_wind_shader"]
 
 [resource]
 resource_name = "CornWindMaterial"
+render_priority = 0
 shader = ExtResource("1_corn_wind_shader")
 shader_parameter/base_color = Color(0.30195454, 0.5576153, 0.34322643, 1)
 shader_parameter/top_color = Color(0.485, 0.71, 0.375, 1)

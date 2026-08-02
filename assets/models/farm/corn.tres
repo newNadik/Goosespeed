@@ -3,7 +3,7 @@
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_hr1ki"]
 resource_name = "FieldOfCorn_mat"
 cull_mode = 2
-albedo_color = Color(0.30195454, 0.5576153, 0.34322643, 1)
+albedo_color = Color(0.735357, 0.735357, 0.735357, 1)
 roughness = 0.969948
 
 [sub_resource type="ArrayMesh" id="ArrayMesh_o1p1y"]
