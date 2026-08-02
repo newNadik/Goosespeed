@@ -62,7 +62,7 @@ func _draw_marker(tape_x: float, center_y: float, top: float, bottom: float, mar
 func _draw_value(center_y: float, fill_color: Color, outline_color: Color) -> void:
 	var text := "%.1f m/s" % absf(current_vertical_speed)
 	var font_size := 30
-	var position := Vector2(size.x * 0.42, center_y + font_size * 0.36)
+	var text_position := Vector2(size.x * 0.42, center_y + font_size * 0.36)
 	var offsets := [
 		Vector2(-1, 0),
 		Vector2(1, 0),
@@ -70,5 +70,5 @@ func _draw_value(center_y: float, fill_color: Color, outline_color: Color) -> vo
 		Vector2(0, 1),
 	]
 	for offset in offsets:
-		draw_string(VALUE_FONT, position + offset, text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size, outline_color)
-	draw_string(VALUE_FONT, position, text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size, fill_color)
+		draw_string(VALUE_FONT, text_position + offset, text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size, outline_color)
+	draw_string(VALUE_FONT, text_position, text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size, fill_color)

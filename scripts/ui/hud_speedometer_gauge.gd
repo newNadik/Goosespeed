@@ -80,7 +80,7 @@ func _draw_needle(center: Vector2, radius: float, start_angle: float, end_angle:
 	draw_circle(center, radius * 0.028, needle_color)
 
 
-func _draw_outlined_string(font: Font, position: Vector2, text: String, font_size: int, fill_color: Color, outline_color: Color) -> void:
+func _draw_outlined_string(font: Font, text_position: Vector2, text: String, font_size: int, fill_color: Color, outline_color: Color) -> void:
 	var outline_offsets := [
 		Vector2(-2, 0),
 		Vector2(2, 0),
@@ -92,5 +92,5 @@ func _draw_outlined_string(font: Font, position: Vector2, text: String, font_siz
 		Vector2(1, 1),
 	]
 	for offset in outline_offsets:
-		draw_string(font, position + offset, text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size, outline_color)
-	draw_string(font, position, text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size, fill_color)
+		draw_string(font, text_position + offset, text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size, outline_color)
+	draw_string(font, text_position, text, HORIZONTAL_ALIGNMENT_LEFT, -1.0, font_size, fill_color)

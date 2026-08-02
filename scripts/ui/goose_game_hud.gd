@@ -170,7 +170,7 @@ func _update_acceleration(delta: float) -> void:
 	has_previous_velocity = true
 
 
-func _update_direction_marker(state: RefCounted) -> void:
+func _update_direction_marker(_state: RefCounted) -> void:
 	if not direction_panel.visible or finish_target == null:
 		return
 	var camera := get_viewport().get_camera_3d()
