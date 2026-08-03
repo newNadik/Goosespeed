@@ -27,6 +27,7 @@ layer = 20
 script = ExtResource("1_overlay")
 
 [node name="Root" type="Control" parent="." unique_id=1498344686]
+visible = false
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -131,12 +132,12 @@ layout_mode = 2
 size_flags_vertical = 3
 horizontal_scroll_mode = 0
 
-[node name="ContentCenter" type="HBoxContainer" parent="Root/MarginContainer/Margin/VBox/FolderBody/FolderMargin/ContentScroll"]
+[node name="ContentCenter" type="HBoxContainer" parent="Root/MarginContainer/Margin/VBox/FolderBody/FolderMargin/ContentScroll" unique_id=1928872718]
 layout_mode = 2
 size_flags_horizontal = 3
 theme_override_constants/separation = 0
 
-[node name="LeftSpacer" type="Control" parent="Root/MarginContainer/Margin/VBox/FolderBody/FolderMargin/ContentScroll/ContentCenter"]
+[node name="LeftSpacer" type="Control" parent="Root/MarginContainer/Margin/VBox/FolderBody/FolderMargin/ContentScroll/ContentCenter" unique_id=1960710654]
 layout_mode = 2
 size_flags_horizontal = 3
 
@@ -145,7 +146,7 @@ custom_minimum_size = Vector2(880, 0)
 layout_mode = 2
 theme_override_constants/separation = 14
 
-[node name="RightSpacer" type="Control" parent="Root/MarginContainer/Margin/VBox/FolderBody/FolderMargin/ContentScroll/ContentCenter"]
+[node name="RightSpacer" type="Control" parent="Root/MarginContainer/Margin/VBox/FolderBody/FolderMargin/ContentScroll/ContentCenter" unique_id=1385209007]
 layout_mode = 2
 size_flags_horizontal = 3
 
