@@ -53,7 +53,7 @@ func generate_pieces() -> void:
 		if piece is Node3D:
 			_place_piece(piece as Node3D, distance)
 
-		_assign_owner(piece, _get_scene_owner())
+		_assign_instance_owner(piece, _get_scene_owner())
 		distance += spacing
 		index += 1
 
@@ -77,9 +77,9 @@ func _clear_generated_root(generated_root: Node) -> void:
 
 
 func _place_piece(piece: Node3D, distance: float) -> void:
-	var position := curve.sample_baked(distance)
-	position.y += y_offset
-	piece.position = position
+	var sampled_position := curve.sample_baked(distance)
+	sampled_position.y += y_offset
+	piece.position = sampled_position
 
 	if not align_to_path:
 		piece.rotation = _rotation_offset_radians()
@@ -129,3 +129,8 @@ func _assign_owner(node: Node, scene_owner: Node) -> void:
 
 	for child in node.get_children():
 		_assign_owner(child, scene_owner)
+
+
+func _assign_instance_owner(node: Node, scene_owner: Node) -> void:
+	if node != scene_owner:
+		node.owner = scene_owner

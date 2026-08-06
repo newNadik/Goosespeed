@@ -37,7 +37,7 @@ _surfaces = [{
 blend_shape_mode = 0
 shadow_mesh = SubResource("ArrayMesh_we1lg")
 
-[node name="Node3D" type="Node3D" unique_id=200598162]
+[node name="Coin" type="Node3D" unique_id=200598162]
 script = ExtResource("1_3qbsy")
 rotation_speed_degrees = 40.0
 rotation_axis = Vector3(0, 1, 0)
