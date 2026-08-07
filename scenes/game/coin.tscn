@@ -1,7 +1,7 @@
 [gd_scene format=4 uid="uid://ckd2n52ba0djg"]
 
 [ext_resource type="Script" uid="uid://co5m8a4r1nsj5" path="res://scripts/props/spinning_prop.gd" id="1_3qbsy"]
-[ext_resource type="Material" uid="uid://bmvdrtyvm0ouq" path="res://themes/gold/gold01.tres" id="2_k50o3"]
+[ext_resource type="Shader" uid="uid://c1ndw8jqku6fr" path="res://themes/holographic.gdshader" id="2_3qbsy"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_km5tq"]
 
@@ -37,6 +37,13 @@ _surfaces = [{
 blend_shape_mode = 0
 shadow_mesh = SubResource("ArrayMesh_we1lg")
 
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_k50o3"]
+render_priority = 0
+shader = ExtResource("2_3qbsy")
+shader_parameter/normal_depth = 0.25
+shader_parameter/color_compression = 6.0
+shader_parameter/albedo = Color(0.98, 0.49, 0, 1)
+
 [node name="Coin" type="Node3D" unique_id=200598162]
 script = ExtResource("1_3qbsy")
 rotation_speed_degrees = 40.0
@@ -45,4 +52,4 @@ rotation_axis = Vector3(0, 1, 0)
 [node name="Cylinder_003" type="MeshInstance3D" parent="." unique_id=746072878]
 transform = Transform3D(40, 0, 0, 0, 40, 0, 0, 0, 40, 0, 1, 0)
 mesh = SubResource("ArrayMesh_uiu26")
-surface_material_override/0 = ExtResource("2_k50o3")
+surface_material_override/0 = SubResource("ShaderMaterial_k50o3")
