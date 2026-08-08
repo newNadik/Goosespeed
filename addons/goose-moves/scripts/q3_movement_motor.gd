@@ -262,6 +262,7 @@ var body_mesh: BoxMesh
 var water_level := 0
 var water_type: StringName
 var water_surface_y := 0.0
+var swim_surface_depth := Q3_SWIM_SURFACE_DEPTH
 var has_water_surface := false
 var water_jump_time_remaining := 0.0
 var character_collider_visible := true
@@ -782,6 +783,7 @@ func _update_water_level() -> void:
 	water_level = 0
 	water_type = &""
 	water_surface_y = 0.0
+	swim_surface_depth = Q3_SWIM_SURFACE_DEPTH
 	has_water_surface = false
 	var eye_height := head.position.y
 	var water_area := _get_water_area_at(global_position + (Vector3.UP * Q3_METERS_PER_UNIT))
@@ -790,6 +792,7 @@ func _update_water_level() -> void:
 
 	water_type = StringName(water_area.get_meta("q3_volume_type", &"water"))
 	water_surface_y = _get_water_surface_y(water_area)
+	swim_surface_depth = _get_swim_surface_depth(water_area)
 	has_water_surface = is_finite(water_surface_y)
 	water_level = 1
 	if _get_water_area_at(global_position + (Vector3.UP * (eye_height * 0.5))) == null:
@@ -838,6 +841,12 @@ func _get_water_surface_y(water_area: Area3D) -> float:
 	return surface_y
 
 
+func _get_swim_surface_depth(water_area: Area3D) -> float:
+	if water_area.has_meta("q3_swim_surface_depth"):
+		return maxf(float(water_area.get_meta("q3_swim_surface_depth")), 0.0)
+	return Q3_SWIM_SURFACE_DEPTH
+
+
 func _should_swim(grounded: bool) -> bool:
 	if _can_walk_out_of_water(grounded):
 		return false
@@ -874,6 +883,7 @@ func clear_water_state() -> void:
 	water_level = 0
 	water_type = &""
 	water_surface_y = 0.0
+	swim_surface_depth = Q3_SWIM_SURFACE_DEPTH
 	has_water_surface = false
 	water_jump_time_remaining = 0.0
 
@@ -1007,7 +1017,7 @@ func _clamp_to_swim_surface() -> void:
 
 
 func _get_swim_surface_target_y() -> float:
-	return water_surface_y - Q3_SWIM_SURFACE_DEPTH
+	return water_surface_y - swim_surface_depth
 
 
 func _get_current_friction_coefficient() -> float:

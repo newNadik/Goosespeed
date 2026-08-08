@@ -214,6 +214,9 @@ func _direct_transitions() -> void:
 	c.q3_motor.water_level = 1
 	c.q3_motor.has_water_surface = true
 	c.q3_motor.water_surface_y = 1.0
+	c.q3_motor.swim_surface_depth = 0.55
+	check_approx("custom swim surface depth sets shallower float target", c.q3_motor._get_swim_surface_target_y(), 0.45, 0.001)
+	c.q3_motor.swim_surface_depth = c.q3_motor.Q3_SWIM_SURFACE_DEPTH
 	c.global_position.y = c.q3_motor._get_swim_surface_target_y() - 0.4
 	c.flap_hold_time = c.flight_hold_threshold
 	c.no_surface_contact_time = 0.0
