@@ -51,6 +51,7 @@ func _initialize() -> void:
 	_expect_slide_animation_selection(failures)
 	_expect_jump_animation_selection(failures)
 	_expect_jump_secondary_motion(failures)
+	_expect_flap_sound_trigger(failures)
 	_expect_animation(
 		failures,
 		visual,
@@ -1258,6 +1259,28 @@ func _expect_jump_sequence(failures: Array[String]) -> void:
 
 	visual.free()
 	fallback_visual.free()
+
+
+func _expect_flap_sound_trigger(failures: Array[String]) -> void:
+	var visual := VisualControllerScript.new()
+	if visual._should_play_flap_sound(_state({"mode": &"flight", "flapping": false})):
+		failures.append("flap sound should not play while gliding")
+
+	if not visual._should_play_flap_sound(_state({"mode": &"flight", "flapping": true})):
+		failures.append("flap sound should play when flight flap starts")
+	visual.previous_flapping = true
+
+	if visual._should_play_flap_sound(_state({"mode": &"flight", "flapping": true})):
+		failures.append("flap sound should not retrigger while flap remains active")
+	if visual._should_play_flap_sound(_state({"mode": &"q3", "flapping": true})):
+		failures.append("flap sound should only play during flight")
+
+	visual.previous_flapping = false
+	visual.flap_sound_enabled = false
+	if visual._should_play_flap_sound(_state({"mode": &"flight", "flapping": true})):
+		failures.append("disabled flap sound should not play")
+
+	visual.free()
 
 
 func _expect_jump_sequence_step(

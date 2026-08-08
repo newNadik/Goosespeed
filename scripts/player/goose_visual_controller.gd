@@ -15,6 +15,7 @@ class JumpSecondaryMotionApplier:
 
 const MovementStateScript := preload("res://scripts/player/movement_state.gd")
 const HeadLookControllerScript := preload("res://scripts/player/goose_head_look_controller.gd")
+const FLAP_SOUND := preload("res://assets/sounds/wing-flap.mp3")
 
 const ANIM_JUMP := &"Goose|A A_Jump"
 const ANIM_JUMP_2 := &"Goose|A A_Jump_2"
@@ -91,6 +92,10 @@ const LOOPING_ANIMATIONS := [
 @export var head_look_smoothness := 10.0
 @export var jump_secondary_motion_enabled := true
 @export_range(0.0, 1.5, 0.05) var jump_secondary_motion_intensity := 0.65
+@export var flap_sound_enabled := true
+@export var flap_sound_volume_db := -8.0
+@export var flap_sound_min_pitch := 0.94
+@export var flap_sound_max_pitch := 1.06
 
 @onready var animation_player: AnimationPlayer = get_node_or_null("AnimationPlayer") as AnimationPlayer
 @onready var skeleton: Skeleton3D = get_node_or_null("Goose/Skeleton3D") as Skeleton3D
@@ -113,11 +118,14 @@ var head_look_controller: Node
 var smoothed_visual_y := 0.0
 var visual_y_initialized := false
 var jump_secondary_bone_indices: Dictionary = {}
+var flap_sound_player: AudioStreamPlayer3D
+var previous_flapping := false
 
 
 func _ready() -> void:
 	_configure_animation_player()
 	_cache_jump_secondary_bones()
+	_ensure_flap_sound_player()
 	_ensure_jump_secondary_motion_controller()
 	_ensure_head_look_controller()
 	if state_bridge:
@@ -179,6 +187,7 @@ func _connect_bridge() -> void:
 	if not state_bridge.state_changed.is_connected(_on_state_changed):
 		state_bridge.state_changed.connect(_on_state_changed)
 	latest_state = state_bridge.get_state()
+	previous_flapping = latest_state.flapping
 	global_position = latest_state.position
 	_reset_visual_position_smoothing()
 	if _uses_full_flight_orientation(latest_state):
@@ -186,7 +195,9 @@ func _connect_bridge() -> void:
 
 
 func _on_state_changed(state: RefCounted) -> void:
-	latest_state = state.duplicate_state()
+	var next_state: RefCounted = state.duplicate_state()
+	_update_flap_sound(next_state)
+	latest_state = next_state
 
 
 func _get_visual_facing_direction(state: RefCounted) -> Vector3:
@@ -627,6 +638,40 @@ func _ensure_jump_secondary_motion_controller() -> void:
 		add_child(jump_secondary_motion_controller)
 	elif jump_secondary_motion_controller is JumpSecondaryMotionApplier:
 		(jump_secondary_motion_controller as JumpSecondaryMotionApplier).visual_controller = self
+
+
+func _ensure_flap_sound_player() -> void:
+	flap_sound_player = get_node_or_null("FlapSound") as AudioStreamPlayer3D
+	if flap_sound_player == null:
+		flap_sound_player = AudioStreamPlayer3D.new()
+		flap_sound_player.name = "FlapSound"
+		add_child(flap_sound_player)
+	flap_sound_player.stream = FLAP_SOUND
+	flap_sound_player.volume_db = flap_sound_volume_db
+	flap_sound_player.unit_size = 6.0
+	flap_sound_player.max_distance = 42.0
+
+
+func _update_flap_sound(state: RefCounted) -> void:
+	if _should_play_flap_sound(state):
+		_play_flap_sound()
+	previous_flapping = state.flapping
+
+
+func _should_play_flap_sound(state: RefCounted) -> bool:
+	return (
+		flap_sound_enabled
+		and state.mode == &"flight"
+		and state.flapping
+		and not previous_flapping
+	)
+
+
+func _play_flap_sound() -> void:
+	if flap_sound_player == null:
+		return
+	flap_sound_player.pitch_scale = randf_range(flap_sound_min_pitch, flap_sound_max_pitch)
+	flap_sound_player.play()
 
 
 func _cache_jump_secondary_bones() -> void:
