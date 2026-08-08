@@ -13,6 +13,7 @@ func _ready() -> void:
 
 	hud.set_player(player)
 	hud.set_run_state(12.34, true)
+	hud.set_coin_count(7)
 	await get_tree().process_frame
 
 	if hud.get_node_or_null("Root/TopLeftPanel") != null:
@@ -21,6 +22,10 @@ func _ready() -> void:
 		return
 	if not _label_contains(hud, "Root/TimerWidget/HBoxContainer/TimerLabel", "12.34"):
 		push_error("HUD timer label did not use run state")
+		get_tree().quit(1)
+		return
+	if not _label_contains(hud, "Root/TimerWidget/CoinsRow/CoinLabel", "7"):
+		push_error("HUD coin label did not use coin count")
 		get_tree().quit(1)
 		return
 	var speedometer := hud.get_node_or_null("Root/MovementWidget/SpeedometerGauge")

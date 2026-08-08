@@ -1,0 +1,80 @@
+[gd_scene load_steps=12 format=3]
+
+[ext_resource type="Script" path="res://scripts/effects/coin_pickup_burst.gd" id="1_burst"]
+
+[sub_resource type="BoxMesh" id="BoxMesh_ray"]
+size = Vector3(0.045, 0.17, 0.012)
+
+[sub_resource type="StandardMaterial3D" id="Material_ray_cream"]
+resource_local_to_scene = true
+transparency = 1
+shading_mode = 0
+cull_mode = 2
+albedo_color = Color(1, 0.86, 0.52, 1)
+
+[sub_resource type="StandardMaterial3D" id="Material_ray_gold"]
+resource_local_to_scene = true
+transparency = 1
+shading_mode = 0
+cull_mode = 2
+albedo_color = Color(1, 0.72, 0.24, 1)
+
+[sub_resource type="StandardMaterial3D" id="Material_ray_paper"]
+resource_local_to_scene = true
+transparency = 1
+shading_mode = 0
+cull_mode = 2
+albedo_color = Color(0.96, 0.94, 0.78, 1)
+
+[sub_resource type="StandardMaterial3D" id="Material_ray_cyan"]
+resource_local_to_scene = true
+transparency = 1
+shading_mode = 0
+cull_mode = 2
+albedo_color = Color(0.5, 0.72, 0.73, 1)
+
+[sub_resource type="StandardMaterial3D" id="Material_ray_blue"]
+resource_local_to_scene = true
+transparency = 1
+shading_mode = 0
+cull_mode = 2
+albedo_color = Color(0.145, 0.25, 0.3, 1)
+
+[node name="CoinPickupBurst" type="Node3D"]
+script = ExtResource("1_burst")
+
+[node name="Ray00" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_ray")
+material_override = SubResource("Material_ray_cream")
+
+[node name="Ray01" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_ray")
+material_override = SubResource("Material_ray_gold")
+
+[node name="Ray02" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_ray")
+material_override = SubResource("Material_ray_paper")
+
+[node name="Ray03" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_ray")
+material_override = SubResource("Material_ray_cyan")
+
+[node name="Ray04" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_ray")
+material_override = SubResource("Material_ray_blue")
+
+[node name="Ray05" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_ray")
+material_override = SubResource("Material_ray_cream")
+
+[node name="Ray06" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_ray")
+material_override = SubResource("Material_ray_gold")
+
+[node name="Ray07" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_ray")
+material_override = SubResource("Material_ray_paper")
+
+[node name="Ray08" type="MeshInstance3D" parent="."]
+mesh = SubResource("BoxMesh_ray")
+material_override = SubResource("Material_ray_cyan")

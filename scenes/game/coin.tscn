@@ -1,35 +1,39 @@
-[gd_scene load_steps=6 format=4 uid="uid://ckd2n52ba0djg"]
+[gd_scene format=4 uid="uid://ckd2n52ba0djg"]
 
-[ext_resource type="Script" uid="uid://co5m8a4r1nsj5" path="res://scripts/props/spinning_prop.gd" id="1_3qbsy"]
+[ext_resource type="Script" path="res://scripts/gameplay/coin_pickup.gd" id="1_3qbsy"]
 [ext_resource type="Shader" uid="uid://xo6lut5plser" path="res://themes/coin_print.gdshader" id="2_o2e3m"]
 [ext_resource type="Shader" uid="uid://b3y75rm75v40p" path="res://themes/coin_edge_holo.gdshader" id="3_8i4go"]
+[ext_resource type="AudioStream" uid="uid://c2c3d0xndjbrm" path="res://assets/sounds/coin.mp3" id="4_50bja"]
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_background"]
 resource_name = "background"
+render_priority = 0
 shader = ExtResource("2_o2e3m")
-shader_parameter/paper_color = Vector3(0.705, 0.455, 0.095)
-shader_parameter/shadow_color = Vector3(0.490, 0.315, 0.070)
-shader_parameter/light_color = Vector3(0.905, 0.610, 0.180)
+shader_parameter/paper_color = Color(0.705, 0.455, 0.095, 1)
+shader_parameter/shadow_color = Color(0.49, 0.315, 0.07, 1)
+shader_parameter/light_color = Color(0.905, 0.61, 0.18, 1)
 shader_parameter/paper_texture = 0.022
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_edges"]
 resource_name = "edges"
+render_priority = 0
 shader = ExtResource("3_8i4go")
-shader_parameter/base_edge = Vector3(0.145, 0.250, 0.300)
-shader_parameter/warm_edge = Vector3(0.780, 0.380, 0.165)
-shader_parameter/holo_gold = Vector3(1.0, 0.650, 0.180)
-shader_parameter/holo_cream = Vector3(1.0, 0.830, 0.460)
-shader_parameter/holo_cyan = Vector3(0.500, 0.720, 0.730)
-shader_parameter/holo_pink = Vector3(0.860, 0.500, 0.470)
-shader_parameter/holo_strength = 0.20
+shader_parameter/base_edge = Color(0.18, 0.3, 0.34, 1)
+shader_parameter/warm_edge = Color(0.8, 0.42, 0.18, 1)
+shader_parameter/holo_gold = Color(1, 0.69, 0.22, 1)
+shader_parameter/holo_cream = Color(1, 0.86, 0.52, 1)
+shader_parameter/holo_cyan = Color(0.52, 0.76, 0.78, 1)
+shader_parameter/holo_pink = Color(0.9, 0.56, 0.52, 1)
+shader_parameter/holo_strength = 0.2
 shader_parameter/paper_texture = 0.016
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_foreground"]
 resource_name = "foreground"
+render_priority = 0
 shader = ExtResource("2_o2e3m")
-shader_parameter/paper_color = Vector3(0.930, 0.590, 0.165)
-shader_parameter/shadow_color = Vector3(0.660, 0.395, 0.105)
-shader_parameter/light_color = Vector3(1.0, 0.755, 0.310)
+shader_parameter/paper_color = Color(0.93, 0.59, 0.165, 1)
+shader_parameter/shadow_color = Color(0.66, 0.395, 0.105, 1)
+shader_parameter/light_color = Color(1, 0.755, 0.31, 1)
 shader_parameter/paper_texture = 0.018
 
 [sub_resource type="ArrayMesh" id="ArrayMesh_13mis"]
@@ -114,6 +118,9 @@ _surfaces = [{
 blend_shape_mode = 0
 shadow_mesh = SubResource("ArrayMesh_13mis")
 
+[sub_resource type="SphereShape3D" id="SphereShape3D_coin_pickup"]
+radius = 1.0
+
 [node name="Coin" type="Node3D" unique_id=200598162]
 script = ExtResource("1_3qbsy")
 rotation_speed_degrees = 40.0
@@ -122,3 +129,18 @@ rotation_axis = Vector3(0, 1, 0)
 [node name="Cylinder_003" type="MeshInstance3D" parent="." unique_id=746727147]
 transform = Transform3D(40, 0, 0, 0, 40, 0, 0, 0, 40, 0, 1, 0)
 mesh = SubResource("ArrayMesh_f4wbi")
+
+[node name="PickupArea" type="Area3D" parent="." unique_id=746191565]
+collision_layer = 0
+monitorable = false
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="PickupArea" unique_id=667168072]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+shape = SubResource("SphereShape3D_coin_pickup")
+
+[node name="PickupSound" type="AudioStreamPlayer3D" parent="." unique_id=990255741]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+stream = ExtResource("4_50bja")
+volume_db = -4.0
+unit_size = 4.0
+max_distance = 32.0

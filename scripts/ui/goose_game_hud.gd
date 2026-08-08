@@ -16,6 +16,7 @@ const COMPASS_CENTER_N_X := 456.0
 @onready var state_details_label: RichTextLabel = $Root/StateDetailsPanel/Margin/StateDetailsLabel
 @onready var timer_panel: Control = $Root/TimerWidget
 @onready var timer_label: Label = $Root/TimerWidget/HBoxContainer/TimerLabel
+@onready var coin_label: Label = $Root/TimerWidget/CoinsRow/CoinLabel
 @onready var movement_panel: Control = $Root/MovementWidget
 @onready var speed_label: Label = $Root/MovementWidget/SpeedLabel
 @onready var speed_unit_label: Label = $Root/MovementWidget/SpeedUnitLabel
@@ -38,6 +39,7 @@ var visual_controller: Node
 var finish_target: Node3D
 var elapsed_time := 0.0
 var run_finished := false
+var coin_count := 0
 var previous_velocity := Vector3.ZERO
 var acceleration := 0.0
 var has_previous_velocity := false
@@ -71,6 +73,11 @@ func set_finish_target(value: Node3D) -> void:
 func set_run_state(time_seconds: float, finished: bool) -> void:
 	elapsed_time = time_seconds
 	run_finished = finished
+	_update_labels()
+
+
+func set_coin_count(value: int) -> void:
+	coin_count = max(value, 0)
 	_update_labels()
 
 
@@ -137,6 +144,7 @@ func _update_labels() -> void:
 	if speedometer_gauge.has_method("set_speed"):
 		speedometer_gauge.set_speed(state.horizontal_speed)
 	timer_label.text = "%05.2fs %s" % [elapsed_time, " FINISH" if run_finished else ""]
+	coin_label.text = str(coin_count)
 	_update_flight_widget(state)
 	if vertical_speed_gauge.has_method("set_vertical_speed"):
 		vertical_speed_gauge.set_vertical_speed(state.vertical_speed)
