@@ -2,7 +2,11 @@ class_name GooseGameScene
 extends Node3D
 
 const PAUSE_MENU_SCENE := preload("res://scenes/ui/pause_menu.tscn")
+const LOADING_SCREEN_SCENE := preload("res://scenes/ui/loading_screen.tscn")
+const CourseCatalog := preload("res://scripts/gameplay/course_catalog.gd")
 const COIN_PICKUP_GROUP := &"coins"
+
+@export_file("*.tscn") var course_scene_path: String = CourseCatalog.DEFAULT_COURSE_PATH
 
 @onready var player: Node = $GoosePlayerRoot
 @onready var game_hud: Node = $GooseGameHud
@@ -14,9 +18,16 @@ var run_coin_count := 0
 var finish_area: Area3D
 var spawn_point: Node3D
 var coin_pickups: Array[CoinPickup] = []
+var active_course: Node3D
+var loading_layer: CanvasLayer
+var loading_screen: Control
 
 
 func _ready() -> void:
+	set_process(false)
+	player.process_mode = Node.PROCESS_MODE_DISABLED
+	_show_loading_screen()
+	await _load_and_attach_course()
 	_cache_course_contract()
 	_connect_finish_trigger()
 	_apply_spawn_transform()
@@ -26,6 +37,9 @@ func _ready() -> void:
 		game_hud.set_finish_target(finish_area)
 	add_child(PAUSE_MENU_SCENE.instantiate())
 	_update_hud()
+	_hide_loading_screen()
+	player.process_mode = Node.PROCESS_MODE_INHERIT
+	set_process(true)
 
 
 func _process(delta: float) -> void:
@@ -131,3 +145,73 @@ func _update_hud() -> void:
 	game_hud.set_run_state(elapsed_time, finished)
 	if game_hud.has_method("set_coin_count"):
 		game_hud.set_coin_count(run_coin_count)
+
+
+func _load_and_attach_course() -> void:
+	var course_scene := await _load_course_scene()
+	if course_scene == null:
+		push_error("Could not load course scene: %s" % course_scene_path)
+		return
+
+	active_course = course_scene.instantiate() as Node3D
+	if active_course == null:
+		push_error("Course scene root must be a Node3D: %s" % course_scene_path)
+		return
+	course_root.add_child(active_course)
+	await get_tree().process_frame
+
+
+func _load_course_scene() -> PackedScene:
+	var path := _get_course_scene_path()
+	CourseCatalog.request_course_preload(path)
+
+	var progress: Array = []
+	var status := ResourceLoader.load_threaded_get_status(path, progress)
+	while status == ResourceLoader.THREAD_LOAD_IN_PROGRESS:
+		_set_loading_progress(_read_threaded_progress(progress))
+		await get_tree().process_frame
+		progress.clear()
+		status = ResourceLoader.load_threaded_get_status(path, progress)
+
+	if status == ResourceLoader.THREAD_LOAD_LOADED:
+		_set_loading_progress(1.0)
+		return ResourceLoader.load_threaded_get(path) as PackedScene
+
+	var loaded_resource := ResourceLoader.load(path)
+	_set_loading_progress(1.0)
+	return loaded_resource as PackedScene
+
+
+func _get_course_scene_path() -> String:
+	if course_scene_path.is_empty():
+		return CourseCatalog.DEFAULT_COURSE_PATH
+	return course_scene_path
+
+
+func _show_loading_screen() -> void:
+	loading_layer = CanvasLayer.new()
+	loading_layer.name = "LoadingLayer"
+	loading_layer.layer = 100
+	loading_layer.process_mode = Node.PROCESS_MODE_ALWAYS
+	add_child(loading_layer)
+
+	loading_screen = LOADING_SCREEN_SCENE.instantiate() as Control
+	loading_layer.add_child(loading_screen)
+
+
+func _hide_loading_screen() -> void:
+	if loading_layer != null:
+		loading_layer.queue_free()
+	loading_layer = null
+	loading_screen = null
+
+
+func _set_loading_progress(value: float) -> void:
+	if loading_screen != null and loading_screen.has_method("set_progress"):
+		loading_screen.set_progress(value)
+
+
+func _read_threaded_progress(progress: Array) -> float:
+	if progress.is_empty():
+		return 0.0
+	return float(progress[0])

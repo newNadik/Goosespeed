@@ -6,8 +6,10 @@ const GAME_SCENE := preload("res://scenes/game/game_scene.tscn")
 func _ready() -> void:
 	var game := GAME_SCENE.instantiate()
 	add_child(game)
-	await get_tree().process_frame
-	await get_tree().physics_frame
+	if not await _wait_for_course(game):
+		push_error("Game scene did not attach the default course")
+		get_tree().quit(1)
+		return
 
 	var player := game.get_node("GoosePlayerRoot")
 	var controller: Node3D = player.get_active_controller()
@@ -102,3 +104,13 @@ func _ready() -> void:
 
 func _horizontal_distance(a: Vector3, b: Vector3) -> float:
 	return Vector2(a.x, a.z).distance_to(Vector2(b.x, b.z))
+
+
+func _wait_for_course(game: Node) -> bool:
+	var deadline := Time.get_ticks_msec() + 20000
+	while Time.get_ticks_msec() < deadline:
+		if game.get_node_or_null("CourseRoot/LevelFarm") != null:
+			await get_tree().physics_frame
+			return true
+		await get_tree().create_timer(0.05).timeout
+	return false
