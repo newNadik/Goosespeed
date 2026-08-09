@@ -109,7 +109,9 @@ func _horizontal_distance(a: Vector3, b: Vector3) -> float:
 func _wait_for_course(game: Node) -> bool:
 	var deadline := Time.get_ticks_msec() + 20000
 	while Time.get_ticks_msec() < deadline:
-		if game.get_node_or_null("CourseRoot/LevelFarm") != null:
+		var course_loaded := game.get_node_or_null("CourseRoot/LevelFarm") != null
+		var spawn_ready := game.get("spawn_point") != null
+		if course_loaded and spawn_ready and game.is_processing():
 			await get_tree().physics_frame
 			return true
 		await get_tree().create_timer(0.05).timeout

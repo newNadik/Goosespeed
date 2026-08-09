@@ -5,6 +5,8 @@ const PAUSE_MENU_SCENE := preload("res://scenes/ui/pause_menu.tscn")
 const LOADING_SCREEN_SCENE := preload("res://scenes/ui/loading_screen.tscn")
 const CourseCatalog := preload("res://scripts/gameplay/course_catalog.gd")
 const COIN_PICKUP_GROUP := &"coins"
+const LOADING_FADE_IN_DURATION := 0.18
+const LOADING_FADE_OUT_DURATION := 0.28
 
 @export_file("*.tscn") var course_scene_path: String = CourseCatalog.DEFAULT_COURSE_PATH
 
@@ -27,6 +29,7 @@ func _ready() -> void:
 	set_process(false)
 	player.process_mode = Node.PROCESS_MODE_DISABLED
 	_show_loading_screen()
+	_fade_loading_screen(1.0, LOADING_FADE_IN_DURATION)
 	await _load_and_attach_course()
 	_cache_course_contract()
 	_connect_finish_trigger()
@@ -37,6 +40,7 @@ func _ready() -> void:
 		game_hud.set_finish_target(finish_area)
 	add_child(PAUSE_MENU_SCENE.instantiate())
 	_update_hud()
+	await _fade_loading_screen(0.0, LOADING_FADE_OUT_DURATION)
 	_hide_loading_screen()
 	player.process_mode = Node.PROCESS_MODE_INHERIT
 	set_process(true)
@@ -196,6 +200,7 @@ func _show_loading_screen() -> void:
 	add_child(loading_layer)
 
 	loading_screen = LOADING_SCREEN_SCENE.instantiate() as Control
+	loading_screen.modulate.a = 0.0
 	loading_layer.add_child(loading_screen)
 
 
@@ -209,6 +214,14 @@ func _hide_loading_screen() -> void:
 func _set_loading_progress(value: float) -> void:
 	if loading_screen != null and loading_screen.has_method("set_progress"):
 		loading_screen.set_progress(value)
+
+
+func _fade_loading_screen(alpha: float, duration: float) -> void:
+	if loading_screen == null:
+		return
+	var tween := create_tween()
+	tween.tween_property(loading_screen, "modulate:a", alpha, duration)
+	await tween.finished
 
 
 func _read_threaded_progress(progress: Array) -> float:
