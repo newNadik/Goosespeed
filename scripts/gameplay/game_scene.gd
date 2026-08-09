@@ -5,8 +5,10 @@ const PAUSE_MENU_SCENE := preload("res://scenes/ui/pause_menu.tscn")
 const LOADING_SCREEN_SCENE := preload("res://scenes/ui/loading_screen.tscn")
 const CourseCatalog := preload("res://scripts/gameplay/course_catalog.gd")
 const COIN_PICKUP_GROUP := &"coins"
-const LOADING_FADE_IN_DURATION := 0.18
+const LOADING_FADE_IN_DURATION := 0.06
 const LOADING_FADE_OUT_DURATION := 0.28
+const LOADING_LAYER_NAME := "LoadingLayer"
+const LOADING_FADE_BASE_NAME := "LoadingFadeBase"
 
 @export_file("*.tscn") var course_scene_path: String = CourseCatalog.DEFAULT_COURSE_PATH
 
@@ -193,15 +195,19 @@ func _get_course_scene_path() -> String:
 
 
 func _show_loading_screen() -> void:
-	loading_layer = CanvasLayer.new()
-	loading_layer.name = "LoadingLayer"
-	loading_layer.layer = 100
-	loading_layer.process_mode = Node.PROCESS_MODE_ALWAYS
-	add_child(loading_layer)
+	loading_layer = get_tree().root.get_node_or_null(LOADING_LAYER_NAME) as CanvasLayer
+	if loading_layer == null:
+		loading_layer = CanvasLayer.new()
+		loading_layer.name = LOADING_LAYER_NAME
+		loading_layer.layer = 100
+		loading_layer.process_mode = Node.PROCESS_MODE_ALWAYS
+		add_child(loading_layer)
 
-	loading_screen = LOADING_SCREEN_SCENE.instantiate() as Control
-	loading_screen.modulate.a = 0.0
-	loading_layer.add_child(loading_screen)
+	loading_screen = loading_layer.get_node_or_null("GooseLoadingScreen") as Control
+	if loading_screen == null:
+		loading_screen = LOADING_SCREEN_SCENE.instantiate() as Control
+		loading_screen.modulate.a = 0.0
+		loading_layer.add_child(loading_screen)
 
 
 func _hide_loading_screen() -> void:
@@ -220,6 +226,10 @@ func _fade_loading_screen(alpha: float, duration: float) -> void:
 	if loading_screen == null:
 		return
 	var tween := create_tween()
+	var loading_base := loading_layer.get_node_or_null(LOADING_FADE_BASE_NAME) as ColorRect
+	if loading_base != null:
+		tween.tween_property(loading_base, "color:a", alpha, duration)
+		tween.parallel()
 	tween.tween_property(loading_screen, "modulate:a", alpha, duration)
 	await tween.finished
 

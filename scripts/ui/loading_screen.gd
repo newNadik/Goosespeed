@@ -1,7 +1,13 @@
 class_name GooseLoadingScreen
 extends Control
 
-const BACKGROUND_COLOUR := Color(0.012, 0.011, 0.01, 0.98)
+const BACKGROUND_COLOUR := Color("#182f44")
+const BACKGROUND_WASH_COLOUR := Color("#273f4f")
+const VIGNETTE_COLOUR := Color("#0f2133")
+const PRINT_SPECKLE_COLOUR := Color("#f1dfbd")
+const PROGRESS_COLOUR := Color("#8fb8c5e6")
+const VIGNETTE_CELL_SIZE := 24.0
+const SPECKLE_SPACING := 36.0
 const WALK_SPEED := 320.0
 const STEP_INTERVAL := 0.24
 const STEP_STRIDE := 78.0
@@ -49,6 +55,7 @@ func _process(delta: float) -> void:
 func _draw() -> void:
 	var rect := Rect2(Vector2.ZERO, size)
 	draw_rect(rect, BACKGROUND_COLOUR, true)
+	_draw_printed_background(rect)
 	_draw_planted_steps()
 	_draw_progress_glow(rect)
 
@@ -192,9 +199,52 @@ func _draw_step_texture(center: Vector2, rotation: float, alpha: float, side: fl
 	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
 
 
+func _draw_printed_background(rect: Rect2) -> void:
+	draw_rect(rect, Color(BACKGROUND_WASH_COLOUR, 0.18), true)
+	_draw_soft_vignette(rect)
+	_draw_print_speckles(rect)
+
+
+func _draw_soft_vignette(rect: Rect2) -> void:
+	var center := rect.size * 0.5
+	var max_distance := center.length()
+	var columns := int(ceil(rect.size.x / VIGNETTE_CELL_SIZE))
+	var rows := int(ceil(rect.size.y / VIGNETTE_CELL_SIZE))
+
+	for row in rows:
+		for column in columns:
+			var cell_position := Vector2(column, row) * VIGNETTE_CELL_SIZE
+			var cell_center := cell_position + Vector2.ONE * VIGNETTE_CELL_SIZE * 0.5
+			var distance_ratio := cell_center.distance_to(center) / max_distance
+			var edge_ratio := maxf(
+				absf(cell_center.x - center.x) / center.x,
+				absf(cell_center.y - center.y) / center.y
+			)
+			var alpha := smoothstep(0.48, 1.0, maxf(distance_ratio, edge_ratio)) * 0.52
+			if alpha <= 0.01:
+				continue
+			var cell_rect := Rect2(cell_position, Vector2.ONE * VIGNETTE_CELL_SIZE)
+			draw_rect(cell_rect, Color(VIGNETTE_COLOUR, alpha), true)
+
+
+func _draw_print_speckles(rect: Rect2) -> void:
+	var columns := int(ceil(rect.size.x / SPECKLE_SPACING))
+	var rows := int(ceil(rect.size.y / SPECKLE_SPACING))
+	for row in rows:
+		for column in columns:
+			var seed := float((column * 37 + row * 53) % 97) / 97.0
+			if seed > 0.36:
+				continue
+			var x := float(column) * SPECKLE_SPACING + 7.0 + fmod(seed * 211.0, 18.0)
+			var y := float(row) * SPECKLE_SPACING + 5.0 + fmod(seed * 157.0, 20.0)
+			var radius := 0.8 + seed * 1.4
+			var alpha := 0.028 + seed * 0.035
+			draw_circle(Vector2(x, y), radius, Color(PRINT_SPECKLE_COLOUR, alpha))
+
+
 func _draw_progress_glow(rect: Rect2) -> void:
 	var glow_width := maxf(0.0, rect.size.x * progress)
 	if glow_width <= 0.0:
 		return
 	var glow_rect := Rect2(0.0, rect.size.y - 8.0, glow_width, 8.0)
-	draw_rect(glow_rect, Color(1.0, 0.43, 0.08, 0.9), true)
+	draw_rect(glow_rect, PROGRESS_COLOUR, true)
