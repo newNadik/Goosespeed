@@ -37,6 +37,7 @@ func _ready() -> void:
 	_connect_finish_trigger()
 	_apply_spawn_transform()
 	_cache_coin_pickups()
+	_reset_coin_pickups()
 	game_hud.set_player(player)
 	if game_hud.has_method("set_finish_target"):
 		game_hud.set_finish_target(finish_area)

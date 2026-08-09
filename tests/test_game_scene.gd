@@ -98,6 +98,21 @@ func _ready() -> void:
 
 	game.queue_free()
 	await get_tree().process_frame
+
+	var next_game := GAME_SCENE.instantiate()
+	add_child(next_game)
+	if not await _wait_for_course(next_game):
+		push_error("Fresh game scene did not attach the default course")
+		get_tree().quit(1)
+		return
+	var fresh_first_coin := next_game.get_node_or_null("CourseRoot/LevelFarm/coins/Path_1/Piece_000")
+	if fresh_first_coin == null or bool(fresh_first_coin.get("is_collected")) or not fresh_first_coin.visible:
+		push_error("Fresh game scene did not reload collected coins")
+		get_tree().quit(1)
+		return
+	next_game.queue_free()
+	await get_tree().process_frame
+
 	print("Game scene OK")
 	get_tree().quit(0)
 
