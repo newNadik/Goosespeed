@@ -9,24 +9,33 @@ extends Node3D
 @export var random_seed := 9173
 @export_range(0.0, 5.0, 0.05) var cloud_scale_in_seconds := 2.0
 @export_range(0.0, 5.0, 0.05) var cloud_scale_out_seconds := 2.0
+@export var bird_scene: PackedScene
+@export var bird_spawn_interval_range := Vector2(8.0, 18.0)
+@export_range(0, 8, 1, "or_greater") var bird_spawn_min_count := 1
+@export_range(0, 8, 1, "or_greater") var bird_spawn_max_count := 1
+@export var bird_speed_range := Vector2(18.0, 24.0)
+@export_range(0.1, 1.0, 0.01) var bird_flight_area_scale := 0.7
 
 var rng := RandomNumberGenerator.new()
 var drift_direction := Vector3.RIGHT
 var drift_speed := 0.5
 var wrap_margin := 28.0
+var _bird_spawn_time_remaining := 0.0
 
 
 func _ready() -> void:
 	rng.seed = random_seed
 	_rebuild_clouds()
+	_schedule_next_bird_spawn()
 
 
 func _process(delta: float) -> void:
-	if drift_speed <= 0.0:
-		return
-	for cloud in get_children():
-		if cloud is Node3D:
-			_move_cloud(cloud as Node3D, delta)
+	if drift_speed > 0.0:
+		for cloud in get_children():
+			if cloud is Node3D and bool(cloud.get_meta(&"is_cloud", false)):
+				_move_cloud(cloud as Node3D, delta)
+
+	_update_bird_spawning(delta)
 
 
 func _rebuild_clouds() -> void:
@@ -69,6 +78,7 @@ func _spawn_cloud(index: int, config: Dictionary, scale_in := true) -> void:
 		return
 
 	cloud.name = "Cloud%02d" % index
+	cloud.set_meta(&"is_cloud", true)
 	cloud.position = _random_position()
 	cloud.rotation.y = _random_cloud_yaw(config)
 
@@ -145,6 +155,55 @@ func _scale_cloud_in(cloud: Node3D, target_scale: Vector3) -> void:
 func _finish_cloud_transition(cloud: Node3D) -> void:
 	if is_instance_valid(cloud):
 		cloud.set_meta(&"transitioning", false)
+
+
+func _update_bird_spawning(delta: float) -> void:
+	if bird_scene == null:
+		return
+
+	_bird_spawn_time_remaining -= delta
+	if _bird_spawn_time_remaining > 0.0:
+		return
+
+	_spawn_bird_fly_by()
+	_schedule_next_bird_spawn()
+
+
+func _spawn_bird_fly_by() -> void:
+	var min_count := mini(bird_spawn_min_count, bird_spawn_max_count)
+	var max_count := maxi(bird_spawn_min_count, bird_spawn_max_count)
+	var bird_count := rng.randi_range(min_count, max_count)
+	for index in bird_count:
+		var bird := bird_scene.instantiate() as CloudFlyingAnimal
+		if bird == null:
+			continue
+
+		bird.name = "SkyBird"
+		add_child(bird)
+		bird.fly_by_finished.connect(_on_bird_fly_by_finished)
+		var local_axis := drift_direction
+		if rng.randf() < 0.35:
+			local_axis = Vector3.FORWARD if rng.randf() < 0.5 else Vector3.RIGHT
+		if rng.randf() < 0.5:
+			local_axis *= -1.0
+		var forward_axis := (global_transform.basis * local_axis).normalized()
+		var side_axis := Vector3(-forward_axis.z, 0.0, forward_axis.x).normalized()
+		var half_forward := _projected_half_extent(local_axis) * bird_flight_area_scale
+		var half_side := _projected_half_extent(Vector3(-local_axis.z, 0.0, local_axis.x).normalized()) * bird_flight_area_scale
+		var speed := rng.randf_range(minf(bird_speed_range.x, bird_speed_range.y), maxf(bird_speed_range.x, bird_speed_range.y))
+		bird.start_fly_by(global_position, forward_axis, side_axis, half_forward, half_side, altitude_range, speed)
+
+
+func _schedule_next_bird_spawn() -> void:
+	_bird_spawn_time_remaining = rng.randf_range(
+		minf(bird_spawn_interval_range.x, bird_spawn_interval_range.y),
+		maxf(bird_spawn_interval_range.x, bird_spawn_interval_range.y)
+	)
+
+
+func _on_bird_fly_by_finished(bird: CloudFlyingAnimal) -> void:
+	if is_instance_valid(bird):
+		bird.queue_free()
 
 
 func _sky_config() -> Dictionary:
