@@ -12,6 +12,7 @@ const SHADOW_CASTER_META := &"goose_first_person_shadow_caster"
 
 func _ready() -> void:
 	active_movement_controller = goose_moves_runtime.spawn_controller(active_movement_controller)
+	active_movement_controller.add_to_group("player")
 	_configure_controller_render_contract()
 	_configure_goose_visual_render_layer()
 	_connect_settings_changed()

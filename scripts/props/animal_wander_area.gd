@@ -16,9 +16,20 @@ extends Area3D
 @export_range(0, 16, 1, "or_greater") var color_surface_index := 0
 @export var poke_animation_name := &"poke"
 @export var walk_animation_name := &"walk"
+@export var idle_animation_names: Array[StringName] = []
 @export var walk_speed := 1.4
 @export_range(-PI, PI, 0.001, "radians") var model_forward_yaw_offset := PI
 @export var avoidance_radius := 1.2
+@export var flee_enabled := false
+@export var player_group := &"player"
+@export var flee_trigger_distance := 6.0
+@export var flee_distance := 12.0
+@export var flee_height := 3.0
+@export var flee_fly_speed := 5.5
+@export var flee_check_interval := 0.3
+@export var takeoff_animation_name := &""
+@export var fly_loop_animation_name := &""
+@export var land_animation_name := &""
 
 var _rng := RandomNumberGenerator.new()
 var _spawned_animals: Array[Node] = []
@@ -61,9 +72,20 @@ func _spawn_animals() -> void:
 		if animal.has_method("configure_wander_area"):
 			animal.set("poke_animation_name", poke_animation_name)
 			animal.set("walk_animation_name", walk_animation_name)
+			animal.set("idle_animation_names", idle_animation_names)
 			animal.set("walk_speed", walk_speed)
 			animal.set("model_forward_yaw_offset", model_forward_yaw_offset)
 			animal.set("avoidance_radius", avoidance_radius)
+			animal.set("flee_enabled", flee_enabled)
+			animal.set("player_group", player_group)
+			animal.set("flee_trigger_distance", flee_trigger_distance)
+			animal.set("flee_distance", flee_distance)
+			animal.set("flee_height", flee_height)
+			animal.set("flee_fly_speed", flee_fly_speed)
+			animal.set("flee_check_interval", flee_check_interval)
+			animal.set("takeoff_animation_name", takeoff_animation_name)
+			animal.set("fly_loop_animation_name", fly_loop_animation_name)
+			animal.set("land_animation_name", land_animation_name)
 			animal.set("color_mesh_path", color_mesh_path)
 			animal.set("color_surface_index", color_surface_index)
 			animal.configure_wander_area(global_position, area_size * 0.5, flock_group)
