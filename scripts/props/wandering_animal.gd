@@ -15,6 +15,11 @@ extends CharacterBody3D
 @export var stay_time_range := Vector2(1.5, 4.0)
 @export var walk_time_range := Vector2(1.2, 3.2)
 @export var target_reached_distance := 0.35
+@export var honk_flee_enabled := false
+@export var honk_flee_trigger_distance := 10.0
+@export var honk_flee_distance := 6.0
+@export var honk_flee_duration := 1.8
+@export var honk_flee_speed := 2.6
 @export var flee_enabled := false
 @export var player_group := &"player"
 @export var flee_trigger_distance := 6.0
@@ -44,6 +49,7 @@ func _ready() -> void:
 	_rng.randomize()
 	_animation_player = get_node_or_null(animation_player_path) as AnimationPlayer
 	_ground_y = global_position.y
+	_connect_honk_signal()
 	_enter_stay()
 
 
@@ -52,6 +58,9 @@ func _physics_process(delta: float) -> void:
 
 	if _state == &"flee_takeoff" or _state == &"flee_fly" or _state == &"flee_land":
 		_update_flee(delta)
+		return
+	if _state == &"honk_flee":
+		_update_honk_flee(delta)
 		return
 
 	_state_time_remaining -= delta
@@ -158,6 +167,39 @@ func _update_walk(delta: float) -> void:
 		_target_position = _random_point_in_area()
 
 
+func _enter_honk_flee(honk_position: Vector3) -> void:
+	var offset := global_position - honk_position
+	offset.y = 0.0
+	if offset.length_squared() > honk_flee_trigger_distance * honk_flee_trigger_distance:
+		return
+
+	var away_direction := offset.normalized() if offset.length_squared() > 0.001 else _random_flat_direction()
+	_target_position = _clamp_to_area(global_position + away_direction * honk_flee_distance)
+	_target_position.y = _ground_y
+	_state = &"honk_flee"
+	_state_time_remaining = honk_flee_duration
+	_play_looping_animation(walk_animation_name)
+
+
+func _update_honk_flee(delta: float) -> void:
+	_state_time_remaining -= delta
+	var to_target := _target_position - global_position
+	to_target.y = 0.0
+	if _state_time_remaining <= 0.0 or to_target.length() <= target_reached_distance:
+		global_position.y = _ground_y
+		_enter_stay()
+		return
+
+	var desired_direction := to_target.normalized()
+	desired_direction = (desired_direction + _separation_direction() * avoidance_weight).normalized()
+	if desired_direction.length_squared() <= 0.001:
+		desired_direction = to_target.normalized()
+	_face_direction(desired_direction, delta)
+	velocity = desired_direction * honk_flee_speed
+	velocity.y = 0.0
+	move_and_slide()
+
+
 func _update_flee_detection(delta: float) -> void:
 	if not flee_enabled or player_group == &"":
 		return
@@ -246,6 +288,30 @@ func _nearest_player() -> Node3D:
 	return nearest
 
 
+func _connect_honk_signal() -> void:
+	var goose_honk := get_node_or_null("/root/GooseHonk")
+	if goose_honk == null or not goose_honk.has_signal("honked"):
+		return
+	if not goose_honk.is_connected("honked", _on_goose_honked):
+		goose_honk.connect("honked", _on_goose_honked)
+
+
+func _on_goose_honked(honk_position: Vector3) -> void:
+	if not honk_flee_enabled:
+		return
+	if _state == &"flee_takeoff" or _state == &"flee_fly" or _state == &"flee_land":
+		return
+
+	var offset := global_position - honk_position
+	offset.y = 0.0
+	if offset.length_squared() > honk_flee_trigger_distance * honk_flee_trigger_distance:
+		return
+	if _has_flight_flee_animations():
+		_enter_flee(offset)
+	else:
+		_enter_honk_flee(honk_position)
+
+
 func _separation_direction() -> Vector3:
 	if _flock_group == &"":
 		return Vector3.ZERO
@@ -260,6 +326,14 @@ func _separation_direction() -> Vector3:
 		if distance > 0.001 and distance < avoidance_radius:
 			separation += offset.normalized() * ((avoidance_radius - distance) / avoidance_radius)
 	return separation
+
+
+func _has_flight_flee_animations() -> bool:
+	return (
+		takeoff_animation_name != &""
+		and fly_loop_animation_name != &""
+		and land_animation_name != &""
+	)
 
 
 func _random_point_in_area() -> Vector3:

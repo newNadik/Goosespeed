@@ -20,6 +20,11 @@ extends Area3D
 @export var walk_speed := 1.4
 @export_range(-PI, PI, 0.001, "radians") var model_forward_yaw_offset := PI
 @export var avoidance_radius := 1.2
+@export var honk_flee_enabled := false
+@export var honk_flee_trigger_distance := 10.0
+@export var honk_flee_distance := 6.0
+@export var honk_flee_duration := 1.8
+@export var honk_flee_speed := 2.6
 @export var flee_enabled := false
 @export var player_group := &"player"
 @export var flee_trigger_distance := 6.0
@@ -76,6 +81,11 @@ func _spawn_animals() -> void:
 			animal.set("walk_speed", walk_speed)
 			animal.set("model_forward_yaw_offset", model_forward_yaw_offset)
 			animal.set("avoidance_radius", avoidance_radius)
+			animal.set("honk_flee_enabled", honk_flee_enabled)
+			animal.set("honk_flee_trigger_distance", honk_flee_trigger_distance)
+			animal.set("honk_flee_distance", honk_flee_distance)
+			animal.set("honk_flee_duration", honk_flee_duration)
+			animal.set("honk_flee_speed", honk_flee_speed)
 			animal.set("flee_enabled", flee_enabled)
 			animal.set("player_group", player_group)
 			animal.set("flee_trigger_distance", flee_trigger_distance)

@@ -10,6 +10,8 @@ func _initialize() -> void:
 	else:
 		if goose_honk.process_mode != Node.PROCESS_MODE_ALWAYS:
 			failures.append("GooseHonk should process while paused")
+		if not goose_honk.has_signal("honked"):
+			failures.append("GooseHonk should emit a honked signal")
 		var player := goose_honk.get("player") as AudioStreamPlayer
 		if player == null:
 			failures.append("GooseHonk audio player is missing")

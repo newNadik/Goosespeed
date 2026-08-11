@@ -1,5 +1,7 @@
 extends Node
 
+signal honked(position: Vector3)
+
 const HONK_STREAM := preload("res://assets/sounds/honk-sound.mp3")
 
 @export var min_pitch := 0.92
@@ -32,3 +34,24 @@ func honk() -> void:
 		return
 	player.pitch_scale = random.randf_range(min_pitch, max_pitch)
 	player.play()
+	honked.emit(_honk_origin())
+
+
+func _honk_origin() -> Vector3:
+	var nearest_player := _nearest_player()
+	if nearest_player == null:
+		return Vector3.ZERO
+	return nearest_player.global_position
+
+
+func _nearest_player() -> Node3D:
+	var nearest: Node3D
+	var nearest_distance_squared := INF
+	for candidate in get_tree().get_nodes_in_group(&"player"):
+		if not candidate is Node3D:
+			continue
+		var distance_squared := (candidate as Node3D).global_position.length_squared()
+		if distance_squared < nearest_distance_squared:
+			nearest = candidate as Node3D
+			nearest_distance_squared = distance_squared
+	return nearest
