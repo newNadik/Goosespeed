@@ -21,6 +21,9 @@ var starting_game := false
 func _ready() -> void:
 	if DisplayServer.get_name() != "headless":
 		CourseCatalog.request_course_preload(PREDICTED_COURSE_SCENE)
+	var audio_manager := get_node_or_null("/root/AudioManager")
+	if audio_manager != null and audio_manager.has_method("play_menu_music"):
+		audio_manager.play_menu_music()
 	start_button.pressed.connect(on_start_pressed)
 	settings_button.pressed.connect(on_settings_pressed)
 	quit_button.pressed.connect(on_quit_pressed)

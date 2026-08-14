@@ -20,6 +20,7 @@ func _ready() -> void:
 	player = AudioStreamPlayer.new()
 	player.name = "HonkPlayer"
 	player.stream = HONK_STREAM
+	player.bus = "SFX"
 	player.process_mode = Node.PROCESS_MODE_ALWAYS
 	add_child(player)
 

@@ -647,6 +647,7 @@ func _ensure_flap_sound_player() -> void:
 		flap_sound_player.name = "FlapSound"
 		add_child(flap_sound_player)
 	flap_sound_player.stream = FLAP_SOUND
+	flap_sound_player.bus = "SFX"
 	flap_sound_player.volume_db = flap_sound_volume_db
 	flap_sound_player.unit_size = 6.0
 	flap_sound_player.max_distance = 42.0

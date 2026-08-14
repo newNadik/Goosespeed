@@ -42,6 +42,7 @@ func _ready() -> void:
 	if game_hud.has_method("set_finish_target"):
 		game_hud.set_finish_target(finish_area)
 	add_child(PAUSE_MENU_SCENE.instantiate())
+	_play_random_game_music()
 	_update_hud()
 	await _fade_loading_screen(0.0, LOADING_FADE_OUT_DURATION)
 	_hide_loading_screen()
@@ -63,6 +64,7 @@ func restart_run() -> void:
 	run_coin_count = 0
 	_reset_coin_pickups()
 	player.reset_to_spawn()
+	_play_random_game_music()
 	_update_hud()
 
 
@@ -152,6 +154,12 @@ func _update_hud() -> void:
 	game_hud.set_run_state(elapsed_time, finished)
 	if game_hud.has_method("set_coin_count"):
 		game_hud.set_coin_count(run_coin_count)
+
+
+func _play_random_game_music() -> void:
+	var audio_manager := get_node_or_null("/root/AudioManager")
+	if audio_manager != null and audio_manager.has_method("play_random_game_music"):
+		audio_manager.play_random_game_music()
 
 
 func _load_and_attach_course() -> void:

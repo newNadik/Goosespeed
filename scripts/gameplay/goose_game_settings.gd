@@ -5,6 +5,8 @@ signal settings_changed
 const GooseMovesRuntimeScript := preload("res://scripts/player/goose_moves_runtime.gd")
 const SAVE_PATH := "user://goosespeed_settings.cfg"
 const SECTION := "goosespeed"
+const DEFAULT_MUSIC_ENABLED := true
+const DEFAULT_SFX_ENABLED := true
 const DEFAULT_HEAD_LOOK_ENABLED := true
 const DEFAULT_HEAD_LOOK_INTENSITY := 1.0
 const DEFAULT_HEAD_LOOK_SMOOTHNESS := 10.0
@@ -57,6 +59,8 @@ const HUD_DEBUG_ELEMENTS := [
 ]
 
 var debug_hud_visible := false
+var music_enabled := DEFAULT_MUSIC_ENABLED
+var sfx_enabled := DEFAULT_SFX_ENABLED
 var head_look_enabled := DEFAULT_HEAD_LOOK_ENABLED
 var head_look_intensity := DEFAULT_HEAD_LOOK_INTENSITY
 var head_look_smoothness := DEFAULT_HEAD_LOOK_SMOOTHNESS
@@ -77,6 +81,8 @@ func load_settings() -> void:
 		_lock_goose_moves_backend()
 		return
 
+	music_enabled = bool(config.get_value(SECTION, "music_enabled", music_enabled))
+	sfx_enabled = bool(config.get_value(SECTION, "sfx_enabled", sfx_enabled))
 	head_look_enabled = bool(config.get_value(SECTION, "head_look_enabled", head_look_enabled))
 	head_look_intensity = clampf(
 		float(config.get_value(SECTION, "head_look_intensity", head_look_intensity)),
@@ -97,6 +103,8 @@ func load_settings() -> void:
 
 func save_settings() -> void:
 	var config := ConfigFile.new()
+	config.set_value(SECTION, "music_enabled", music_enabled)
+	config.set_value(SECTION, "sfx_enabled", sfx_enabled)
 	config.set_value(SECTION, "head_look_enabled", head_look_enabled)
 	config.set_value(SECTION, "head_look_intensity", head_look_intensity)
 	config.set_value(SECTION, "head_look_smoothness", head_look_smoothness)
@@ -105,6 +113,22 @@ func save_settings() -> void:
 	var error := config.save(SAVE_PATH)
 	if error != OK:
 		push_warning("Failed to save GooseSpeed settings: %s" % error)
+
+
+func set_music_enabled(value: bool) -> void:
+	if music_enabled == value:
+		return
+	music_enabled = value
+	save_settings()
+	settings_changed.emit()
+
+
+func set_sfx_enabled(value: bool) -> void:
+	if sfx_enabled == value:
+		return
+	sfx_enabled = value
+	save_settings()
+	settings_changed.emit()
 
 
 func set_head_look_enabled(value: bool) -> void:

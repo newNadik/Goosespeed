@@ -52,6 +52,7 @@ func _ensure_sound_player() -> void:
 		add_child(_sound_player)
 
 	_sound_player.stream = sound_stream
+	_sound_player.bus = "SFX"
 	_sound_player.volume_db = volume_db
 	_sound_player.max_distance = max_audible_distance
 
