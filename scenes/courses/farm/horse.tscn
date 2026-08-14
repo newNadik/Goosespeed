@@ -1,6 +1,8 @@
 [gd_scene format=4 uid="uid://chcdcjqahnca1"]
 
 [ext_resource type="Script" path="res://scripts/props/mesh_albedo_color.gd" id="1_pr6pu"]
+[ext_resource type="Script" path="res://scripts/props/animal_proximity_sound.gd" id="2_sound"]
+[ext_resource type="AudioStream" path="res://assets/sounds/farm/horse.mp3" id="3_sound"]
 
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_5ebgh"]
 resource_name = "Material"
@@ -237,6 +239,15 @@ shadow_mesh = SubResource("ArrayMesh_jy2up")
 script = ExtResource("1_pr6pu")
 mesh_instance_path = NodePath("Cube_0/Object_4")
 albedo_color = Color(0.5686277, 0.31764704, 0.21176486, 1)
+
+[node name="ProximitySound" type="Node3D" parent="."]
+script = ExtResource("2_sound")
+sound_stream = ExtResource("3_sound")
+activation_distance = 35.0
+max_audible_distance = 30.0
+delay_range = Vector2(2, 6)
+play_chance = 0.8
+volume_db = -4.0
 
 [node name="Cube_0" type="Node3D" parent="." unique_id=1152836770]
 transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 6.1107416, 0)

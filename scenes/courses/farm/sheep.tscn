@@ -2,6 +2,8 @@
 
 [ext_resource type="Texture2D" uid="uid://bn2rfyf3fjvte" path="res://assets/models/farm/sheep_animation_lowpoly_0.png" id="1_asqur"]
 [ext_resource type="Script" path="res://scripts/props/random_animation_player.gd" id="2_a5icu"]
+[ext_resource type="Script" path="res://scripts/props/animal_proximity_sound.gd" id="3_sound"]
+[ext_resource type="AudioStream" path="res://assets/sounds/farm/sheep.mp3" id="4_sound"]
 
 [sub_resource type="CapsuleShape3D" id="CapsuleShape3D_ka346"]
 radius = 0.6801758
@@ -133,6 +135,15 @@ _data = {
 [node name="Sheep" type="StaticBody3D" unique_id=664707766]
 script = ExtResource("2_a5icu")
 animation_names = Array[String](["Animation"])
+
+[node name="ProximitySound" type="Node3D" parent="."]
+script = ExtResource("3_sound")
+sound_stream = ExtResource("4_sound")
+activation_distance = 30.0
+max_audible_distance = 26.0
+delay_range = Vector2(2, 6)
+play_chance = 0.75
+volume_db = -5.0
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=178690507]
 transform = Transform3D(1, 0, 0, 0, -4.3711385e-08, -0.99999994, 0, 0.99999994, -4.3711385e-08, 0, 0.8123665, 0.21667479)

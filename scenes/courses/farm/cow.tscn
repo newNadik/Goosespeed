@@ -1,5 +1,8 @@
 [gd_scene format=4 uid="uid://dxp0uh7bp2y8u"]
 
+[ext_resource type="Script" path="res://scripts/props/animal_proximity_sound.gd" id="1_sound"]
+[ext_resource type="AudioStream" path="res://assets/sounds/farm/cow.mp3" id="2_sound"]
+
 [sub_resource type="StandardMaterial3D" id="StandardMaterial3D_g4pl7"]
 resource_name = "Material"
 cull_mode = 2
@@ -274,6 +277,15 @@ blend_shape_mode = 0
 shadow_mesh = SubResource("ArrayMesh_ux4u3")
 
 [node name="Cow" type="Node3D" unique_id=693541528]
+
+[node name="ProximitySound" type="Node3D" parent="."]
+script = ExtResource("1_sound")
+sound_stream = ExtResource("2_sound")
+activation_distance = 35.0
+max_audible_distance = 30.0
+delay_range = Vector2(2, 6)
+play_chance = 0.8
+volume_db = -4.0
 
 [node name="Cube_0" type="Node3D" parent="." unique_id=1256120279]
 transform = Transform3D(1.2291212, 0, 0, 0, 1.2291212, 0, 0, 0, 1.2291212, 0, 2.36308, 0)
