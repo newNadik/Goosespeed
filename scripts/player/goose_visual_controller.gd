@@ -87,6 +87,7 @@ const LOOPING_ANIMATIONS := [
 @export var default_turn_rate := 14.0
 @export var input_facing_commit_time := 0.14
 @export var visual_vertical_smoothness := 18.0
+@export var swim_visual_y_offset := -0.30
 @export var head_look_enabled := true
 @export_range(0.0, 1.0, 0.05) var head_look_intensity := 0.65
 @export var head_look_smoothness := 10.0
@@ -237,6 +238,8 @@ func _get_root_position() -> Vector3:
 
 func _get_visual_position(delta: float) -> Vector3:
 	var target_position := _get_root_position()
+	if latest_state.swimming:
+		target_position.y += swim_visual_y_offset
 	if not _should_smooth_visual_position(latest_state):
 		_set_smoothed_visual_y(target_position.y)
 		return target_position
