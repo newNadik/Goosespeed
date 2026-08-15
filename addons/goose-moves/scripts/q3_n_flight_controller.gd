@@ -74,6 +74,7 @@ var camera_transition_from_fov := 100.0
 var camera_transition_target: Camera3D
 var first_person_camera_enabled := false
 var presentation_enabled := true
+var control_enabled := true
 var debug_hud_visible := true
 var player_body_render_layer := 0
 
@@ -120,7 +121,7 @@ func _physics_process(delta: float) -> void:
 	movement_state.physics_tick(delta)
 	_update_knockdown_timer(delta)
 	if mode == Mode.FLIGHT:
-		if Input.is_action_pressed("player_crouch"):
+		if control_enabled and Input.is_action_pressed("player_crouch"):
 			_enter_q3(true)
 			_emit_movement_state_changed()
 			return
@@ -148,7 +149,7 @@ func _physics_process(delta: float) -> void:
 		_emit_movement_state_changed()
 		return
 
-	q3_motor.control_enabled = not _is_knocked_down()
+	_sync_control_enabled()
 	_update_flap_hold(delta)
 	var was_grounded := is_on_floor()
 	var q3_impact_velocity := velocity
@@ -224,6 +225,7 @@ func _try_flap_impulse() -> void:
 
 func set_spawn_transform(value: Transform3D) -> void:
 	set_meta("spawn_transform", value)
+	set_meta("spawn_view_angles", get_view_angles())
 
 
 func reset_to_spawn() -> void:
@@ -236,15 +238,21 @@ func reset_to_spawn() -> void:
 	flap_hold_time = 0.0
 	no_surface_contact_time = 0.0
 	movement_state = MOVEMENT_STATE_TRACKER.new()
-	var euler := spawn_transform.basis.get_euler()
-	set_view_angles(euler.y, euler.x)
+	var view_angles: Vector2 = get_meta("spawn_view_angles", _view_angles_for_basis(spawn_transform.basis))
+	set_view_angles(view_angles.x, view_angles.y)
 	q3_motor.reset_camera_anchor_smoothing()
 	_set_q3_visuals()
+	_emit_movement_state_changed()
 
 
 func set_presentation_enabled(value: bool) -> void:
 	presentation_enabled = value
 	_apply_presentation_state()
+
+
+func set_control_enabled(value: bool) -> void:
+	control_enabled = value
+	_sync_control_enabled()
 
 
 func set_debug_hud_visible(value: bool) -> void:
@@ -276,6 +284,11 @@ func set_view_angles(view_yaw: float, view_pitch: float) -> void:
 	flight_motor.camera_yaw = view_yaw
 	flight_motor.camera_pitch = clampf(view_pitch, deg_to_rad(-75.0), deg_to_rad(60.0))
 	flight_motor._apply_camera_rotation()
+
+
+func _view_angles_for_basis(value: Basis) -> Vector2:
+	var euler := value.get_euler()
+	return Vector2(euler.y, euler.x)
 
 
 func recenter_camera() -> void:
@@ -474,7 +487,7 @@ func _get_landing_carry_config() -> Dictionary:
 
 
 func _update_flap_hold(delta: float) -> void:
-	if _is_knocked_down():
+	if not control_enabled or _is_knocked_down():
 		flap_hold_time = 0.0
 		return
 	if not _can_charge_flight_hold():
@@ -533,7 +546,7 @@ func _update_knockdown_timer(delta: float) -> void:
 		return
 	knockdown_time_remaining = maxf(knockdown_time_remaining - delta, 0.0)
 	if knockdown_time_remaining <= 0.0:
-		q3_motor.control_enabled = true
+		_sync_control_enabled()
 
 
 func _get_body_bounce_impact(impact_velocity: Vector3) -> Dictionary:
@@ -566,7 +579,7 @@ func _get_body_bounce_velocity(impact_velocity: Vector3, normal: Vector3) -> Vec
 
 func _start_knockdown() -> void:
 	knockdown_time_remaining = maxf(body_bounce_knockdown_duration, 0.0)
-	q3_motor.control_enabled = not _is_knocked_down()
+	_sync_control_enabled()
 	flap_hold_time = 0.0
 	no_surface_contact_time = 0.0
 	_update_knockdown_hud()
@@ -651,6 +664,12 @@ func _sync_q3_body_size_to_flight() -> void:
 	q3_motor.set_character_size(FLIGHT_COLLISION_SIZE)
 
 
+func _sync_control_enabled() -> void:
+	q3_motor.control_enabled = control_enabled and not _is_knocked_down()
+	q3_motor.camera_control_enabled = control_enabled or not _is_knocked_down()
+	flight_motor.control_enabled = control_enabled and not _is_knocked_down()
+
+
 func _body_would_overlap_with_basis(candidate_basis: Basis) -> bool:
 	if not is_inside_tree():
 		return false
@@ -688,7 +707,7 @@ func _enter_q3(snap_upright: bool) -> void:
 	if should_blend_camera:
 		movement_state.record_exited_flight()
 	motion_mode = CharacterBody3D.MOTION_MODE_GROUNDED
-	q3_motor.control_enabled = not _is_knocked_down()
+	_sync_control_enabled()
 	floor_stop_on_slope = false
 	floor_max_angle = deg_to_rad(q3_motor.max_slope_angle)
 	floor_snap_length = q3_motor.step_height

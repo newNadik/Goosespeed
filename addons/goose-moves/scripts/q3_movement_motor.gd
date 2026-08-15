@@ -215,6 +215,7 @@ var wall_jump_enabled := false
 var third_person_enabled := false
 var idle_camera_orbit_enabled := false
 var control_enabled := true
+var camera_control_enabled := true
 var character_size := Vector3(
 	30.0 * Q3_METERS_PER_UNIT,
 	Q3_STANDING_HULL_HEIGHT * Q3_METERS_PER_UNIT,
@@ -1267,7 +1268,7 @@ func _surface_is_slick(collider: Node) -> bool:
 
 
 func handle_unhandled_input(event: InputEvent) -> void:
-	if not control_enabled:
+	if not camera_control_enabled:
 		return
 	if event is InputEventMouseMotion and Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
 		yaw -= event.relative.x * mouse_sensitivity

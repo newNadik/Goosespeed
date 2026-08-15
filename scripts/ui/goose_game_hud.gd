@@ -6,7 +6,19 @@ const MovementStateScript := preload("res://scripts/player/movement_state.gd")
 const COMPASS_CLIP_CENTER_X := 228.0
 const COMPASS_CYCLE_WIDTH := 456.0
 const COMPASS_CENTER_N_X := 456.0
+const COUNTDOWN_TEXTURES: Array[Texture2D] = [
+	preload("res://assets/ui/count_3.png"),
+	preload("res://assets/ui/count_2.png"),
+	preload("res://assets/ui/count_1.png"),
+	preload("res://assets/ui/count_go.png"),
+]
+const COUNTDOWN_SLIDE_DURATION := 0.2
+const COUNTDOWN_CENTER_HOLD_DURATION := 0.6
+const COUNTDOWN_MAX_WIDTH := 520.0
+const COUNTDOWN_SCREEN_WIDTH_SCALE := 0.42
+const COUNTDOWN_SCREEN_HEIGHT_SCALE := 0.45
 
+@onready var root: Control = $Root
 @onready var direction_panel: Control = $Root/DirectionWidget
 @onready var compass_clip: Control = $Root/DirectionWidget/CompassClip
 @onready var compass_strip: Control = $Root/DirectionWidget/CompassClip/CompassStrip
@@ -44,10 +56,13 @@ var previous_velocity := Vector3.ZERO
 var acceleration := 0.0
 var has_previous_velocity := false
 var finish_icon_base_y := 0.0
+var countdown_rect: TextureRect
+var countdown_playing := false
 
 
 func _ready() -> void:
 	finish_icon_base_y = finish_icon.position.y
+	_ensure_countdown_rect()
 	_connect_settings()
 	_update_visibility()
 
@@ -79,6 +94,19 @@ func set_run_state(time_seconds: float, finished: bool) -> void:
 func set_coin_count(value: int) -> void:
 	coin_count = max(value, 0)
 	_update_labels()
+
+
+func play_level_start_countdown() -> void:
+	_ensure_countdown_rect()
+	countdown_playing = true
+	for texture in COUNTDOWN_TEXTURES:
+		await _play_countdown_step(texture)
+	countdown_rect.visible = false
+	countdown_playing = false
+
+
+func is_level_start_countdown_playing() -> bool:
+	return countdown_playing
 
 
 func _connect_settings() -> void:
@@ -405,3 +433,64 @@ func _format_input_state() -> String:
 	if Input.is_action_pressed(&"player_walk"):
 		inputs.append("walk")
 	return "none" if inputs.is_empty() else " / ".join(inputs)
+
+
+func _ensure_countdown_rect() -> void:
+	if countdown_rect != null:
+		return
+	countdown_rect = TextureRect.new()
+	countdown_rect.name = "LevelStartCountdown"
+	countdown_rect.visible = false
+	countdown_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	countdown_rect.expand_mode = TextureRect.EXPAND_FIT_WIDTH_PROPORTIONAL
+	countdown_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	countdown_rect.z_index = 100
+	root.add_child(countdown_rect)
+
+
+func _play_countdown_step(texture: Texture2D) -> void:
+	if texture == null:
+		return
+	var layout := _get_countdown_layout(texture)
+	countdown_rect.texture = texture
+	countdown_rect.size = layout["size"]
+	countdown_rect.position = layout["start"]
+	countdown_rect.modulate.a = 1.0
+	countdown_rect.visible = true
+
+	var tween := create_tween()
+	tween.set_pause_mode(Tween.TWEEN_PAUSE_BOUND)
+	tween.set_trans(Tween.TRANS_BACK)
+	tween.set_ease(Tween.EASE_OUT)
+	tween.tween_property(countdown_rect, "position", layout["center"], COUNTDOWN_SLIDE_DURATION)
+	await tween.finished
+	await get_tree().create_timer(COUNTDOWN_CENTER_HOLD_DURATION, false).timeout
+
+	tween = create_tween()
+	tween.set_pause_mode(Tween.TWEEN_PAUSE_BOUND)
+	tween.set_trans(Tween.TRANS_BACK)
+	tween.set_ease(Tween.EASE_IN)
+	tween.tween_property(countdown_rect, "position", layout["end"], COUNTDOWN_SLIDE_DURATION)
+	await tween.finished
+
+
+func _get_countdown_layout(texture: Texture2D) -> Dictionary:
+	var viewport_size := root.size
+	if viewport_size.x <= 0.0 or viewport_size.y <= 0.0:
+		viewport_size = get_viewport().get_visible_rect().size
+	var texture_size := texture.get_size()
+	var aspect := texture_size.x / maxf(texture_size.y, 1.0)
+	var width: float = minf(COUNTDOWN_MAX_WIDTH, viewport_size.x * COUNTDOWN_SCREEN_WIDTH_SCALE)
+	var height := width / maxf(aspect, 0.001)
+	var max_height := viewport_size.y * COUNTDOWN_SCREEN_HEIGHT_SCALE
+	if height > max_height:
+		height = max_height
+		width = height * aspect
+	var size := Vector2(width, height)
+	var center := (viewport_size - size) * 0.5
+	return {
+		"size": size,
+		"start": Vector2(viewport_size.x + size.x, center.y),
+		"center": center,
+		"end": Vector2(-size.x, center.y),
+	}

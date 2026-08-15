@@ -5,9 +5,11 @@ const SFX_BUS := "SFX"
 const MENU_MUSIC_DIR := "res://assets/music/menu"
 const GAME_MUSIC_DIR := "res://assets/music/game"
 const AUDIO_EXTENSIONS := ["mp3", "ogg", "wav"]
+const COUNTDOWN_STREAM := preload("res://assets/sounds/countdown.mp3")
 
 var _menu_player: AudioStreamPlayer
 var _game_player: AudioStreamPlayer
+var _countdown_player: AudioStreamPlayer
 var _rng := RandomNumberGenerator.new()
 var _menu_tracks: Array[AudioStream] = []
 var _game_tracks: Array[AudioStream] = []
@@ -19,6 +21,8 @@ func _ready() -> void:
 	_ensure_audio_buses()
 	_menu_player = _create_music_player("MenuMusicPlayer")
 	_game_player = _create_music_player("GameMusicPlayer")
+	_countdown_player = _create_sfx_player("CountdownPlayer")
+	_countdown_player.process_mode = Node.PROCESS_MODE_PAUSABLE
 	_menu_tracks = _load_tracks_from_dir(MENU_MUSIC_DIR)
 	_game_tracks = _load_tracks_from_dir(GAME_MUSIC_DIR)
 	var settings := _get_game_settings()
@@ -49,10 +53,28 @@ func stop_music() -> void:
 	_stop_player(_game_player)
 
 
+func play_countdown_sfx() -> void:
+	_apply_audio_settings()
+	if _countdown_player == null:
+		return
+	_countdown_player.stop()
+	_countdown_player.play()
+
+
 func _create_music_player(node_name: String) -> AudioStreamPlayer:
 	var player := AudioStreamPlayer.new()
 	player.name = node_name
 	player.bus = MUSIC_BUS
+	player.process_mode = Node.PROCESS_MODE_ALWAYS
+	add_child(player)
+	return player
+
+
+func _create_sfx_player(node_name: String) -> AudioStreamPlayer:
+	var player := AudioStreamPlayer.new()
+	player.name = node_name
+	player.stream = COUNTDOWN_STREAM
+	player.bus = SFX_BUS
 	player.process_mode = Node.PROCESS_MODE_ALWAYS
 	add_child(player)
 	return player

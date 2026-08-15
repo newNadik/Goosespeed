@@ -25,6 +25,7 @@ var coin_pickups: Array[CoinPickup] = []
 var active_course: Node3D
 var loading_layer: CanvasLayer
 var loading_screen: Control
+var countdown_active := false
 
 
 func _ready() -> void:
@@ -42,12 +43,11 @@ func _ready() -> void:
 	if game_hud.has_method("set_finish_target"):
 		game_hud.set_finish_target(finish_area)
 	add_child(PAUSE_MENU_SCENE.instantiate())
-	_play_random_game_music()
 	_update_hud()
 	await _fade_loading_screen(0.0, LOADING_FADE_OUT_DURATION)
 	_hide_loading_screen()
 	player.process_mode = Node.PROCESS_MODE_INHERIT
-	set_process(true)
+	await _begin_level_start_countdown()
 
 
 func _process(delta: float) -> void:
@@ -59,12 +59,14 @@ func _process(delta: float) -> void:
 
 
 func restart_run() -> void:
+	if countdown_active:
+		return
 	elapsed_time = 0.0
 	finished = false
 	run_coin_count = 0
 	_reset_coin_pickups()
 	player.reset_to_spawn()
-	_play_random_game_music()
+	_begin_level_start_countdown()
 	_update_hud()
 
 
@@ -160,6 +162,38 @@ func _play_random_game_music() -> void:
 	var audio_manager := get_node_or_null("/root/AudioManager")
 	if audio_manager != null and audio_manager.has_method("play_random_game_music"):
 		audio_manager.play_random_game_music()
+
+
+func _begin_level_start_countdown() -> void:
+	countdown_active = true
+	set_process(false)
+	_set_player_controls_enabled(false)
+	_stop_music()
+	_play_countdown_sfx()
+	if game_hud.has_method("play_level_start_countdown"):
+		await game_hud.play_level_start_countdown()
+	_set_player_controls_enabled(true)
+	_play_random_game_music()
+	countdown_active = false
+	set_process(true)
+	_update_hud()
+
+
+func _set_player_controls_enabled(value: bool) -> void:
+	if player != null and player.has_method("set_control_enabled"):
+		player.set_control_enabled(value)
+
+
+func _play_countdown_sfx() -> void:
+	var audio_manager := get_node_or_null("/root/AudioManager")
+	if audio_manager != null and audio_manager.has_method("play_countdown_sfx"):
+		audio_manager.play_countdown_sfx()
+
+
+func _stop_music() -> void:
+	var audio_manager := get_node_or_null("/root/AudioManager")
+	if audio_manager != null and audio_manager.has_method("stop_music"):
+		audio_manager.stop_music()
 
 
 func _load_and_attach_course() -> void:

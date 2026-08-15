@@ -71,6 +71,24 @@ func _ready() -> void:
 		push_error("HUD vertical speed gauge did not accept vertical speed data")
 		get_tree().quit(1)
 		return
+	hud.play_level_start_countdown()
+	await get_tree().process_frame
+	if not hud.is_level_start_countdown_playing():
+		push_error("HUD countdown did not start")
+		get_tree().quit(1)
+		return
+	get_tree().paused = true
+	await get_tree().create_timer(4.5, true).timeout
+	if not hud.is_level_start_countdown_playing():
+		get_tree().paused = false
+		push_error("HUD countdown completed while paused")
+		get_tree().quit(1)
+		return
+	get_tree().paused = false
+	if not await _wait_for_countdown_complete(hud):
+		push_error("HUD countdown did not complete after unpausing")
+		get_tree().quit(1)
+		return
 	print("Goose game HUD OK")
 	get_tree().quit(0)
 
@@ -78,3 +96,12 @@ func _ready() -> void:
 func _label_contains(root: Node, path: NodePath, expected_text: String) -> bool:
 	var label := root.get_node_or_null(path) as Label
 	return label != null and label.text.contains(expected_text)
+
+
+func _wait_for_countdown_complete(hud: Node) -> bool:
+	var deadline := Time.get_ticks_msec() + 10000
+	while Time.get_ticks_msec() < deadline:
+		if not hud.is_level_start_countdown_playing():
+			return true
+		await get_tree().create_timer(0.05).timeout
+	return false

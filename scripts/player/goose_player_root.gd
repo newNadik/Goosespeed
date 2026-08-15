@@ -37,11 +37,18 @@ func get_active_controller() -> Node:
 
 func reset_to_spawn() -> void:
 	goose_moves_runtime.reset_to_spawn()
-	goose_visual.global_position = (active_movement_controller as Node3D).global_position
+	if goose_visual.has_method("snap_to_transform_source"):
+		goose_visual.snap_to_transform_source()
+	else:
+		goose_visual.global_transform = (active_movement_controller as Node3D).global_transform
 
 
 func set_spawn_transform(value: Transform3D) -> void:
 	goose_moves_runtime.set_spawn_transform(value)
+
+
+func set_control_enabled(value: bool) -> void:
+	goose_moves_runtime.set_control_enabled(value)
 
 
 func _apply_backend_debug_visibility() -> void:

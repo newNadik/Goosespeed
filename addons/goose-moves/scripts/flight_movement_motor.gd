@@ -208,6 +208,7 @@ var spring_arm: SpringArm3D
 var status_label: Label
 
 var view_active := true
+var control_enabled := true
 var flap_cooldown_remaining := 0.0
 var flap_feedback_remaining := 0.0
 var flap_impulse_fired_this_tick := false
@@ -352,6 +353,10 @@ func set_view_active(active: bool) -> void:
 
 
 func _collect_inputs(delta: float, flap_ready_at_tick_start := true) -> void:
+	if not control_enabled:
+		pitch_control_input = 0.0
+		roll_control_input = 0.0
+		return
 	if camera_fly_by_wire_enabled:
 		_update_camera_fly_by_wire_inputs(delta)
 	else:

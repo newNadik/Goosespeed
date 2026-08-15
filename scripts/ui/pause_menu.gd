@@ -89,6 +89,11 @@ func on_resume_pressed() -> void:
 func on_restart_pressed() -> void:
 	set_open(false, false)
 	get_tree().paused = false
+	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+	var game_scene := _find_game_scene()
+	if game_scene != null and game_scene.has_method("restart_run"):
+		game_scene.restart_run()
+		return
 	get_tree().reload_current_scene()
 
 
@@ -110,6 +115,15 @@ func on_main_menu_pressed() -> void:
 
 func on_quit_pressed() -> void:
 	get_tree().quit()
+
+
+func _find_game_scene() -> Node:
+	var node := get_parent()
+	while node != null:
+		if node is GooseGameScene:
+			return node
+		node = node.get_parent()
+	return null
 
 
 func show_pause_menu_content() -> void:

@@ -149,6 +149,16 @@ func set_transform_source(value: Node3D) -> void:
 			global_basis = _get_flight_visual_target_basis_for_basis(transform_source.global_basis)
 
 
+func snap_to_transform_source() -> void:
+	if transform_source == null:
+		return
+	global_position = transform_source.global_position
+	global_basis = _get_flight_visual_target_basis_for_basis(transform_source.global_basis)
+	tracked_intended_movement_direction = Vector3.ZERO
+	intended_movement_time = 0.0
+	_reset_visual_position_smoothing()
+
+
 func _process(delta: float) -> void:
 	landing_hold_remaining = maxf(landing_hold_remaining - delta, 0.0)
 	run_fast_hold_remaining = maxf(run_fast_hold_remaining - delta, 0.0)

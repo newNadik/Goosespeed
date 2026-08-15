@@ -16,6 +16,9 @@ func _ready() -> void:
 		push_error("Q3 + Flight controller does not match GooseSpeed runtime contract")
 		get_tree().quit(1)
 		return
+	if not _controller_control_gate_allows_camera_look(controller):
+		get_tree().quit(1)
+		return
 	if controller.name != "ActiveMovementController":
 		push_error("Active controller has unexpected name %s" % controller.name)
 		get_tree().quit(1)
@@ -25,8 +28,8 @@ func _ready() -> void:
 		push_error("Prototype visuals are visible")
 		get_tree().quit(1)
 		return
-	if not _backend_hud_is_visible(controller):
-		push_error("Debug HUD is hidden")
+	if not _backend_hud_is_hidden(controller):
+		push_error("Prototype debug HUD is visible")
 		get_tree().quit(1)
 		return
 	if not _backend_camera_is_current(controller):
@@ -67,6 +70,26 @@ func _controller_contract_is_valid(controller: Node) -> bool:
 	return true
 
 
+func _controller_control_gate_allows_camera_look(controller: Node) -> bool:
+	controller.set_control_enabled(false)
+	var q3_motor = controller.get("q3_motor")
+	var flight_motor = controller.get("flight_motor")
+	if bool(q3_motor.get("control_enabled")):
+		push_error("Control gate did not block Q3 movement controls")
+		return false
+	if not bool(q3_motor.get("camera_control_enabled")):
+		push_error("Control gate should leave Q3 camera look enabled")
+		return false
+	if bool(flight_motor.get("control_enabled")):
+		push_error("Control gate did not block flight movement controls")
+		return false
+	controller.set_control_enabled(true)
+	if not bool(q3_motor.get("control_enabled")) or not bool(flight_motor.get("control_enabled")):
+		push_error("Control gate did not restore movement controls")
+		return false
+	return true
+
+
 func _backend_camera_is_current(controller: Node) -> bool:
 	for camera in _find_cameras(controller):
 		if camera.current:
@@ -74,12 +97,12 @@ func _backend_camera_is_current(controller: Node) -> bool:
 	return false
 
 
-func _backend_hud_is_visible(controller: Node) -> bool:
+func _backend_hud_is_hidden(controller: Node) -> bool:
 	for hud_name in ["HUD", "Q3HUD"]:
 		var backend_hud := controller.get_node_or_null(hud_name) as CanvasLayer
 		if backend_hud != null and backend_hud.visible:
-			return true
-	return false
+			return false
+	return true
 
 
 func _goose_visual_settings_are_applied(player: Node) -> bool:

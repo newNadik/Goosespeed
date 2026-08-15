@@ -6,6 +6,7 @@ const Q3_FLIGHT_CONTROLLER_SCENE := preload("res://addons/goose-moves/scenes/q3_
 const REQUIRED_CONTROLLER_METHODS := [
 	&"set_spawn_transform",
 	&"reset_to_spawn",
+	&"set_control_enabled",
 	&"set_debug_hud_visible",
 ]
 
@@ -60,6 +61,12 @@ func set_spawn_transform(value: Transform3D) -> void:
 	if active_controller == null:
 		return
 	active_controller.set_spawn_transform(value)
+
+
+func set_control_enabled(value: bool) -> void:
+	if active_controller == null or not active_controller.has_method("set_control_enabled"):
+		return
+	active_controller.set_control_enabled(value)
 
 
 func apply_debug_visibility(debug_visible: bool) -> void:
