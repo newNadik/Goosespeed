@@ -17,6 +17,7 @@ const COUNTDOWN_CENTER_HOLD_DURATION := 0.6
 const COUNTDOWN_MAX_WIDTH := 520.0
 const COUNTDOWN_SCREEN_WIDTH_SCALE := 0.42
 const COUNTDOWN_SCREEN_HEIGHT_SCALE := 0.45
+const ACCELERATION_SMOOTHNESS := 14.0
 
 @onready var root: Control = $Root
 @onready var direction_panel: Control = $Root/DirectionWidget
@@ -53,7 +54,7 @@ var elapsed_time := 0.0
 var run_finished := false
 var coin_count := 0
 var coin_target := 0
-var previous_velocity := Vector3.ZERO
+var previous_horizontal_velocity := Vector2.ZERO
 var acceleration := 0.0
 var has_previous_velocity := false
 var finish_icon_base_y := 0.0
@@ -212,9 +213,12 @@ func _update_acceleration(delta: float) -> void:
 	if delta <= 0.0:
 		return
 	var state := _get_movement_state()
+	var horizontal_velocity := Vector2(state.velocity.x, state.velocity.z)
 	if has_previous_velocity:
-		acceleration = (state.velocity - previous_velocity).length() / delta
-	previous_velocity = state.velocity
+		var raw_acceleration := (horizontal_velocity - previous_horizontal_velocity).length() / delta
+		var blend := 1.0 - exp(-ACCELERATION_SMOOTHNESS * delta)
+		acceleration = lerpf(acceleration, raw_acceleration, blend)
+	previous_horizontal_velocity = horizontal_velocity
 	has_previous_velocity = true
 
 

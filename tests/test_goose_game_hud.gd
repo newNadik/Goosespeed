@@ -2,6 +2,17 @@ extends Node
 
 const PLAYER_SCENE := preload("res://scenes/player/goose_player_root.tscn")
 const HUD_SCENE := preload("res://scenes/ui/goose_game_hud.tscn")
+const MovementStateScript := preload("res://scripts/player/movement_state.gd")
+
+class FakeStateBridge:
+	extends Node
+
+	var velocity := Vector3.ZERO
+
+	func get_state() -> RefCounted:
+		var state := MovementStateScript.new()
+		state.velocity = velocity
+		return state
 
 
 func _ready() -> void:
@@ -62,6 +73,24 @@ func _ready() -> void:
 		push_error("HUD acceleration gauge did not accept acceleration data")
 		get_tree().quit(1)
 		return
+	acceleration_gauge.set_acceleration(0.4)
+	if int(acceleration_gauge._active_segment_count()) != 1:
+		push_error("HUD acceleration gauge did not show gentle straight-run acceleration")
+		get_tree().quit(1)
+		return
+	acceleration_gauge.set_acceleration(5.0)
+	if int(acceleration_gauge._active_segment_count()) != 2:
+		push_error("HUD acceleration gauge gradation is too sensitive for moderate turns")
+		get_tree().quit(1)
+		return
+	acceleration_gauge.set_acceleration(22.0)
+	if int(acceleration_gauge._active_segment_count()) != 5:
+		push_error("HUD acceleration gauge did not fill at high acceleration")
+		get_tree().quit(1)
+		return
+	if not _hud_acceleration_uses_smoothed_horizontal_velocity(hud):
+		get_tree().quit(1)
+		return
 	var vertical_gauge := hud.get_node_or_null("Root/MovementWidget/VerticalSpeedGauge")
 	if vertical_gauge == null or not vertical_gauge.has_method("set_vertical_speed"):
 		push_error("HUD vertical speed gauge is missing")
@@ -97,6 +126,37 @@ func _ready() -> void:
 func _label_contains(root: Node, path: NodePath, expected_text: String) -> bool:
 	var label := root.get_node_or_null(path) as Label
 	return label != null and label.text.contains(expected_text)
+
+
+func _hud_acceleration_uses_smoothed_horizontal_velocity(hud: Node) -> bool:
+	var original_state_bridge = hud.get("state_bridge")
+	var fake_bridge := FakeStateBridge.new()
+	add_child(fake_bridge)
+	hud.set("state_bridge", fake_bridge)
+	hud.set("has_previous_velocity", false)
+	hud.set("acceleration", 0.0)
+
+	fake_bridge.velocity = Vector3.ZERO
+	hud._update_acceleration(0.1)
+	fake_bridge.velocity = Vector3(0.0, 30.0, 0.0)
+	hud._update_acceleration(0.1)
+	if float(hud.get("acceleration")) > 0.001:
+		push_error("HUD acceleration should ignore vertical-only velocity changes")
+		hud.set("state_bridge", original_state_bridge)
+		fake_bridge.queue_free()
+		return false
+
+	fake_bridge.velocity = Vector3(3.0, 30.0, 0.0)
+	hud._update_acceleration(0.1)
+	if float(hud.get("acceleration")) <= 0.0:
+		push_error("HUD acceleration should still show horizontal velocity changes")
+		hud.set("state_bridge", original_state_bridge)
+		fake_bridge.queue_free()
+		return false
+
+	hud.set("state_bridge", original_state_bridge)
+	fake_bridge.queue_free()
+	return true
 
 
 func _wait_for_countdown_complete(hud: Node) -> bool:

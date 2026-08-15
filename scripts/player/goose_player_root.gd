@@ -70,6 +70,23 @@ func _apply_movement_profile() -> void:
 		)
 		if flight_motor != null and "flap_cooldown" in flight_motor:
 			flight_motor.set("flap_cooldown", float(movement_profile.get("flap_cooldown")))
+		var q3_motor = (
+			active_movement_controller.get("q3_motor")
+			if "q3_motor" in active_movement_controller
+			else null
+		)
+		if q3_motor != null:
+			for setting_name in [
+				"straight_run_bonus_acceleration",
+				"straight_run_bonus_max_speed",
+				"straight_run_bonus_decay",
+				"straight_run_min_forward_input",
+				"straight_run_max_lateral_input",
+				"straight_run_max_direction_change_degrees",
+				"straight_run_max_floor_normal_change_degrees",
+			]:
+				if setting_name in q3_motor:
+					q3_motor.set(setting_name, float(movement_profile.get(setting_name)))
 	if goose_visual != null and "takeoff_runup_charge_ratio" in goose_visual:
 		goose_visual.set(
 			"takeoff_runup_charge_ratio",

@@ -47,6 +47,9 @@ func _ready() -> void:
 	if not _movement_profile_is_applied(player, controller):
 		get_tree().quit(1)
 		return
+	if not _straight_run_bonus_behaves_as_profiled(controller):
+		get_tree().quit(1)
+		return
 	if not await _first_person_camera_hides_goose_visual(player, controller):
 		get_tree().quit(1)
 		return
@@ -151,6 +154,12 @@ func _movement_profiles_are_configured() -> bool:
 	if not is_equal_approx(DEFAULT_PROFILE.takeoff_runup_charge_ratio, 0.5):
 		push_error("Default movement profile changed the player scene charge animation ratio")
 		return false
+	if not is_equal_approx(DEFAULT_PROFILE.straight_run_bonus_acceleration, 0.0):
+		push_error("Default movement profile should leave straight-run bonus disabled")
+		return false
+	if not is_equal_approx(DEFAULT_PROFILE.straight_run_bonus_max_speed, 0.0):
+		push_error("Default movement profile should not allow extra straight-run speed")
+		return false
 	if not is_equal_approx(EXPERIMENTAL_PROFILE.flight_hold_threshold, 0.3):
 		push_error("Experimental movement profile did not set flight hold threshold")
 		return false
@@ -159,6 +168,15 @@ func _movement_profiles_are_configured() -> bool:
 		return false
 	if not is_equal_approx(EXPERIMENTAL_PROFILE.takeoff_runup_charge_ratio, 0.5):
 		push_error("Experimental movement profile changed charge animation ratio")
+		return false
+	if not is_equal_approx(EXPERIMENTAL_PROFILE.straight_run_bonus_acceleration, 0.4):
+		push_error("Experimental movement profile did not set straight-run bonus acceleration")
+		return false
+	if not is_equal_approx(EXPERIMENTAL_PROFILE.straight_run_bonus_max_speed, 6.0):
+		push_error("Experimental movement profile did not set straight-run bonus max speed")
+		return false
+	if not is_equal_approx(EXPERIMENTAL_PROFILE.straight_run_bonus_decay, 8.0):
+		push_error("Experimental movement profile did not set straight-run bonus decay")
 		return false
 	return true
 
@@ -193,6 +211,70 @@ func _movement_profile_is_applied(player: Node, controller: Node) -> bool:
 		float(profile.get("takeoff_runup_charge_ratio")),
 	):
 		push_error("Movement profile did not apply charge animation ratio to goose visual")
+		return false
+	var q3_motor = controller.get("q3_motor")
+	if q3_motor == null:
+		push_error("Movement profile cannot find controller Q3 motor")
+		return false
+	for setting_name in [
+		"straight_run_bonus_acceleration",
+		"straight_run_bonus_max_speed",
+		"straight_run_bonus_decay",
+		"straight_run_min_forward_input",
+		"straight_run_max_lateral_input",
+		"straight_run_max_direction_change_degrees",
+		"straight_run_max_floor_normal_change_degrees",
+	]:
+		if not is_equal_approx(float(q3_motor.get(setting_name)), float(profile.get(setting_name))):
+			push_error("Movement profile did not apply %s to the Q3 motor" % setting_name)
+			return false
+	return true
+
+
+func _straight_run_bonus_behaves_as_profiled(controller: Node) -> bool:
+	var q3_motor = controller.get("q3_motor")
+	if q3_motor == null:
+		push_error("Straight-run test cannot find controller Q3 motor")
+		return false
+	q3_motor._reset_straight_run_bonus()
+	q3_motor.velocity = Vector3.ZERO
+	var target_bonus: float = q3_motor._update_straight_run_bonus(
+		1.0,
+		true,
+		Vector2(0.0, 1.0),
+		Vector3.FORWARD,
+		Vector3.UP,
+	)
+	if (
+		not is_equal_approx(q3_motor.straight_run_bonus_speed, 0.4)
+		or not is_equal_approx(q3_motor.straight_run_current_acceleration, 0.4)
+		or not is_equal_approx(target_bonus, 0.4)
+		or q3_motor.velocity.length() > 0.0
+	):
+		push_error("Straight-run bonus did not add target speed during stable forward ground movement")
+		return false
+	target_bonus = q3_motor._update_straight_run_bonus(
+		1.0,
+		true,
+		Vector2(1.0, 0.7),
+		Vector3.RIGHT,
+		Vector3.UP,
+	)
+	if q3_motor.straight_run_bonus_speed > 0.0 or target_bonus > 0.0:
+		push_error("Straight-run bonus did not decay after a rapid turn")
+		return false
+	q3_motor._reset_straight_run_bonus()
+	q3_motor.velocity = Vector3.ZERO
+	q3_motor._update_straight_run_bonus(2.0, true, Vector2(0.0, 1.0), Vector3.FORWARD, Vector3.UP)
+	target_bonus = q3_motor._update_straight_run_bonus(
+		1.0,
+		true,
+		Vector2(0.0, 1.0),
+		Vector3.FORWARD,
+		Vector3.UP.rotated(Vector3.RIGHT, deg_to_rad(25.0)),
+	)
+	if q3_motor.straight_run_bonus_speed > 0.0 or target_bonus > 0.0:
+		push_error("Straight-run bonus did not decay on bumpy terrain")
 		return false
 	return true
 

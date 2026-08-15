@@ -239,6 +239,13 @@ var slime_friction := Q3_SLIME_FRICTION
 var mouse_sensitivity := 0.003
 var camera_vertical_smoothness := 16.0
 var first_person_eye_height_offset := 0.1
+var straight_run_bonus_acceleration := 0.0
+var straight_run_bonus_max_speed := 0.0
+var straight_run_bonus_decay := 8.0
+var straight_run_min_forward_input := 0.9
+var straight_run_max_lateral_input := 0.18
+var straight_run_max_direction_change_degrees := 8.0
+var straight_run_max_floor_normal_change_degrees := 10.0
 
 var head: Node3D
 var camera_anchor: Node3D
@@ -271,6 +278,10 @@ var intended_movement_direction := Vector3.ZERO
 var intended_movement_magnitude := 0.0
 var camera_anchor_initialized := false
 var smoothed_camera_anchor_y := 0.0
+var straight_run_bonus_speed := 0.0
+var straight_run_current_acceleration := 0.0
+var previous_straight_run_direction := Vector3.ZERO
+var previous_straight_run_floor_normal := Vector3.UP
 
 
 func setup(
@@ -360,14 +371,17 @@ func physics_tick(delta: float) -> void:
 	_update_crouch_slide(delta, grounded)
 	_update_crouch_state()
 	if water_jump_time_remaining > 0.0:
+		_reset_straight_run_bonus()
 		_water_jump_move(delta)
 		_end_force_vector_debug_frame(debug_start_velocity, delta)
 		return
 	if _should_swim(grounded):
 		if _try_water_jump():
+			_reset_straight_run_bonus()
 			_water_jump_move(delta)
 			_end_force_vector_debug_frame(debug_start_velocity, delta)
 			return
+		_reset_straight_run_bonus()
 		_water_move(movement_input, delta)
 		_end_force_vector_debug_frame(debug_start_velocity, delta)
 		return
@@ -385,6 +399,15 @@ func physics_tick(delta: float) -> void:
 			wish_speed = minf(wish_speed, move_speed * wade_scale)
 		if is_crouching:
 			wish_speed = minf(wish_speed, move_speed * crouch_speed_scale)
+	var straight_run_target_bonus := _update_straight_run_bonus(
+		delta,
+		grounded,
+		movement_input,
+		wish_direction,
+		floor_normal,
+	)
+	if grounded:
+		wish_speed += straight_run_target_bonus
 
 	_apply_friction(delta, grounded and not slick)
 	var airborne_end_velocity_y := 0.0
@@ -447,6 +470,95 @@ func _update_intended_movement(wish_direction: Vector3, movement_input: Vector2)
 		intended_movement_direction = Vector3.ZERO
 		return
 	intended_movement_direction = wish_direction.normalized()
+
+
+func _update_straight_run_bonus(
+	delta: float,
+	grounded: bool,
+	movement_input: Vector2,
+	wish_direction: Vector3,
+	floor_normal: Vector3,
+) -> float:
+	straight_run_current_acceleration = 0.0
+	var eligible := _straight_run_bonus_is_eligible(
+		grounded,
+		movement_input,
+		wish_direction,
+		floor_normal,
+	)
+	if eligible:
+		var previous_bonus_speed := straight_run_bonus_speed
+		straight_run_bonus_speed = minf(
+			straight_run_bonus_speed + (maxf(straight_run_bonus_acceleration, 0.0) * delta),
+			maxf(straight_run_bonus_max_speed, 0.0),
+		)
+		if straight_run_bonus_speed > previous_bonus_speed:
+			straight_run_current_acceleration = maxf(straight_run_bonus_acceleration, 0.0)
+	else:
+		_decay_straight_run_bonus(delta)
+
+	if grounded:
+		previous_straight_run_floor_normal = floor_normal.normalized()
+	if not wish_direction.is_zero_approx():
+		previous_straight_run_direction = wish_direction.normalized()
+	return straight_run_bonus_speed if eligible else 0.0
+
+
+func _straight_run_bonus_is_eligible(
+	grounded: bool,
+	movement_input: Vector2,
+	wish_direction: Vector3,
+	floor_normal: Vector3,
+) -> bool:
+	if straight_run_bonus_acceleration <= 0.0 or straight_run_bonus_max_speed <= 0.0:
+		return false
+	if (
+		not grounded
+		or floor_is_slick
+		or water_level > 0
+		or is_crouching
+		or is_crouch_sliding
+		or wish_direction.is_zero_approx()
+	):
+		return false
+	if movement_input.y < straight_run_min_forward_input:
+		return false
+	if absf(movement_input.x) > straight_run_max_lateral_input:
+		return false
+	if _direction_change_exceeds_limit(
+		previous_straight_run_direction,
+		wish_direction,
+		straight_run_max_direction_change_degrees,
+	):
+		return false
+	return not _direction_change_exceeds_limit(
+		previous_straight_run_floor_normal,
+		floor_normal,
+		straight_run_max_floor_normal_change_degrees,
+	)
+
+
+func _decay_straight_run_bonus(delta: float) -> void:
+	if straight_run_bonus_speed <= 0.0:
+		return
+	var decay_amount := minf(straight_run_bonus_speed, maxf(straight_run_bonus_decay, 0.0) * delta)
+	if decay_amount <= 0.0:
+		return
+	straight_run_bonus_speed -= decay_amount
+
+
+func _direction_change_exceeds_limit(from_direction: Vector3, to_direction: Vector3, limit_degrees: float) -> bool:
+	if from_direction.is_zero_approx() or to_direction.is_zero_approx():
+		return false
+	var max_angle := deg_to_rad(maxf(limit_degrees, 0.0))
+	return from_direction.normalized().angle_to(to_direction.normalized()) > max_angle
+
+
+func _reset_straight_run_bonus() -> void:
+	straight_run_bonus_speed = 0.0
+	straight_run_current_acceleration = 0.0
+	previous_straight_run_direction = Vector3.ZERO
+	previous_straight_run_floor_normal = Vector3.UP
 
 
 func _get_wish_speed(movement_input: Vector2) -> float:
@@ -1037,7 +1149,10 @@ func _get_current_acceleration() -> float:
 	if _should_swim(is_on_floor()):
 		return water_acceleration
 	if is_on_floor() and not floor_is_slick:
-		return _get_ground_acceleration() * (WARSOW_CROUCH_SLIDE_CONTROL if is_crouch_sliding else 1.0)
+		return (
+			_get_ground_acceleration() * (WARSOW_CROUCH_SLIDE_CONTROL if is_crouch_sliding else 1.0)
+			+ straight_run_current_acceleration
+		)
 	var movement_input := _get_movement_input()
 	var wish_direction := _get_wish_direction(movement_input, Vector3.UP)
 	return _get_air_acceleration(wish_direction, movement_input)

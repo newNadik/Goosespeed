@@ -241,6 +241,7 @@ func reset_to_spawn() -> void:
 	var view_angles: Vector2 = get_meta("spawn_view_angles", _view_angles_for_basis(spawn_transform.basis))
 	set_view_angles(view_angles.x, view_angles.y)
 	q3_motor.reset_camera_anchor_smoothing()
+	q3_motor._reset_straight_run_bonus()
 	_set_q3_visuals()
 	_emit_movement_state_changed()
 
