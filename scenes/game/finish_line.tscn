@@ -1,0 +1,86 @@
+[gd_scene format=3 uid="uid://djwuft8c8fhj6"]
+
+[ext_resource type="Texture2D" uid="uid://cvcpnomqq7ie0" path="res://assets/ui/finish_bg.png" id="1_glgnc"]
+[ext_resource type="FontFile" uid="uid://w5x0f5kuolxq" path="res://assets/ui/fonts/Condor_Medium.otf" id="2_68dpc"]
+[ext_resource type="Texture2D" uid="uid://cy3g6fcux67d6" path="res://assets/ui/icons/ic_finish.png" id="3_68dpc"]
+[ext_resource type="Texture2D" uid="uid://b8lw6vhyg52xg" path="res://assets/ui/icons/ic_coin.png" id="4_f5cbo"]
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_ka346"]
+size = Vector2(6, 1.5)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_jgpue"]
+transparency = 2
+alpha_scissor_threshold = 0.5
+alpha_antialiasing_mode = 0
+cull_mode = 2
+shading_mode = 0
+diffuse_mode = 3
+specular_mode = 1
+albedo_texture = ExtResource("1_glgnc")
+
+[node name="finish_line" type="Node3D" unique_id=1757257707]
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="." unique_id=907530619]
+transform = Transform3D(1, 0, 0, 0, -4.371139e-08, -1, 0, 1, -4.371139e-08, 0, 2, 0)
+mesh = SubResource("PlaneMesh_ka346")
+surface_material_override/0 = SubResource("StandardMaterial3D_jgpue")
+
+[node name="Node3D" type="Node3D" parent="." unique_id=1713794956]
+
+[node name="Label3D" type="Label3D" parent="Node3D" unique_id=177374324]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.25, 0.01)
+pixel_size = 0.001
+modulate = Color(0.15294118, 0.24705882, 0.30980393, 1)
+outline_modulate = Color(0.99607843, 0.46666667, 0.2627451, 1)
+text = "FINISH"
+font = ExtResource("2_68dpc")
+font_size = 500
+outline_size = 60
+
+[node name="Sprite3D" type="Sprite3D" parent="Node3D" unique_id=1619055151]
+transform = Transform3D(0.3, 0, 0, 0, 0.3, 0, 0, 0, 0.3, 1.2, 2.27, 0.01)
+texture = ExtResource("3_68dpc")
+
+[node name="Sprite3D2" type="Sprite3D" parent="Node3D" unique_id=383958073]
+transform = Transform3D(0.3, 0, 0, 0, 0.3, 0, 0, 0, 0.3, -1.2, 2.27, 0.01)
+flip_h = true
+texture = ExtResource("3_68dpc")
+
+[node name="Node3D2" type="Node3D" parent="." unique_id=1570778852]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.02)
+
+[node name="Label3D" type="Label3D" parent="Node3D2" unique_id=1419754778]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.25, 0.01)
+pixel_size = 0.001
+modulate = Color(0.15294118, 0.24705882, 0.30980393, 1)
+outline_modulate = Color(0.99607843, 0.46666667, 0.2627451, 1)
+text = "FINISH"
+font = ExtResource("2_68dpc")
+font_size = 500
+outline_size = 60
+
+[node name="Sprite3D" type="Sprite3D" parent="Node3D2" unique_id=931875927]
+transform = Transform3D(0.3, 0, 0, 0, 0.3, 0, 0, 0, 0.3, 1.2, 2.27, 0.01)
+texture = ExtResource("3_68dpc")
+
+[node name="Sprite3D2" type="Sprite3D" parent="Node3D2" unique_id=506330058]
+transform = Transform3D(0.3, 0, 0, 0, 0.3, 0, 0, 0, 0.3, -1.2, 2.27, 0.01)
+flip_h = true
+texture = ExtResource("3_68dpc")
+
+[node name="Node3D3" type="Node3D" parent="." unique_id=211048132]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.17338276, -0.08429992, 0)
+
+[node name="Sprite3D2" type="Sprite3D" parent="Node3D3" unique_id=981014925]
+transform = Transform3D(0.3, 0, 0, 0, 0.3, 0, 0, 0, 0.3, -0.59115684, 1.7178552, 0.01)
+texture = ExtResource("4_f5cbo")
+
+[node name="coins_label" type="Label3D" parent="Node3D3" unique_id=1668204112]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.09111905, 1.7239926, 0.01)
+pixel_size = 0.001
+modulate = Color(0.15294118, 0.24705882, 0.30980393, 1)
+outline_modulate = Color(0.99607843, 0.46666667, 0.2627451, 1)
+text = "0 / 10"
+font = ExtResource("2_68dpc")
+font_size = 300
+outline_size = 60
