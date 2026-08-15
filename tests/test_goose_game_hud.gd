@@ -12,6 +12,7 @@ func _ready() -> void:
 	await get_tree().process_frame
 
 	hud.set_player(player)
+	hud.set_coin_target(10)
 	hud.set_run_state(12.34, true)
 	hud.set_coin_count(7)
 	await get_tree().process_frame
@@ -24,7 +25,7 @@ func _ready() -> void:
 		push_error("HUD timer label did not use run state")
 		get_tree().quit(1)
 		return
-	if not _label_contains(hud, "Root/TimerWidget/CoinsRow/CoinLabel", "7"):
+	if not _label_contains(hud, "Root/TimerWidget/CoinsRow/CoinLabel", "7 / 10"):
 		push_error("HUD coin label did not use coin count")
 		get_tree().quit(1)
 		return

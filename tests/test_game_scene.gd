@@ -44,8 +44,13 @@ func _ready() -> void:
 	var initial_controller_basis := controller.global_basis
 	var initial_visual_basis := goose_visual.global_basis
 	var first_coin := game.get_node_or_null("CourseRoot/LevelFarm/coins/Path_1/Piece_000")
+	var finish_line := game.get_node_or_null("CourseRoot/LevelFarm/Finish/finish_line")
 	if first_coin == null or not first_coin.has_method("collect_from"):
 		push_error("Game scene coin pickup fixture is missing")
+		get_tree().quit(1)
+		return
+	if finish_line == null or not finish_line.has_method("set_coin_progress"):
+		push_error("Game scene finish line fixture is missing")
 		get_tree().quit(1)
 		return
 	var pickup_sound := first_coin.get_node_or_null("PickupSound") as AudioStreamPlayer3D
@@ -66,11 +71,39 @@ func _ready() -> void:
 
 	game.elapsed_time = 4.2
 	game._on_finish_body_entered(controller)
-	if not game.is_run_finished():
-		push_error("Game scene finish trigger did not finish run")
+	if game.is_run_finished():
+		push_error("Game scene finished before target coins were collected")
 		get_tree().quit(1)
 		return
-	if game.get_total_coin_count() != 1:
+	if game.get_total_coin_count() != 0:
+		push_error("Game scene added coins to total before target coin finish")
+		get_tree().quit(1)
+		return
+	if not finish_line.visible or bool(finish_line.get("unlocked")):
+		push_error("Finish line unlocked before target coins were collected")
+		get_tree().quit(1)
+		return
+
+	if not await _collect_coins(game, controller, game.get_target_coin_count() - game.get_run_coin_count()):
+		push_error("Game scene could not collect enough coins for target")
+		get_tree().quit(1)
+		return
+	await get_tree().process_frame
+	if not finish_line.visible or not bool(finish_line.get("unlocked")):
+		push_error("Finish line did not unlock while staying visible after target coins")
+		get_tree().quit(1)
+		return
+
+	game._on_finish_body_entered(controller)
+	if not game.is_run_finished():
+		push_error("Game scene finish trigger did not finish run after target coins")
+		get_tree().quit(1)
+		return
+	if finish_line.visible or not bool(finish_line.get("completed")):
+		push_error("Finish line did not disappear after completed finish")
+		get_tree().quit(1)
+		return
+	if game.get_total_coin_count() != game.get_target_coin_count():
 		push_error("Game scene did not add run coins to total on finish")
 		get_tree().quit(1)
 		return
@@ -91,12 +124,16 @@ func _ready() -> void:
 		push_error("Game scene restart did not reset run coins")
 		get_tree().quit(1)
 		return
-	if game.get_total_coin_count() != 1:
+	if game.get_total_coin_count() != game.get_target_coin_count():
 		push_error("Game scene restart changed total coins")
 		get_tree().quit(1)
 		return
 	if bool(first_coin.get("is_collected")) or not first_coin.visible:
 		push_error("Game scene restart did not restore collected coins")
+		get_tree().quit(1)
+		return
+	if not finish_line.visible or bool(finish_line.get("unlocked")):
+		push_error("Game scene restart did not restore finish line")
 		get_tree().quit(1)
 		return
 	if _horizontal_distance(controller.global_position, spawn_point.global_position) > 0.05:
@@ -166,6 +203,24 @@ func _basis_yaw_matches(a: Basis, b: Basis) -> bool:
 	if a_forward.length_squared() <= 0.0001 or b_forward.length_squared() <= 0.0001:
 		return false
 	return a_forward.normalized().dot(b_forward.normalized()) > 0.999
+
+
+func _collect_coins(game: Node, controller: Node3D, amount: int) -> bool:
+	var collected := 0
+	for node in game.get_tree().get_nodes_in_group(&"coins"):
+		var coin := node as CoinPickup
+		if coin == null or bool(coin.get("is_collected")):
+			continue
+		if not game.get_node("CourseRoot").is_ancestor_of(coin):
+			continue
+		var pickup_sound := coin.get_node_or_null("PickupSound") as AudioStreamPlayer3D
+		if pickup_sound != null:
+			pickup_sound.stream = null
+		if coin.collect_from(controller):
+			collected += 1
+		if collected >= amount:
+			return true
+	return collected >= amount
 
 
 func _wait_for_course(game: Node) -> bool:

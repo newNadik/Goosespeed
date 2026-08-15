@@ -11,6 +11,7 @@ const LOADING_LAYER_NAME := "LoadingLayer"
 const LOADING_FADE_BASE_NAME := "LoadingFadeBase"
 
 @export_file("*.tscn") var course_scene_path: String = CourseCatalog.DEFAULT_COURSE_PATH
+@export var target_coin_count := 10
 
 @onready var player: Node = $GoosePlayerRoot
 @onready var game_hud: Node = $GooseGameHud
@@ -20,6 +21,7 @@ var elapsed_time := 0.0
 var finished := false
 var run_coin_count := 0
 var finish_area: Area3D
+var finish_line: Node3D
 var spawn_point: Node3D
 var coin_pickups: Array[CoinPickup] = []
 var active_course: Node3D
@@ -40,6 +42,8 @@ func _ready() -> void:
 	_cache_coin_pickups()
 	_reset_coin_pickups()
 	game_hud.set_player(player)
+	if game_hud.has_method("set_coin_target"):
+		game_hud.set_coin_target(target_coin_count)
 	if game_hud.has_method("set_finish_target"):
 		game_hud.set_finish_target(finish_area)
 	add_child(PAUSE_MENU_SCENE.instantiate())
@@ -65,6 +69,7 @@ func restart_run() -> void:
 	finished = false
 	run_coin_count = 0
 	_reset_coin_pickups()
+	_reset_finish_line()
 	player.reset_to_spawn()
 	_begin_level_start_countdown()
 	_update_hud()
@@ -86,6 +91,10 @@ func get_run_coin_count() -> int:
 	return run_coin_count
 
 
+func get_target_coin_count() -> int:
+	return target_coin_count
+
+
 func get_total_coin_count() -> int:
 	var wallet := get_node_or_null("/root/CoinWallet")
 	if wallet != null and wallet.has_method("get_total_coins"):
@@ -96,6 +105,7 @@ func get_total_coin_count() -> int:
 func _cache_course_contract() -> void:
 	spawn_point = course_root.find_child("SpawnPoint", true, false) as Node3D
 	finish_area = course_root.find_child("FinishTrigger", true, false) as Area3D
+	finish_line = course_root.find_child("finish_line", true, false) as Node3D
 	if spawn_point == null:
 		push_error("Course is missing SpawnPoint")
 	if finish_area == null:
@@ -128,6 +138,13 @@ func _reset_coin_pickups() -> void:
 			coin.reset_pickup()
 
 
+func _reset_finish_line() -> void:
+	if finish_line != null and finish_line.has_method("reset_finish_line"):
+		finish_line.reset_finish_line(run_coin_count, target_coin_count)
+	else:
+		_update_finish_line()
+
+
 func _apply_spawn_transform() -> void:
 	var active_controller := player.get_active_controller() as Node3D
 	var spawn_transform: Transform3D = active_controller.global_transform
@@ -139,16 +156,21 @@ func _apply_spawn_transform() -> void:
 
 func _on_finish_body_entered(body: Node3D) -> void:
 	if body == player.get_active_controller():
+		if run_coin_count < target_coin_count:
+			return
 		if not finished:
 			var wallet := get_node_or_null("/root/CoinWallet")
 			if wallet != null and wallet.has_method("add_coins"):
 				wallet.add_coins(run_coin_count)
+			if finish_line != null and finish_line.has_method("complete_finish_line"):
+				finish_line.complete_finish_line()
 		finished = true
 		_update_hud()
 
 
 func _on_coin_collected(coin: CoinPickup) -> void:
 	run_coin_count += coin.value
+	_update_finish_line()
 	_update_hud()
 
 
@@ -156,6 +178,13 @@ func _update_hud() -> void:
 	game_hud.set_run_state(elapsed_time, finished)
 	if game_hud.has_method("set_coin_count"):
 		game_hud.set_coin_count(run_coin_count)
+	if game_hud.has_method("set_coin_target"):
+		game_hud.set_coin_target(target_coin_count)
+
+
+func _update_finish_line() -> void:
+	if finish_line != null and finish_line.has_method("set_coin_progress"):
+		finish_line.set_coin_progress(run_coin_count, target_coin_count)
 
 
 func _play_random_game_music() -> void:

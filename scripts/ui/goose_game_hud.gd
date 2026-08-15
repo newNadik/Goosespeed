@@ -52,6 +52,7 @@ var finish_target: Node3D
 var elapsed_time := 0.0
 var run_finished := false
 var coin_count := 0
+var coin_target := 0
 var previous_velocity := Vector3.ZERO
 var acceleration := 0.0
 var has_previous_velocity := false
@@ -93,6 +94,11 @@ func set_run_state(time_seconds: float, finished: bool) -> void:
 
 func set_coin_count(value: int) -> void:
 	coin_count = max(value, 0)
+	_update_labels()
+
+
+func set_coin_target(value: int) -> void:
+	coin_target = max(value, 0)
 	_update_labels()
 
 
@@ -171,8 +177,8 @@ func _update_labels() -> void:
 	speed_label.text = "%.1f" % state.horizontal_speed
 	if speedometer_gauge.has_method("set_speed"):
 		speedometer_gauge.set_speed(state.horizontal_speed)
-	timer_label.text = "%05.2fs %s" % [elapsed_time, " FINISH" if run_finished else ""]
-	coin_label.text = str(coin_count)
+	timer_label.text = "%05.2fs" % elapsed_time
+	coin_label.text = _format_coin_count()
 	_update_flight_widget(state)
 	if vertical_speed_gauge.has_method("set_vertical_speed"):
 		vertical_speed_gauge.set_vertical_speed(state.vertical_speed)
@@ -194,6 +200,12 @@ func _get_movement_state() -> RefCounted:
 	if state_bridge != null and state_bridge.has_method("get_state"):
 		return state_bridge.get_state()
 	return MovementStateScript.new()
+
+
+func _format_coin_count() -> String:
+	if coin_target > 0:
+		return "%d / %d" % [coin_count, coin_target]
+	return str(coin_count)
 
 
 func _update_acceleration(delta: float) -> void:
