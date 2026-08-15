@@ -47,12 +47,17 @@ func _ready() -> void:
 	var initial_visual_basis := goose_visual.global_basis
 	var first_coin := game.get_node_or_null("CourseRoot/LevelFarm/coins/Path_1/Piece_000")
 	var finish_line := game.get_node_or_null("CourseRoot/LevelFarm/Finish/finish_line")
+	var summary := game.get_node_or_null("LevelSummaryPopup")
 	if first_coin == null or not first_coin.has_method("collect_from"):
 		push_error("Game scene coin pickup fixture is missing")
 		get_tree().quit(1)
 		return
 	if finish_line == null or not finish_line.has_method("set_coin_progress"):
 		push_error("Game scene finish line fixture is missing")
+		get_tree().quit(1)
+		return
+	if summary == null or not summary.has_method("is_summary_visible"):
+		push_error("Game scene level summary fixture is missing")
 		get_tree().quit(1)
 		return
 	var pickup_sound := first_coin.get_node_or_null("PickupSound") as AudioStreamPlayer3D
@@ -110,6 +115,36 @@ func _ready() -> void:
 		push_error("Game scene did not add run coins to total on finish")
 		get_tree().quit(1)
 		return
+	if not summary.is_summary_visible():
+		push_error("Game scene did not show level summary after finish")
+		get_tree().quit(1)
+		return
+	if not _label_contains(summary, "Root/Panel/Margin/VBox/Stats/TimeRow/Value", "04.20s"):
+		push_error("Level summary did not show final time")
+		get_tree().quit(1)
+		return
+	if not _label_contains(summary, "Root/Panel/Margin/VBox/Stats/BestRow/Value", "04.20s"):
+		push_error("Level summary did not show best time")
+		get_tree().quit(1)
+		return
+	var best_time_panel := summary.get_node_or_null("Root/Panel/Margin/VBox/Stats/TimeRow/BEST_TIME_Panel") as Panel
+	if best_time_panel == null or not best_time_panel.visible:
+		push_error("Level summary did not show new best badge")
+		get_tree().quit(1)
+		return
+	if not _label_contains(summary, "Root/Panel/Margin/VBox/Stats/CoinsRow/Value", str(expected_payout)):
+		push_error("Level summary did not show collected coins")
+		get_tree().quit(1)
+		return
+	if not _label_contains(summary, "Root/Panel/Margin/VBox/Stats/WalletRow/Value", str(expected_payout)):
+		push_error("Level summary did not show wallet total")
+		get_tree().quit(1)
+		return
+	var continue_button := summary.get_node_or_null("Root/Panel/Margin/VBox/Buttons/ContinueButton") as Button
+	if continue_button == null or not continue_button.disabled:
+		push_error("Level summary continue button should be disabled")
+		get_tree().quit(1)
+		return
 	game._on_finish_body_entered(controller)
 	if game.get_total_coin_count() != expected_payout:
 		push_error("Game scene paid out the same finished run twice")
@@ -130,6 +165,10 @@ func _ready() -> void:
 	await get_tree().physics_frame
 	if game.is_run_finished():
 		push_error("Game scene restart did not clear finished state")
+		get_tree().quit(1)
+		return
+	if summary.is_summary_visible():
+		push_error("Game scene restart did not hide level summary")
 		get_tree().quit(1)
 		return
 	if not is_equal_approx(game.get_elapsed_time(), 0.0):
@@ -222,6 +261,11 @@ func _basis_yaw_matches(a: Basis, b: Basis) -> bool:
 	if a_forward.length_squared() <= 0.0001 or b_forward.length_squared() <= 0.0001:
 		return false
 	return a_forward.normalized().dot(b_forward.normalized()) > 0.999
+
+
+func _label_contains(root: Node, path: NodePath, expected_text: String) -> bool:
+	var label := root.get_node_or_null(path) as Label
+	return label != null and label.text.contains(expected_text)
 
 
 func _collect_coins(game: Node, controller: Node3D, amount: int) -> bool:

@@ -1,0 +1,291 @@
+[gd_scene format=3 uid="uid://dy46cmwafoohg"]
+
+[ext_resource type="Script" uid="uid://c8fqj5m3uco0s" path="res://scripts/ui/level_summary_popup.gd" id="1_summary"]
+[ext_resource type="Texture2D" uid="uid://c3ju1c50i4j6s" path="res://assets/ui/goose_corner.png" id="2_8846n"]
+[ext_resource type="FontFile" uid="uid://bkdpp3abo73lr" path="res://assets/ui/fonts/Condor Medium Condensed.otf" id="2_amy7c"]
+[ext_resource type="FontFile" uid="uid://w5x0f5kuolxq" path="res://assets/ui/fonts/Condor_Medium.otf" id="3_j86yd"]
+[ext_resource type="PackedScene" uid="uid://dnkqiibhhu7cj" path="res://scenes/ui/goose_summary_button.tscn" id="4_button"]
+[ext_resource type="Texture2D" uid="uid://bn5d8brjvidq2" path="res://assets/ui/icons/ic_replay.png" id="5_replay"]
+[ext_resource type="Texture2D" uid="uid://dry1r48mwn3rl" path="res://assets/ui/icons/ic_play.png" id="6_play"]
+[ext_resource type="Texture2D" uid="uid://dvhj1a5mmwgso" path="res://assets/ui/icons/ic_home.png" id="7_home"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ticket"]
+bg_color = Color(0.9529412, 0.91764706, 0.8745098, 1)
+border_width_left = 4
+border_width_top = 4
+border_width_right = 4
+border_width_bottom = 4
+border_color = Color(0.15294118, 0.24705882, 0.30980393, 1)
+corner_radius_top_left = 31
+corner_radius_top_right = 31
+corner_radius_bottom_right = 31
+corner_radius_bottom_left = 31
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ka346"]
+bg_color = Color(0.6, 0.6, 0.6, 0)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(0.74, 0.16058001, 0.0962, 1)
+corner_radius_top_left = 25
+corner_radius_top_right = 25
+corner_radius_bottom_right = 25
+corner_radius_bottom_left = 25
+
+[node name="LevelSummaryPopup" type="CanvasLayer" unique_id=1522736927]
+process_mode = 3
+layer = 8
+script = ExtResource("1_summary")
+
+[node name="Root" type="Control" parent="." unique_id=1788573121]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="Scrim" type="ColorRect" parent="Root" unique_id=1969816910]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0.09411765, 0.18431373, 0.26666668, 0.45)
+
+[node name="Panel" type="PanelContainer" parent="Root" unique_id=1688097626]
+custom_minimum_size = Vector2(650, 450)
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -310.0
+offset_top = -210.0
+offset_right = 310.0
+offset_bottom = 210.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_ticket")
+
+[node name="Margin" type="MarginContainer" parent="Root/Panel" unique_id=672845632]
+layout_mode = 2
+theme_override_constants/margin_left = 42
+theme_override_constants/margin_top = 42
+theme_override_constants/margin_right = 42
+theme_override_constants/margin_bottom = 42
+
+[node name="VBox" type="VBoxContainer" parent="Root/Panel/Margin" unique_id=687502486]
+layout_mode = 2
+theme_override_constants/separation = 24
+
+[node name="SeparatorTop2" type="ColorRect" parent="Root/Panel/Margin/VBox" unique_id=1806264941]
+custom_minimum_size = Vector2(0, 3)
+layout_mode = 2
+color = Color(0.15190001, 0.24675998, 0.31, 0)
+
+[node name="Title" type="Label" parent="Root/Panel/Margin/VBox" unique_id=1384141592]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.15294118, 0.24705882, 0.30980393, 1)
+theme_override_colors/font_shadow_color = Color(0.99607843, 0.46666667, 0.2627451, 1)
+theme_override_fonts/font = ExtResource("2_amy7c")
+theme_override_font_sizes/font_size = 48
+text = "RUN COMPLETE"
+horizontal_alignment = 1
+
+[node name="SeparatorTop4" type="ColorRect" parent="Root/Panel/Margin/VBox" unique_id=1287383581]
+custom_minimum_size = Vector2(0, 3)
+layout_mode = 2
+color = Color(0.15190001, 0.24675998, 0.31, 0)
+
+[node name="Header" type="HBoxContainer" parent="Root/Panel/Margin/VBox" unique_id=1399156998]
+layout_mode = 2
+theme_override_constants/separation = 16
+
+[node name="CourseLabel" type="Label" parent="Root/Panel/Margin/VBox/Header" unique_id=1053026306]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.15294118, 0.24705882, 0.30980393, 1)
+theme_override_fonts/font = ExtResource("3_j86yd")
+theme_override_font_sizes/font_size = 32
+text = "FARM"
+
+[node name="StatusLabel" type="Label" parent="Root/Panel/Margin/VBox/Header" unique_id=331985623]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.106310435, 0.4685259, 0.41548926, 1)
+theme_override_fonts/font = ExtResource("3_j86yd")
+theme_override_font_sizes/font_size = 32
+text = "CLEARED"
+horizontal_alignment = 2
+
+[node name="SeparatorTop" type="ColorRect" parent="Root/Panel/Margin/VBox" unique_id=669389009]
+custom_minimum_size = Vector2(0, 3)
+layout_mode = 2
+color = Color(0.15190001, 0.24675998, 0.31, 0.78431374)
+
+[node name="SeparatorTop3" type="ColorRect" parent="Root/Panel/Margin/VBox" unique_id=1194347175]
+custom_minimum_size = Vector2(0, 3)
+layout_mode = 2
+color = Color(0.15190001, 0.24675998, 0.31, 0)
+
+[node name="Stats" type="VBoxContainer" parent="Root/Panel/Margin/VBox" unique_id=1791925915]
+layout_mode = 2
+theme_override_constants/separation = 18
+
+[node name="TimeRow" type="HBoxContainer" parent="Root/Panel/Margin/VBox/Stats" unique_id=1331505305]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="Label" type="Label" parent="Root/Panel/Margin/VBox/Stats/TimeRow" unique_id=1835134421]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.15294118, 0.24705882, 0.30980393, 1)
+theme_override_fonts/font = ExtResource("2_amy7c")
+theme_override_font_sizes/font_size = 36
+text = "Time"
+
+[node name="BEST_TIME_Panel" type="Panel" parent="Root/Panel/Margin/VBox/Stats/TimeRow" unique_id=278620323]
+visible = false
+custom_minimum_size = Vector2(150, 40)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_ka346")
+
+[node name="Label" type="Label" parent="Root/Panel/Margin/VBox/Stats/TimeRow/BEST_TIME_Panel" unique_id=1745606739]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = 3.0
+offset_bottom = 3.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.74, 0.16058001, 0.0962, 1)
+theme_override_fonts/font = ExtResource("2_amy7c")
+theme_override_font_sizes/font_size = 28
+text = "BEST TIME"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Value" type="Label" parent="Root/Panel/Margin/VBox/Stats/TimeRow" unique_id=1233284012]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.15294118, 0.24705882, 0.30980393, 1)
+theme_override_fonts/font = ExtResource("3_j86yd")
+theme_override_font_sizes/font_size = 32
+text = "00.00s"
+horizontal_alignment = 2
+
+[node name="BestRow" type="HBoxContainer" parent="Root/Panel/Margin/VBox/Stats" unique_id=1112050579]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="Root/Panel/Margin/VBox/Stats/BestRow" unique_id=1694048681]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.15294118, 0.24705882, 0.30980393, 1)
+theme_override_fonts/font = ExtResource("2_amy7c")
+theme_override_font_sizes/font_size = 36
+text = "Best Time"
+
+[node name="Value" type="Label" parent="Root/Panel/Margin/VBox/Stats/BestRow" unique_id=1875194482]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.15294118, 0.24705882, 0.30980393, 1)
+theme_override_fonts/font = ExtResource("3_j86yd")
+theme_override_font_sizes/font_size = 32
+text = "NO RECORD"
+horizontal_alignment = 2
+
+[node name="CoinsRow" type="HBoxContainer" parent="Root/Panel/Margin/VBox/Stats" unique_id=843288765]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="Root/Panel/Margin/VBox/Stats/CoinsRow" unique_id=1365362993]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.15294118, 0.24705882, 0.30980393, 1)
+theme_override_fonts/font = ExtResource("2_amy7c")
+theme_override_font_sizes/font_size = 36
+text = "Tokens"
+
+[node name="Value" type="Label" parent="Root/Panel/Margin/VBox/Stats/CoinsRow" unique_id=366251705]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.15294118, 0.24705882, 0.30980393, 1)
+theme_override_fonts/font = ExtResource("3_j86yd")
+theme_override_font_sizes/font_size = 32
+text = "0"
+horizontal_alignment = 2
+
+[node name="WalletRow" type="HBoxContainer" parent="Root/Panel/Margin/VBox/Stats" unique_id=1434719278]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="Root/Panel/Margin/VBox/Stats/WalletRow" unique_id=1861803097]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_colors/font_color = Color(0.15294118, 0.24705882, 0.30980393, 1)
+theme_override_fonts/font = ExtResource("2_amy7c")
+theme_override_font_sizes/font_size = 36
+text = "Balance"
+
+[node name="Value" type="Label" parent="Root/Panel/Margin/VBox/Stats/WalletRow" unique_id=1032962376]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.15294118, 0.24705882, 0.30980393, 1)
+theme_override_fonts/font = ExtResource("3_j86yd")
+theme_override_font_sizes/font_size = 32
+text = "0"
+horizontal_alignment = 2
+
+[node name="SeparatorTop5" type="ColorRect" parent="Root/Panel/Margin/VBox" unique_id=173920297]
+custom_minimum_size = Vector2(0, 3)
+layout_mode = 2
+color = Color(0.15190001, 0.24675998, 0.31, 0)
+
+[node name="SeparatorBottom" type="ColorRect" parent="Root/Panel/Margin/VBox" unique_id=499761482]
+custom_minimum_size = Vector2(0, 3)
+layout_mode = 2
+color = Color(0.15294118, 0.24705882, 0.30980393, 0.8)
+
+[node name="SeparatorTop6" type="ColorRect" parent="Root/Panel/Margin/VBox" unique_id=1819235903]
+custom_minimum_size = Vector2(0, 3)
+layout_mode = 2
+color = Color(0.15190001, 0.24675998, 0.31, 0)
+
+[node name="Buttons" type="HBoxContainer" parent="Root/Panel/Margin/VBox" unique_id=958342477]
+layout_mode = 2
+theme_override_constants/separation = 10
+alignment = 1
+
+[node name="RestartButton" parent="Root/Panel/Margin/VBox/Buttons" unique_id=1919175766 instance=ExtResource("4_button")]
+custom_minimum_size = Vector2(135, 42)
+layout_mode = 2
+text = "Restart"
+icon = ExtResource("5_replay")
+label_text = "Restart"
+button_icon = ExtResource("5_replay")
+
+[node name="ContinueButton" parent="Root/Panel/Margin/VBox/Buttons" unique_id=628399235 instance=ExtResource("4_button")]
+custom_minimum_size = Vector2(140, 42)
+layout_mode = 2
+disabled = true
+text = "Continue"
+icon = ExtResource("6_play")
+label_text = "Continue"
+button_icon = ExtResource("6_play")
+
+[node name="MainMenuButton" parent="Root/Panel/Margin/VBox/Buttons" unique_id=2031911406 instance=ExtResource("4_button")]
+custom_minimum_size = Vector2(155, 42)
+layout_mode = 2
+text = "Main Menu"
+icon = ExtResource("7_home")
+label_text = "Main Menu"
+button_icon = ExtResource("7_home")
+
+[node name="TextureRect" type="TextureRect" parent="Root/Panel" unique_id=544173993]
+custom_minimum_size = Vector2(130, 0)
+layout_mode = 2
+size_flags_horizontal = 8
+size_flags_vertical = 0
+texture = ExtResource("2_8846n")
+expand_mode = 5

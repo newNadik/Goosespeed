@@ -3,12 +3,14 @@ extends Node3D
 
 const PAUSE_MENU_SCENE := preload("res://scenes/ui/pause_menu.tscn")
 const LOADING_SCREEN_SCENE := preload("res://scenes/ui/loading_screen.tscn")
+const LEVEL_SUMMARY_POPUP_SCENE := preload("res://scenes/ui/level_summary_popup.tscn")
 const CourseCatalog := preload("res://scripts/gameplay/course_catalog.gd")
 const COIN_PICKUP_GROUP := &"coins"
 const LOADING_FADE_IN_DURATION := 0.06
 const LOADING_FADE_OUT_DURATION := 0.28
 const LOADING_LAYER_NAME := "LoadingLayer"
 const LOADING_FADE_BASE_NAME := "LoadingFadeBase"
+const MAIN_MENU_SCENE := "res://scenes/ui/main_menu.tscn"
 
 @export_file("*.tscn") var course_scene_path: String = CourseCatalog.DEFAULT_COURSE_PATH
 @export var target_coin_count := 10
@@ -27,6 +29,7 @@ var coin_pickups: Array[CoinPickup] = []
 var active_course: Node3D
 var loading_layer: CanvasLayer
 var loading_screen: Control
+var level_summary_popup
 var countdown_active := false
 var last_finish_best_time := -1.0
 var last_finish_new_best := false
@@ -49,6 +52,7 @@ func _ready() -> void:
 	if game_hud.has_method("set_finish_target"):
 		game_hud.set_finish_target(finish_area)
 	add_child(PAUSE_MENU_SCENE.instantiate())
+	_add_level_summary_popup()
 	_update_hud()
 	await _fade_loading_screen(0.0, LOADING_FADE_OUT_DURATION)
 	_hide_loading_screen()
@@ -70,6 +74,9 @@ func restart_run() -> void:
 	elapsed_time = 0.0
 	finished = false
 	last_finish_new_best = false
+	if level_summary_popup != null:
+		level_summary_popup.hide_summary()
+	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 	run_coin_count = 0
 	_reset_coin_pickups()
 	_reset_finish_line()
@@ -177,8 +184,11 @@ func _on_finish_body_entered(body: Node3D) -> void:
 			var wallet := get_node_or_null("/root/CoinWallet")
 			if wallet != null and wallet.has_method("add_coins"):
 				wallet.add_coins(run_coin_count)
-			if finish_line != null and finish_line.has_method("complete_finish_line"):
-				finish_line.complete_finish_line()
+				if finish_line != null and finish_line.has_method("complete_finish_line"):
+					finish_line.complete_finish_line()
+			_show_level_summary()
+			_set_player_controls_enabled(false)
+			Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 		finished = true
 		_update_hud()
 
@@ -191,6 +201,20 @@ func _record_level_time() -> void:
 		last_finish_new_best = progress.record_level_time(_get_course_scene_path(), elapsed_time)
 		if last_finish_new_best:
 			last_finish_best_time = elapsed_time
+
+
+func _show_level_summary() -> void:
+	if level_summary_popup == null:
+		return
+	level_summary_popup.show_summary(
+		_get_course_display_name(),
+		elapsed_time,
+		get_best_time(),
+		last_finish_new_best,
+		run_coin_count,
+		target_coin_count,
+		get_total_coin_count()
+	)
 
 
 func _on_coin_collected(coin: CoinPickup) -> void:
@@ -264,6 +288,30 @@ func _load_and_attach_course() -> void:
 	await get_tree().process_frame
 
 
+func _add_level_summary_popup() -> void:
+	level_summary_popup = LEVEL_SUMMARY_POPUP_SCENE.instantiate()
+	if level_summary_popup == null:
+		return
+	add_child(level_summary_popup)
+	level_summary_popup.restart_requested.connect(_on_summary_restart_requested)
+	level_summary_popup.main_menu_requested.connect(_on_summary_main_menu_requested)
+	level_summary_popup.continue_requested.connect(_on_summary_continue_requested)
+
+
+func _on_summary_restart_requested() -> void:
+	restart_run()
+
+
+func _on_summary_continue_requested() -> void:
+	pass
+
+
+func _on_summary_main_menu_requested() -> void:
+	get_tree().paused = false
+	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	get_tree().change_scene_to_file(MAIN_MENU_SCENE)
+
+
 func _load_course_scene() -> PackedScene:
 	var path := _get_course_scene_path()
 	CourseCatalog.request_course_preload(path)
@@ -289,6 +337,14 @@ func _get_course_scene_path() -> String:
 	if course_scene_path.is_empty():
 		return CourseCatalog.DEFAULT_COURSE_PATH
 	return course_scene_path
+
+
+func _get_course_display_name() -> String:
+	var path := _get_course_scene_path()
+	var file_name := path.get_file().get_basename()
+	if file_name.begins_with("level_"):
+		file_name = file_name.substr("level_".length())
+	return file_name.replace("_", " ")
 
 
 func _show_loading_screen() -> void:
