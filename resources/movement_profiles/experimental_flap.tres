@@ -5,5 +5,5 @@
 [resource]
 script = ExtResource("1_profile")
 flap_cooldown = 0.8
-straight_run_bonus_acceleration = 0.4
+straight_run_bonus_acceleration = 0.3
 straight_run_bonus_max_speed = 6.0

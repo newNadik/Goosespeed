@@ -169,7 +169,7 @@ func _movement_profiles_are_configured() -> bool:
 	if not is_equal_approx(EXPERIMENTAL_PROFILE.takeoff_runup_charge_ratio, 0.5):
 		push_error("Experimental movement profile changed charge animation ratio")
 		return false
-	if not is_equal_approx(EXPERIMENTAL_PROFILE.straight_run_bonus_acceleration, 0.4):
+	if not is_equal_approx(EXPERIMENTAL_PROFILE.straight_run_bonus_acceleration, 0.3):
 		push_error("Experimental movement profile did not set straight-run bonus acceleration")
 		return false
 	if not is_equal_approx(EXPERIMENTAL_PROFILE.straight_run_bonus_max_speed, 6.0):
@@ -246,9 +246,9 @@ func _straight_run_bonus_behaves_as_profiled(controller: Node) -> bool:
 		Vector3.UP,
 	)
 	if (
-		not is_equal_approx(q3_motor.straight_run_bonus_speed, 0.4)
-		or not is_equal_approx(q3_motor.straight_run_current_acceleration, 0.4)
-		or not is_equal_approx(target_bonus, 0.4)
+		not is_equal_approx(q3_motor.straight_run_bonus_speed, 0.3)
+		or not is_equal_approx(q3_motor.straight_run_current_acceleration, 0.3)
+		or not is_equal_approx(target_bonus, 0.3)
 		or q3_motor.velocity.length() > 0.0
 	):
 		push_error("Straight-run bonus did not add target speed during stable forward ground movement")
