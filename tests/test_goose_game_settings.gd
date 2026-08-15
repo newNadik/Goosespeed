@@ -130,6 +130,28 @@ func _settings_overlay_is_valid() -> bool:
 	overlay.show_settings()
 	await get_tree().process_frame
 
+	var controls_button := _find_tab_button(tabs, GooseSettingsOverlay.TAB_CONTROLS)
+	if controls_button == null:
+		push_error("Settings overlay did not build the Controls tab")
+		overlay.queue_free()
+		return false
+	controls_button.pressed.emit()
+	await get_tree().process_frame
+	var content_box := overlay.get_node("Root/MarginContainer/Margin/VBox/FolderBody/FolderMargin/ContentScroll/ContentCenter/ContentBox") as VBoxContainer
+	var binding_grid := _find_binding_grid(content_box)
+	if binding_grid == null:
+		push_error("Settings overlay did not expose keybinding rows")
+		overlay.queue_free()
+		return false
+	if binding_grid.columns != 5:
+		push_error("Settings overlay keybinding grid did not reserve a gamepad column")
+		overlay.queue_free()
+		return false
+	if not _binding_grid_has_gamepad_label(binding_grid):
+		push_error("Settings overlay keybinding gamepad column is empty")
+		overlay.queue_free()
+		return false
+
 	var audio_button := _find_tab_button(tabs, GooseSettingsOverlay.TAB_AUDIO)
 	if audio_button == null:
 		push_error("Settings overlay did not build the Audio tab")
@@ -137,7 +159,7 @@ func _settings_overlay_is_valid() -> bool:
 		return false
 	audio_button.pressed.emit()
 	await get_tree().process_frame
-	var content_box := overlay.get_node("Root/MarginContainer/Margin/VBox/FolderBody/FolderMargin/ContentScroll/ContentCenter/ContentBox") as VBoxContainer
+	content_box = overlay.get_node("Root/MarginContainer/Margin/VBox/FolderBody/FolderMargin/ContentScroll/ContentCenter/ContentBox") as VBoxContainer
 	var music_volume_slider := _find_slider_with_label(content_box, "Music Volume")
 	var sfx_volume_slider := _find_slider_with_label(content_box, "SFX Volume")
 	if _find_control_with_label(content_box, "Music") != null or _find_control_with_label(content_box, "Sound Effects") != null:
@@ -183,6 +205,22 @@ func _find_tab_button(tabs: HBoxContainer, label_text: String) -> Button:
 		if button != null and button.text == label_text:
 			return button
 	return null
+
+
+func _find_binding_grid(content_box: VBoxContainer) -> GridContainer:
+	for child in content_box.get_children():
+		var grid := child as GridContainer
+		if grid != null:
+			return grid
+	return null
+
+
+func _binding_grid_has_gamepad_label(grid: GridContainer) -> bool:
+	for child in grid.get_children():
+		var button := child as Button
+		if button != null and (button.text.begins_with("Pad ") or button.text.begins_with("LS ")):
+			return true
+	return false
 
 
 func _find_control_with_label(content_box: VBoxContainer, label_text: String) -> Control:

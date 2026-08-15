@@ -4,7 +4,8 @@ signal bindings_changed
 signal actions_changed
 
 const SAVE_PATH := "user://keybindings.cfg"
-const MAX_BINDINGS := 2
+const MAX_BINDINGS := 3
+const GAMEPAD_BINDING_SLOT := 2
 const MOUSE_BUTTON_PULSE_FRAMES := 1
 const PULSE_MOUSE_BUTTONS := {
 	MOUSE_BUTTON_WHEEL_UP: true,
@@ -70,6 +71,8 @@ const Q3_N_FLIGHT_ACTIONS: Array[String] = [
 	"player_walk",
 	"player_reset_camera",
 	"player_toggle_camera",
+	"player_honk",
+	"player_restart",
 ]
 const Q3_ACTION_LABELS := {
 	"player_forward": "Move Forward",
@@ -82,6 +85,8 @@ const Q3_ACTION_LABELS := {
 	"player_walk": "Slow Walk",
 	"player_reset_camera": "Recenter Camera",
 	"player_toggle_camera": "Toggle Camera",
+	"player_honk": "Honk",
+	"player_restart": "Restart",
 }
 const SPECTATOR_ACTION_LABELS := {
 	"player_forward": "Move Forward",
@@ -119,17 +124,19 @@ const Q3_N_FLIGHT_ACTION_LABELS := {
 	"player_walk": "Slow Walk",
 }
 const DEFAULT_BINDINGS := {
-	"player_forward": [KEY_W, -1],
-	"player_back": [KEY_S, -1],
-	"player_left": [KEY_A, -1],
-	"player_right": [KEY_D, -1],
-	"player_jump": [KEY_SPACE, -1],
-	"player_flap": [KEY_SPACE, -1],
-	"player_crouch": [KEY_CTRL, -1],
-	"player_special": [KEY_E, -1],
-	"player_walk": [KEY_SHIFT, -1],
-	"player_reset_camera": [KEY_C, -1],
-	"player_toggle_camera": [KEY_V, -1],
+	"player_forward": [KEY_W, -1, {"type": "joy_motion", "axis": JOY_AXIS_LEFT_Y, "axis_value": -1.0}],
+	"player_back": [KEY_S, -1, {"type": "joy_motion", "axis": JOY_AXIS_LEFT_Y, "axis_value": 1.0}],
+	"player_left": [KEY_A, -1, {"type": "joy_motion", "axis": JOY_AXIS_LEFT_X, "axis_value": -1.0}],
+	"player_right": [KEY_D, -1, {"type": "joy_motion", "axis": JOY_AXIS_LEFT_X, "axis_value": 1.0}],
+	"player_jump": [KEY_SPACE, -1, {"type": "joy_button", "button_index": JOY_BUTTON_A}],
+	"player_flap": [KEY_SPACE, -1, {"type": "joy_button", "button_index": JOY_BUTTON_A}],
+	"player_crouch": [KEY_CTRL, -1, {"type": "joy_button", "button_index": JOY_BUTTON_RIGHT_SHOULDER}],
+	"player_special": [KEY_E, -1, {"type": "joy_button", "button_index": JOY_BUTTON_X}],
+	"player_walk": [KEY_SHIFT, -1, {"type": "joy_button", "button_index": JOY_BUTTON_LEFT_SHOULDER}],
+	"player_reset_camera": [KEY_C, -1, {"type": "joy_button", "button_index": JOY_BUTTON_RIGHT_STICK}],
+	"player_toggle_camera": [KEY_V, -1, {"type": "joy_button", "button_index": JOY_BUTTON_Y}],
+	"player_honk": [KEY_Q, -1, {"type": "joy_button", "button_index": JOY_BUTTON_B}],
+	"player_restart": [KEY_R, -1, {"type": "joy_button", "button_index": JOY_BUTTON_BACK}],
 }
 
 var bindings_by_controller: Dictionary = {}
@@ -183,7 +190,7 @@ func get_action_label(action: String, controller_id := "") -> String:
 
 func get_bindings(action: String, controller_id := "") -> Array:
 	var bindings := bindings_by_controller.get(_resolve_controller(controller_id), {}) as Dictionary
-	return (bindings.get(action, [-1, -1]) as Array).duplicate(true)
+	return (bindings.get(action, _empty_slots()) as Array).duplicate(true)
 
 
 func is_action_just_pressed(action: StringName) -> bool:
@@ -220,6 +227,10 @@ func set_binding(action: String, slot: int, binding: Variant) -> void:
 	var normalized: Variant = _normalize_binding(binding)
 	if normalized is int and int(normalized) < 0:
 		return
+	if slot == GAMEPAD_BINDING_SLOT and not _is_gamepad_binding(normalized):
+		return
+	if slot != GAMEPAD_BINDING_SLOT and _is_gamepad_binding(normalized):
+		return
 	var slots := get_bindings(action)
 	slots[slot] = normalized
 	var bindings := bindings_by_controller[active_controller_id] as Dictionary
@@ -233,7 +244,7 @@ func clear_action(action: String) -> void:
 	if not action in get_actions():
 		return
 	var bindings := bindings_by_controller[active_controller_id] as Dictionary
-	bindings[action] = [-1, -1]
+	bindings[action] = _empty_slots()
 	apply_to_input_map()
 	save_bindings()
 	bindings_changed.emit()
@@ -299,13 +310,32 @@ func on_settings_changed() -> void:
 
 
 func _normalize_binding(binding: Variant) -> Variant:
-	if binding is Dictionary and str((binding as Dictionary).get("type", "")) == "mouse":
-		var button_index := int((binding as Dictionary).get("button_index", -1))
-		if button_index > 0:
-			return {
-				"type": "mouse",
-				"button_index": button_index,
-			}
+	if binding is Dictionary:
+		var binding_data := binding as Dictionary
+		match str(binding_data.get("type", "")):
+			"mouse":
+				var button_index := int(binding_data.get("button_index", -1))
+				if button_index > 0:
+					return {
+						"type": "mouse",
+						"button_index": button_index,
+					}
+			"joy_button":
+				var button_index := int(binding_data.get("button_index", -1))
+				if button_index >= 0:
+					return {
+						"type": "joy_button",
+						"button_index": button_index,
+					}
+			"joy_motion":
+				var axis := int(binding_data.get("axis", -1))
+				var axis_value := float(binding_data.get("axis_value", 0.0))
+				if axis >= 0 and not is_zero_approx(axis_value):
+					return {
+						"type": "joy_motion",
+						"axis": axis,
+						"axis_value": -1.0 if axis_value < 0.0 else 1.0,
+					}
 	if (binding is int or binding is float) and int(binding) > 0:
 		return int(binding)
 	return -1
@@ -320,6 +350,17 @@ func _binding_to_input_event(binding: Variant) -> InputEvent:
 		var mouse_event := InputEventMouseButton.new()
 		mouse_event.button_index = int((binding as Dictionary).get("button_index", -1)) as MouseButton
 		return mouse_event
+	if binding is Dictionary and str((binding as Dictionary).get("type", "")) == "joy_button":
+		var joy_button_event := InputEventJoypadButton.new()
+		joy_button_event.device = -1
+		joy_button_event.button_index = int((binding as Dictionary).get("button_index", -1)) as JoyButton
+		return joy_button_event
+	if binding is Dictionary and str((binding as Dictionary).get("type", "")) == "joy_motion":
+		var joy_motion_event := InputEventJoypadMotion.new()
+		joy_motion_event.device = -1
+		joy_motion_event.axis = int((binding as Dictionary).get("axis", -1)) as JoyAxis
+		joy_motion_event.axis_value = float((binding as Dictionary).get("axis_value", 0.0))
+		return joy_motion_event
 	return null
 
 
@@ -344,12 +385,14 @@ func _prune_mouse_button_pulses() -> void:
 func _parse_saved_slots(saved: Variant) -> Array:
 	if saved is Array:
 		var saved_slots := saved as Array
-		var slots: Array = [-1, -1]
+		var slots: Array = _empty_slots()
 		for slot in mini(saved_slots.size(), MAX_BINDINGS):
 			slots[slot] = _normalize_binding(saved_slots[slot])
 		return slots
 	if saved is int:
-		return [_normalize_binding(saved), -1]
+		var slots := _empty_slots()
+		slots[0] = _normalize_binding(saved)
+		return slots
 	return []
 
 
@@ -362,7 +405,23 @@ func _load_controller_bindings(config: ConfigFile, section: String, controller_i
 			continue
 		var slots := _parse_saved_slots(config.get_value(section, action))
 		if not slots.is_empty():
+			if slots.size() > GAMEPAD_BINDING_SLOT and not _is_gamepad_binding(slots[GAMEPAD_BINDING_SLOT]):
+				slots[GAMEPAD_BINDING_SLOT] = (DEFAULT_BINDINGS[action] as Array)[GAMEPAD_BINDING_SLOT]
 			bindings[action] = slots
+
+
+func _empty_slots() -> Array:
+	var slots := []
+	for _slot in MAX_BINDINGS:
+		slots.append(-1)
+	return slots
+
+
+func _is_gamepad_binding(binding: Variant) -> bool:
+	return (
+		binding is Dictionary
+		and str((binding as Dictionary).get("type", "")) in ["joy_button", "joy_motion"]
+	)
 
 
 func _normalize_controller(value: String) -> String:

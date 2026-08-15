@@ -39,6 +39,8 @@ const DEFAULT_REFERENCE_AREA := 0.275
 const DEFAULT_EXTRA_LINEAR_DRAG_LINEAR_COEFFICIENT := 0.0
 const DEFAULT_EXTRA_LINEAR_DRAG_QUADRATIC_COEFFICIENT := 0.015
 const DEFAULT_AIR_DENSITY := 1.225
+const GAMEPAD_LOOK_DEADZONE := 0.18
+const GAMEPAD_LOOK_RATE := 3.0
 const MAX_LIFT_AOA_MIN_AIRSPEED := 5.0
 const MIN_AERODYNAMIC_SPEED_SQUARED := 0.0001
 const MIN_DIRECTION_VECTOR_LENGTH_SQUARED := 0.000001
@@ -271,7 +273,8 @@ func setup(
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 
 
-func process_tick(_delta: float) -> void:
+func process_tick(delta: float) -> void:
+	_update_gamepad_look(delta)
 	var forward_speed := velocity.dot(-global_basis.z)
 	status_label.text = "Flight\nSpeed %.2f m/s\nAoA %.1f°\nSideslip %.1f°\nFlap CD %.2f s" % [
 		forward_speed,
@@ -312,6 +315,31 @@ func handle_input(event: InputEvent) -> void:
 			deg_to_rad(-75.0),
 			deg_to_rad(60.0),
 		)
+
+
+func _update_gamepad_look(delta: float) -> void:
+	var joypad_id := _get_primary_joypad_id()
+	if joypad_id < 0:
+		return
+	var look_input := Vector2(
+		Input.get_joy_axis(joypad_id, JOY_AXIS_RIGHT_X),
+		Input.get_joy_axis(joypad_id, JOY_AXIS_RIGHT_Y),
+	)
+	if look_input.length() < GAMEPAD_LOOK_DEADZONE:
+		return
+	camera_yaw -= look_input.x * GAMEPAD_LOOK_RATE * delta
+	camera_pitch = clampf(
+		camera_pitch - (look_input.y * GAMEPAD_LOOK_RATE * delta),
+		deg_to_rad(-75.0),
+		deg_to_rad(60.0),
+	)
+
+
+func _get_primary_joypad_id() -> int:
+	var joypads := Input.get_connected_joypads()
+	if joypads.is_empty():
+		return -1
+	return int(joypads[0])
 
 
 func _apply_camera_rotation() -> void:

@@ -3,6 +3,7 @@ extends CenterContainer
 signal back_requested
 
 const LISTENING_TEXT := "Press input..."
+const GAMEPAD_BINDING_SLOT := 2
 
 @onready var action_grid: GridContainer = $Panel/Margin/VBox/ScrollContainer/ActionGrid
 @onready var reset_button: Button = $Panel/Margin/VBox/ButtonRow/ResetButton
@@ -27,6 +28,8 @@ func _input(event: InputEvent) -> void:
 
 	var binding: Variant
 	if event is InputEventKey:
+		if listening_slot == GAMEPAD_BINDING_SLOT:
+			return
 		var key_event := event as InputEventKey
 		if not key_event.pressed or key_event.echo:
 			return
@@ -39,12 +42,35 @@ func _input(event: InputEvent) -> void:
 			keycode = int(key_event.keycode)
 		binding = keycode
 	elif event is InputEventMouseButton:
+		if listening_slot == GAMEPAD_BINDING_SLOT:
+			return
 		var mouse_event := event as InputEventMouseButton
 		if not mouse_event.pressed:
 			return
 		binding = {
 			"type": "mouse",
 			"button_index": int(mouse_event.button_index),
+		}
+	elif event is InputEventJoypadButton:
+		if listening_slot != GAMEPAD_BINDING_SLOT:
+			return
+		var joy_button_event := event as InputEventJoypadButton
+		if not joy_button_event.pressed:
+			return
+		binding = {
+			"type": "joy_button",
+			"button_index": int(joy_button_event.button_index),
+		}
+	elif event is InputEventJoypadMotion:
+		if listening_slot != GAMEPAD_BINDING_SLOT:
+			return
+		var joy_motion_event := event as InputEventJoypadMotion
+		if absf(joy_motion_event.axis_value) < 0.5:
+			return
+		binding = {
+			"type": "joy_motion",
+			"axis": int(joy_motion_event.axis),
+			"axis_value": -1.0 if joy_motion_event.axis_value < 0.0 else 1.0,
 		}
 	else:
 		return
@@ -71,6 +97,7 @@ func focus_first() -> void:
 
 func build_rows() -> void:
 	stop_listening()
+	action_grid.columns = 5
 	binding_buttons.clear()
 	for child in action_grid.get_children():
 		child.queue_free()
@@ -128,7 +155,59 @@ func get_binding_label(binding: Variant) -> String:
 				return "Wheel Down"
 			_:
 				return "M%d" % button_index
+	if binding is Dictionary and str((binding as Dictionary).get("type", "")) == "joy_button":
+		return get_joy_button_label(int((binding as Dictionary).get("button_index", -1)))
+	if binding is Dictionary and str((binding as Dictionary).get("type", "")) == "joy_motion":
+		return get_joy_motion_label(
+			int((binding as Dictionary).get("axis", -1)),
+			float((binding as Dictionary).get("axis_value", 0.0)),
+		)
 	return "---"
+
+
+func get_joy_button_label(button_index: int) -> String:
+	match button_index:
+		JOY_BUTTON_A:
+			return "Pad A"
+		JOY_BUTTON_B:
+			return "Pad B"
+		JOY_BUTTON_X:
+			return "Pad X"
+		JOY_BUTTON_Y:
+			return "Pad Y"
+		JOY_BUTTON_BACK:
+			return "Back"
+		JOY_BUTTON_START:
+			return "Start"
+		JOY_BUTTON_LEFT_SHOULDER:
+			return "LB"
+		JOY_BUTTON_RIGHT_SHOULDER:
+			return "RB"
+		JOY_BUTTON_LEFT_STICK:
+			return "LS"
+		JOY_BUTTON_RIGHT_STICK:
+			return "RS"
+		_:
+			return "Pad %d" % button_index
+
+
+func get_joy_motion_label(axis: int, axis_value: float) -> String:
+	var suffix := "-" if axis_value < 0.0 else "+"
+	match axis:
+		JOY_AXIS_LEFT_X:
+			return "LS X%s" % suffix
+		JOY_AXIS_LEFT_Y:
+			return "LS Y%s" % suffix
+		JOY_AXIS_RIGHT_X:
+			return "RS X%s" % suffix
+		JOY_AXIS_RIGHT_Y:
+			return "RS Y%s" % suffix
+		JOY_AXIS_TRIGGER_LEFT:
+			return "LT"
+		JOY_AXIS_TRIGGER_RIGHT:
+			return "RT"
+		_:
+			return "Axis %d%s" % [axis, suffix]
 
 
 func on_bind_pressed(action: String, slot: int) -> void:

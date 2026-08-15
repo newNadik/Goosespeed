@@ -77,6 +77,8 @@ const THIRD_PERSON_AIRBORNE_CAMERA_LIFT := 0.35
 const THIRD_PERSON_LOW_CAMERA_PITCH_START := deg_to_rad(8.0)
 const THIRD_PERSON_LOW_CAMERA_PITCH_END := deg_to_rad(35.0)
 const THIRD_PERSON_MIN_SPRING_MARGIN := 0.25
+const GAMEPAD_LOOK_DEADZONE := 0.18
+const GAMEPAD_LOOK_RATE := 3.0
 
 enum MovementMode {
 	VQ3,
@@ -322,6 +324,7 @@ func setup(
 
 
 func process_tick(delta: float) -> void:
+	_update_gamepad_look(delta)
 	_update_camera_anchor(delta)
 	var horizontal_speed_mps := Vector2(velocity.x, velocity.z).length()
 	hud.update_values(
@@ -1389,6 +1392,34 @@ func handle_unhandled_input(event: InputEvent) -> void:
 		yaw -= event.relative.x * mouse_sensitivity
 		pitch = clampf(pitch - (event.relative.y * mouse_sensitivity), deg_to_rad(-89.0), deg_to_rad(89.0))
 		_apply_view_rotation(_idle_camera_orbit_is_active(_get_movement_input()))
+
+
+func _update_gamepad_look(delta: float) -> void:
+	if not camera_control_enabled:
+		return
+	var joypad_id := _get_primary_joypad_id()
+	if joypad_id < 0:
+		return
+	var look_input := Vector2(
+		Input.get_joy_axis(joypad_id, JOY_AXIS_RIGHT_X),
+		Input.get_joy_axis(joypad_id, JOY_AXIS_RIGHT_Y),
+	)
+	if look_input.length() < GAMEPAD_LOOK_DEADZONE:
+		return
+	yaw -= look_input.x * GAMEPAD_LOOK_RATE * delta
+	pitch = clampf(
+		pitch - (look_input.y * GAMEPAD_LOOK_RATE * delta),
+		deg_to_rad(-89.0),
+		deg_to_rad(89.0),
+	)
+	_apply_view_rotation(_idle_camera_orbit_is_active(_get_movement_input()))
+
+
+func _get_primary_joypad_id() -> int:
+	var joypads := Input.get_connected_joypads()
+	if joypads.is_empty():
+		return -1
+	return int(joypads[0])
 
 
 func recenter_camera() -> void:
