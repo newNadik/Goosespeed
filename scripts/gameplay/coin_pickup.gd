@@ -21,8 +21,8 @@ func _ready() -> void:
 		pickup_area.body_entered.connect(_on_pickup_body_entered)
 
 
-func set_collector_body(value: Node3D) -> void:
-	collector_body = value
+func set_collector_body(body: Node3D) -> void:
+	collector_body = body
 
 
 func reset_pickup() -> void:

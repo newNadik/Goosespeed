@@ -162,10 +162,10 @@ func _update_area_shape() -> void:
 	_set_preview_visible(Engine.is_editor_hint())
 
 
-func _set_preview_visible(is_visible: bool) -> void:
+func _set_preview_visible(visible_in_editor: bool) -> void:
 	var preview_mesh_instance := get_node_or_null("PreviewMesh") as MeshInstance3D
 	if preview_mesh_instance != null:
-		preview_mesh_instance.visible = is_visible
+		preview_mesh_instance.visible = visible_in_editor
 
 
 func _ensure_local_resources() -> void:

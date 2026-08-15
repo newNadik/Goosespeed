@@ -187,13 +187,13 @@ func _draw_planted_steps() -> void:
 		)
 
 
-func _draw_step_texture(center: Vector2, rotation: float, alpha: float, side: float) -> void:
+func _draw_step_texture(center: Vector2, step_rotation: float, alpha: float, side: float) -> void:
 	var texture_size := step_texture.get_size()
 	if texture_size.x <= 0.0 or texture_size.y <= 0.0:
 		return
 
-	var scale := minf(STEP_SIZE.x / texture_size.x, STEP_SIZE.y / texture_size.y)
-	draw_set_transform(center, rotation, Vector2(scale * side, scale))
+	var step_scale := minf(STEP_SIZE.x / texture_size.x, STEP_SIZE.y / texture_size.y)
+	draw_set_transform(center, step_rotation, Vector2(step_scale * side, step_scale))
 	var top_left := -texture_size * 0.5
 	draw_texture(step_texture, top_left, Color(1.0, 1.0, 1.0, alpha))
 	draw_set_transform(Vector2.ZERO, 0.0, Vector2.ONE)
@@ -232,13 +232,13 @@ func _draw_print_speckles(rect: Rect2) -> void:
 	var rows := int(ceil(rect.size.y / SPECKLE_SPACING))
 	for row in rows:
 		for column in columns:
-			var seed := float((column * 37 + row * 53) % 97) / 97.0
-			if seed > 0.36:
+			var speckle_seed := float((column * 37 + row * 53) % 97) / 97.0
+			if speckle_seed > 0.36:
 				continue
-			var x := float(column) * SPECKLE_SPACING + 7.0 + fmod(seed * 211.0, 18.0)
-			var y := float(row) * SPECKLE_SPACING + 5.0 + fmod(seed * 157.0, 20.0)
-			var radius := 0.8 + seed * 1.4
-			var alpha := 0.028 + seed * 0.035
+			var x := float(column) * SPECKLE_SPACING + 7.0 + fmod(speckle_seed * 211.0, 18.0)
+			var y := float(row) * SPECKLE_SPACING + 5.0 + fmod(speckle_seed * 157.0, 20.0)
+			var radius := 0.8 + speckle_seed * 1.4
+			var alpha := 0.028 + speckle_seed * 0.035
 			draw_circle(Vector2(x, y), radius, Color(PRINT_SPECKLE_COLOUR, alpha))
 
 

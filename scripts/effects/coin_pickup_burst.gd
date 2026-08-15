@@ -65,6 +65,10 @@ func _face_camera() -> void:
 	if camera == null:
 		return
 	var target := camera.global_position
-	if global_position.distance_squared_to(target) < 0.001:
+	var direction := target - global_position
+	if direction.length_squared() < 0.001:
 		return
-	look_at(target, camera.global_transform.basis.y)
+	var up := camera.global_transform.basis.y.normalized()
+	if up.is_zero_approx() or absf(direction.normalized().dot(up)) > 0.999:
+		return
+	look_at(target, up)

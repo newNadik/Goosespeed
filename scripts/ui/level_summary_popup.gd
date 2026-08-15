@@ -33,7 +33,7 @@ func show_summary(
 	best_time: float,
 	is_new_best: bool,
 	coins_collected: int,
-	coin_target: int,
+	_coin_target: int,
 	wallet_total: int
 ) -> void:
 	course_label.text = course_name.to_upper()
