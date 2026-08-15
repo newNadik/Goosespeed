@@ -20,6 +20,8 @@ func _ready() -> void:
 		return
 	if CoinWallet.has_method("reset_for_tests"):
 		CoinWallet.reset_for_tests()
+	if LevelProgress.has_method("reset_for_tests"):
+		LevelProgress.reset_for_tests()
 	var spawn_point := game.get_node("CourseRoot/LevelFarm/SpawnPoint") as Node3D
 	var course := game.get_node("CourseRoot/LevelFarm")
 	for required_node in [
@@ -107,6 +109,14 @@ func _ready() -> void:
 		push_error("Game scene did not add run coins to total on finish")
 		get_tree().quit(1)
 		return
+	if not game.was_last_finish_new_best():
+		push_error("Game scene did not mark first finish as a new best")
+		get_tree().quit(1)
+		return
+	if not is_equal_approx(game.get_best_time(), 4.2):
+		push_error("Game scene did not record level best time")
+		get_tree().quit(1)
+		return
 
 	controller.global_position += Vector3(3, 0, 0)
 	game.restart_run()
@@ -186,6 +196,8 @@ func _ready() -> void:
 		return
 	next_game.queue_free()
 	await get_tree().process_frame
+	if LevelProgress.has_method("reset_for_tests"):
+		LevelProgress.reset_for_tests()
 
 	print("Game scene OK")
 	get_tree().quit(0)

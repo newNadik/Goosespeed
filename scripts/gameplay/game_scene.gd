@@ -28,6 +28,8 @@ var active_course: Node3D
 var loading_layer: CanvasLayer
 var loading_screen: Control
 var countdown_active := false
+var last_finish_best_time := -1.0
+var last_finish_new_best := false
 
 
 func _ready() -> void:
@@ -67,6 +69,7 @@ func restart_run() -> void:
 		return
 	elapsed_time = 0.0
 	finished = false
+	last_finish_new_best = false
 	run_coin_count = 0
 	_reset_coin_pickups()
 	_reset_finish_line()
@@ -100,6 +103,17 @@ func get_total_coin_count() -> int:
 	if wallet != null and wallet.has_method("get_total_coins"):
 		return wallet.get_total_coins()
 	return 0
+
+
+func get_best_time() -> float:
+	var progress := get_node_or_null("/root/LevelProgress")
+	if progress != null and progress.has_method("get_best_time"):
+		return progress.get_best_time(_get_course_scene_path())
+	return -1.0
+
+
+func was_last_finish_new_best() -> bool:
+	return last_finish_new_best
 
 
 func _cache_course_contract() -> void:
@@ -159,6 +173,7 @@ func _on_finish_body_entered(body: Node3D) -> void:
 		if run_coin_count < target_coin_count:
 			return
 		if not finished:
+			_record_level_time()
 			var wallet := get_node_or_null("/root/CoinWallet")
 			if wallet != null and wallet.has_method("add_coins"):
 				wallet.add_coins(run_coin_count)
@@ -166,6 +181,16 @@ func _on_finish_body_entered(body: Node3D) -> void:
 				finish_line.complete_finish_line()
 		finished = true
 		_update_hud()
+
+
+func _record_level_time() -> void:
+	last_finish_best_time = get_best_time()
+	last_finish_new_best = false
+	var progress := get_node_or_null("/root/LevelProgress")
+	if progress != null and progress.has_method("record_level_time"):
+		last_finish_new_best = progress.record_level_time(_get_course_scene_path(), elapsed_time)
+		if last_finish_new_best:
+			last_finish_best_time = elapsed_time
 
 
 func _on_coin_collected(coin: CoinPickup) -> void:
