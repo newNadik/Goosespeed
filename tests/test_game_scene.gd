@@ -119,6 +119,17 @@ func _ready() -> void:
 		push_error("Game scene did not show level summary after finish")
 		get_tree().quit(1)
 		return
+	var summary_pause_menu := game.get_node_or_null("PauseMenu")
+	if summary_pause_menu == null:
+		push_error("Game scene pause menu fixture is missing")
+		get_tree().quit(1)
+		return
+	_press_escape(summary_pause_menu)
+	await get_tree().process_frame
+	if bool(summary_pause_menu.get("open")) or get_tree().paused:
+		push_error("Pause menu opened while level summary was visible")
+		get_tree().quit(1)
+		return
 	if not _label_contains(summary, "Root/Panel/Margin/VBox/Stats/TimeRow/Value", "04.20s"):
 		push_error("Level summary did not show final time")
 		get_tree().quit(1)
@@ -214,6 +225,28 @@ func _ready() -> void:
 		push_error("Game scene pause menu restart fixture is missing")
 		get_tree().quit(1)
 		return
+	var pause_resume_button := pause_menu.get_node_or_null(
+		"MenuRoot/MenuBackground/MarginContainer/VBoxContainer/ResumeButton"
+	) as Button
+	if pause_resume_button == null:
+		push_error("Game scene pause menu resume button fixture is missing")
+		get_tree().quit(1)
+		return
+	pause_resume_button.grab_focus()
+	_press_escape(pause_menu)
+	await get_tree().process_frame
+	if not bool(pause_menu.get("open")) or not get_tree().paused:
+		push_error("Pause menu did not open from Escape while UI had focus")
+		get_tree().quit(1)
+		return
+	_press_escape(pause_menu)
+	await get_tree().process_frame
+	if bool(pause_menu.get("open")):
+		push_error("Pause menu did not close from Escape while open")
+		get_tree().quit(1)
+		return
+	pause_menu.set_open(false, false)
+	get_tree().paused = false
 	pause_menu.on_restart_pressed()
 	await get_tree().process_frame
 	await get_tree().physics_frame
@@ -261,6 +294,14 @@ func _basis_yaw_matches(a: Basis, b: Basis) -> bool:
 	if a_forward.length_squared() <= 0.0001 or b_forward.length_squared() <= 0.0001:
 		return false
 	return a_forward.normalized().dot(b_forward.normalized()) > 0.999
+
+
+func _press_escape(pause_menu: Node) -> void:
+	var event := InputEventKey.new()
+	event.pressed = true
+	event.keycode = KEY_ESCAPE
+	event.physical_keycode = KEY_ESCAPE
+	pause_menu._input(event)
 
 
 func _label_contains(root: Node, path: NodePath, expected_text: String) -> bool:

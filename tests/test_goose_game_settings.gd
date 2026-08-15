@@ -100,6 +100,17 @@ func _settings_overlay_is_valid() -> bool:
 		push_error("Settings overlay did not build the expected tabs")
 		overlay.queue_free()
 		return false
+	var back_requests := [0]
+	overlay.back_requested.connect(func() -> void: back_requests[0] += 1)
+	overlay.back_button.grab_focus()
+	_press_escape(overlay)
+	await get_tree().process_frame
+	if overlay.visible or int(back_requests[0]) != 1:
+		push_error("Settings overlay did not close from Escape while UI had focus")
+		overlay.queue_free()
+		return false
+	overlay.show_settings()
+	await get_tree().process_frame
 
 	var audio_button := _find_tab_button(tabs, GooseSettingsOverlay.TAB_AUDIO)
 	if audio_button == null:
@@ -134,6 +145,14 @@ func _settings_overlay_is_valid() -> bool:
 		return false
 	overlay.queue_free()
 	return true
+
+
+func _press_escape(target: Node) -> void:
+	var event := InputEventKey.new()
+	event.pressed = true
+	event.keycode = KEY_ESCAPE
+	event.physical_keycode = KEY_ESCAPE
+	target._input(event)
 
 
 func _find_tab_button(tabs: HBoxContainer, label_text: String) -> Button:

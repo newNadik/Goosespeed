@@ -17,6 +17,7 @@ const CLOSED_OFFSET := Vector2(-920.0, 0.0)
 @onready var settings_overlay = $GooseSettingsOverlay
 
 var open := false
+var pause_blocked := false
 var menu_background_open_position := Vector2.ZERO
 var menu_background_shadow_open_position := Vector2.ZERO
 var scrim_open_color := Color.TRANSPARENT
@@ -37,21 +38,34 @@ func _ready() -> void:
 	set_open(false, false)
 
 
-func _unhandled_input(event: InputEvent) -> void:
-	if not event is InputEventKey:
+func _input(event: InputEvent) -> void:
+	if not _is_cancel_pressed(event):
 		return
-	var key_event := event as InputEventKey
-	if not key_event.pressed or key_event.echo or not Input.is_action_just_pressed(&"ui_cancel"):
+	if not open and pause_blocked:
+		get_viewport().set_input_as_handled()
 		return
 	if open and settings_overlay.visible:
-		show_pause_menu_content()
-		get_viewport().set_input_as_handled()
 		return
 	set_open(not open, true, true)
 	get_viewport().set_input_as_handled()
 
 
+func _is_cancel_pressed(event: InputEvent) -> bool:
+	if event is InputEventKey:
+		var key_event := event as InputEventKey
+		if not key_event.pressed or key_event.echo:
+			return false
+		return (
+			event.is_action_pressed(&"ui_cancel")
+			or key_event.keycode == KEY_ESCAPE
+			or key_event.physical_keycode == KEY_ESCAPE
+		)
+	return event.is_action_pressed(&"ui_cancel")
+
+
 func set_open(value: bool, update_mouse_mode := true, animate := false) -> void:
+	if value and pause_blocked:
+		return
 	if transition_tween:
 		transition_tween.kill()
 	open = value
@@ -75,6 +89,12 @@ func set_open(value: bool, update_mouse_mode := true, animate := false) -> void:
 		get_tree().paused = false
 		if update_mouse_mode:
 			call_deferred("capture_mouse")
+
+
+func set_pause_blocked(value: bool) -> void:
+	pause_blocked = value
+	if pause_blocked and open:
+		set_open(false, false)
 
 
 func capture_mouse() -> void:

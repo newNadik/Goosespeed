@@ -30,6 +30,7 @@ var active_course: Node3D
 var loading_layer: CanvasLayer
 var loading_screen: Control
 var level_summary_popup
+var pause_menu: PauseMenu
 var countdown_active := false
 var last_finish_best_time := -1.0
 var last_finish_new_best := false
@@ -51,7 +52,8 @@ func _ready() -> void:
 		game_hud.set_coin_target(target_coin_count)
 	if game_hud.has_method("set_finish_target"):
 		game_hud.set_finish_target(finish_area)
-	add_child(PAUSE_MENU_SCENE.instantiate())
+	pause_menu = PAUSE_MENU_SCENE.instantiate() as PauseMenu
+	add_child(pause_menu)
 	_add_level_summary_popup()
 	_update_hud()
 	await _fade_loading_screen(0.0, LOADING_FADE_OUT_DURATION)
@@ -74,6 +76,7 @@ func restart_run() -> void:
 	elapsed_time = 0.0
 	finished = false
 	last_finish_new_best = false
+	_set_pause_blocked(false)
 	if level_summary_popup != null:
 		level_summary_popup.hide_summary()
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
@@ -186,6 +189,7 @@ func _on_finish_body_entered(body: Node3D) -> void:
 				wallet.add_coins(run_coin_count)
 				if finish_line != null and finish_line.has_method("complete_finish_line"):
 					finish_line.complete_finish_line()
+			_set_pause_blocked(true)
 			_show_level_summary()
 			_set_player_controls_enabled(false)
 			Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
@@ -260,6 +264,11 @@ func _begin_level_start_countdown() -> void:
 func _set_player_controls_enabled(value: bool) -> void:
 	if player != null and player.has_method("set_control_enabled"):
 		player.set_control_enabled(value)
+
+
+func _set_pause_blocked(value: bool) -> void:
+	if pause_menu != null and pause_menu.has_method("set_pause_blocked"):
+		pause_menu.set_pause_blocked(value)
 
 
 func _play_countdown_sfx() -> void:

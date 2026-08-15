@@ -62,6 +62,16 @@ func _ready() -> void:
 
 
 func _input(event: InputEvent) -> void:
+	if _is_cancel_pressed(event):
+		if not listening_action.is_empty():
+			_stop_listening_for_binding()
+			get_viewport().set_input_as_handled()
+			return
+		if visible:
+			on_settings_back_requested()
+			get_viewport().set_input_as_handled()
+		return
+
 	if listening_action.is_empty():
 		return
 
@@ -94,12 +104,17 @@ func _input(event: InputEvent) -> void:
 	get_viewport().set_input_as_handled()
 
 
-func _unhandled_input(event: InputEvent) -> void:
-	if not visible:
-		return
-	if event is InputEventKey and event.pressed and not event.echo and Input.is_action_just_pressed(&"ui_cancel"):
-		on_settings_back_requested()
-		get_viewport().set_input_as_handled()
+func _is_cancel_pressed(event: InputEvent) -> bool:
+	if event is InputEventKey:
+		var key_event := event as InputEventKey
+		if not key_event.pressed or key_event.echo:
+			return false
+		return (
+			event.is_action_pressed(&"ui_cancel")
+			or key_event.keycode == KEY_ESCAPE
+			or key_event.physical_keycode == KEY_ESCAPE
+		)
+	return event.is_action_pressed(&"ui_cancel")
 
 
 func _process(_delta: float) -> void:
