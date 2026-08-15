@@ -6,6 +6,7 @@
 [ext_resource type="Theme" path="res://themes/goosespeed_theme.tres" id="3_theme"]
 [ext_resource type="FontFile" uid="uid://bkdpp3abo73lr" path="res://assets/ui/fonts/Condor Medium Condensed.otf" id="4_odurj"]
 [ext_resource type="Script" uid="uid://cujp2m1w06sjl" path="res://scripts/ui/menu_paper_fitter.gd" id="5_fitter"]
+[ext_resource type="Texture2D" uid="uid://c3ju1c50i4j6s" path="res://assets/ui/goose_corner.png" id="6_odurj"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_dwtjk"]
 bg_color = Color(0.09411765, 0.18431373, 0.26666668, 0.39215687)
@@ -27,7 +28,6 @@ layer = 20
 script = ExtResource("1_overlay")
 
 [node name="Root" type="Control" parent="." unique_id=1498344686]
-visible = false
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0
@@ -149,6 +149,14 @@ theme_override_constants/separation = 14
 [node name="RightSpacer" type="Control" parent="Root/MarginContainer/Margin/VBox/FolderBody/FolderMargin/ContentScroll/ContentCenter" unique_id=1385209007]
 layout_mode = 2
 size_flags_horizontal = 3
+
+[node name="TextureRect" type="TextureRect" parent="Root/MarginContainer" unique_id=2144810062]
+custom_minimum_size = Vector2(210, 0)
+layout_mode = 2
+size_flags_horizontal = 8
+size_flags_vertical = 0
+texture = ExtResource("6_odurj")
+expand_mode = 5
 
 [node name="MenuPaperFitter" type="Node" parent="Root" unique_id=1891179258]
 script = ExtResource("5_fitter")

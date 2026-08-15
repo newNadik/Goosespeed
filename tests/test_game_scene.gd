@@ -86,7 +86,8 @@ func _ready() -> void:
 		get_tree().quit(1)
 		return
 
-	if not await _collect_coins(game, controller, game.get_target_coin_count() - game.get_run_coin_count()):
+	var expected_payout: int = game.get_target_coin_count() + 1
+	if not await _collect_coins(game, controller, expected_payout - game.get_run_coin_count()):
 		push_error("Game scene could not collect enough coins for target")
 		get_tree().quit(1)
 		return
@@ -105,8 +106,13 @@ func _ready() -> void:
 		push_error("Finish line did not disappear after completed finish")
 		get_tree().quit(1)
 		return
-	if game.get_total_coin_count() != game.get_target_coin_count():
+	if game.get_total_coin_count() != expected_payout:
 		push_error("Game scene did not add run coins to total on finish")
+		get_tree().quit(1)
+		return
+	game._on_finish_body_entered(controller)
+	if game.get_total_coin_count() != expected_payout:
+		push_error("Game scene paid out the same finished run twice")
 		get_tree().quit(1)
 		return
 	if not game.was_last_finish_new_best():
@@ -134,7 +140,8 @@ func _ready() -> void:
 		push_error("Game scene restart did not reset run coins")
 		get_tree().quit(1)
 		return
-	if game.get_total_coin_count() != game.get_target_coin_count():
+	CoinWallet.load_wallet()
+	if game.get_total_coin_count() != expected_payout:
 		push_error("Game scene restart changed total coins")
 		get_tree().quit(1)
 		return
