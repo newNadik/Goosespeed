@@ -41,8 +41,10 @@ var tab_buttons: Dictionary = {}
 var syncing_hud_settings_controls := false
 var syncing_game_settings_controls := false
 var fullscreen_toggle: CheckButton
-var music_toggle: CheckButton
-var sfx_toggle: CheckButton
+var music_volume_slider: HSlider
+var music_volume_label: Label
+var sfx_volume_slider: HSlider
+var sfx_volume_label: Label
 var movement_setting_controls := {}
 var hud_toggles := {}
 var goose_moves_settings_menu: Control
@@ -208,8 +210,6 @@ func _clear_content() -> void:
 	binding_buttons.clear()
 	movement_setting_controls.clear()
 	fullscreen_toggle = null
-	music_toggle = null
-	sfx_toggle = null
 	goose_moves_settings_menu = null
 	for child in content_box.get_children():
 		child.queue_free()
@@ -318,13 +318,23 @@ func _build_hud_tab() -> void:
 
 
 func _build_audio_tab() -> void:
-	var music_row := _create_toggle_row("Music", GooseGameSettings.music_enabled, _on_music_enabled_changed)
-	music_toggle = music_row.get_node("Toggle") as CheckButton
-	content_box.add_child(music_row)
+	var music_volume_row := _create_volume_slider_row(
+		"Music Volume",
+		GooseGameSettings.music_volume,
+		_on_music_volume_changed,
+	)
+	music_volume_slider = music_volume_row.get_node("Slider") as HSlider
+	music_volume_label = music_volume_row.get_node("ValueLabel") as Label
+	content_box.add_child(music_volume_row)
 
-	var sfx_row := _create_toggle_row("Sound Effects", GooseGameSettings.sfx_enabled, _on_sfx_enabled_changed)
-	sfx_toggle = sfx_row.get_node("Toggle") as CheckButton
-	content_box.add_child(sfx_row)
+	var sfx_volume_row := _create_volume_slider_row(
+		"SFX Volume",
+		GooseGameSettings.sfx_volume,
+		_on_sfx_volume_changed,
+	)
+	sfx_volume_slider = sfx_volume_row.get_node("Slider") as HSlider
+	sfx_volume_label = sfx_volume_row.get_node("ValueLabel") as Label
+	content_box.add_child(sfx_volume_row)
 
 
 func _build_goose_moves_tab() -> void:
@@ -460,17 +470,36 @@ func _create_movement_slider_row(label_text: String, value: float, def: Dictiona
 	return row
 
 
+func _create_volume_slider_row(label_text: String, value: float, callback: Callable) -> HBoxContainer:
+	var def := {
+		"min": 0.0,
+		"max": 1.0,
+		"step": 0.01,
+		"format": "percent",
+	}
+	return _create_movement_slider_row(label_text, clampf(value, 0.0, 1.0), def, callback)
+
+
 func _sync_game_settings_controls() -> void:
-	if fullscreen_toggle == null and music_toggle == null and sfx_toggle == null and movement_setting_controls.is_empty():
+	if (
+		fullscreen_toggle == null
+		and music_volume_slider == null
+		and sfx_volume_slider == null
+		and movement_setting_controls.is_empty()
+	):
 		return
 	var settings := get_node_or_null("/root/Settings")
 	syncing_game_settings_controls = true
 	if fullscreen_toggle != null:
 		fullscreen_toggle.set_pressed_no_signal(bool(settings.get("fullscreen")) if settings != null else false)
-	if music_toggle != null:
-		music_toggle.set_pressed_no_signal(GooseGameSettings.music_enabled)
-	if sfx_toggle != null:
-		sfx_toggle.set_pressed_no_signal(GooseGameSettings.sfx_enabled)
+	if music_volume_slider != null:
+		music_volume_slider.set_value_no_signal(GooseGameSettings.music_volume)
+	if music_volume_label != null:
+		music_volume_label.text = _format_movement_setting_value(GooseGameSettings.music_volume, {"format": "percent"})
+	if sfx_volume_slider != null:
+		sfx_volume_slider.set_value_no_signal(GooseGameSettings.sfx_volume)
+	if sfx_volume_label != null:
+		sfx_volume_label.text = _format_movement_setting_value(GooseGameSettings.sfx_volume, {"format": "percent"})
 	for key in movement_setting_controls:
 		var control_data := movement_setting_controls.get(key, {}) as Dictionary
 		var slider := control_data.get("slider") as HSlider
@@ -503,16 +532,20 @@ func _on_fullscreen_changed(enabled: bool) -> void:
 		settings.set_fullscreen(enabled)
 
 
-func _on_music_enabled_changed(enabled: bool) -> void:
+func _on_music_volume_changed(value: float) -> void:
+	if music_volume_label != null:
+		music_volume_label.text = _format_movement_setting_value(value, {"format": "percent"})
 	if syncing_game_settings_controls:
 		return
-	GooseGameSettings.set_music_enabled(enabled)
+	GooseGameSettings.set_music_volume(value)
 
 
-func _on_sfx_enabled_changed(enabled: bool) -> void:
+func _on_sfx_volume_changed(value: float) -> void:
+	if sfx_volume_label != null:
+		sfx_volume_label.text = _format_movement_setting_value(value, {"format": "percent"})
 	if syncing_game_settings_controls:
 		return
-	GooseGameSettings.set_sfx_enabled(enabled)
+	GooseGameSettings.set_sfx_volume(value)
 
 
 func _on_movement_setting_slider_changed(value: float, key: String) -> void:
@@ -709,6 +742,8 @@ func _get_movement_setting_value(key: String, def: Dictionary) -> float:
 
 func _format_movement_setting_value(value: float, def: Dictionary) -> String:
 	var format_text := str(def.get("format", "%.2f"))
+	if format_text == "percent":
+		return "%d%%" % roundi(clampf(value, 0.0, 1.0) * 100.0)
 	var suffix := str(def.get("suffix", ""))
 	return (format_text % value) + suffix
 

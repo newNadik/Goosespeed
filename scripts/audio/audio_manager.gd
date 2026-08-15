@@ -6,6 +6,7 @@ const MENU_MUSIC_DIR := "res://assets/music/menu"
 const GAME_MUSIC_DIR := "res://assets/music/game"
 const AUDIO_EXTENSIONS := ["mp3", "ogg", "wav"]
 const COUNTDOWN_STREAM := preload("res://assets/sounds/countdown.mp3")
+const SILENT_DB := -80.0
 
 var _menu_player: AudioStreamPlayer
 var _game_player: AudioStreamPlayer
@@ -145,6 +146,10 @@ func _apply_audio_settings() -> void:
 	var settings := _get_game_settings()
 	var music_enabled := bool(settings.get("music_enabled")) if settings != null else true
 	var sfx_enabled := bool(settings.get("sfx_enabled")) if settings != null else true
+	var music_volume := float(settings.get("music_volume")) if settings != null else 1.0
+	var sfx_volume := float(settings.get("sfx_volume")) if settings != null else 1.0
+	_set_bus_volume(MUSIC_BUS, music_volume)
+	_set_bus_volume(SFX_BUS, sfx_volume)
 	_set_bus_muted(MUSIC_BUS, not music_enabled)
 	_set_bus_muted(SFX_BUS, not sfx_enabled)
 
@@ -157,3 +162,14 @@ func _set_bus_muted(bus_name: String, muted: bool) -> void:
 	var bus_index := AudioServer.get_bus_index(bus_name)
 	if bus_index >= 0:
 		AudioServer.set_bus_mute(bus_index, muted)
+
+
+func _set_bus_volume(bus_name: String, volume: float) -> void:
+	var bus_index := AudioServer.get_bus_index(bus_name)
+	if bus_index < 0:
+		return
+	var clamped_volume := clampf(volume, 0.0, 1.0)
+	AudioServer.set_bus_volume_db(
+		bus_index,
+		linear_to_db(clamped_volume) if clamped_volume > 0.0 else SILENT_DB,
+	)

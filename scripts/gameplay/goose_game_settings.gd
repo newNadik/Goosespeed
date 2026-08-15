@@ -7,6 +7,8 @@ const SAVE_PATH := "user://goosespeed_settings.cfg"
 const SECTION := "goosespeed"
 const DEFAULT_MUSIC_ENABLED := true
 const DEFAULT_SFX_ENABLED := true
+const DEFAULT_MUSIC_VOLUME := 0.70
+const DEFAULT_SFX_VOLUME := 1.0
 const DEFAULT_HEAD_LOOK_ENABLED := true
 const DEFAULT_HEAD_LOOK_INTENSITY := 1.0
 const DEFAULT_HEAD_LOOK_SMOOTHNESS := 10.0
@@ -61,6 +63,8 @@ const HUD_DEBUG_ELEMENTS := [
 var debug_hud_visible := false
 var music_enabled := DEFAULT_MUSIC_ENABLED
 var sfx_enabled := DEFAULT_SFX_ENABLED
+var music_volume := DEFAULT_MUSIC_VOLUME
+var sfx_volume := DEFAULT_SFX_VOLUME
 var head_look_enabled := DEFAULT_HEAD_LOOK_ENABLED
 var head_look_intensity := DEFAULT_HEAD_LOOK_INTENSITY
 var head_look_smoothness := DEFAULT_HEAD_LOOK_SMOOTHNESS
@@ -83,6 +87,8 @@ func load_settings() -> void:
 
 	music_enabled = bool(config.get_value(SECTION, "music_enabled", music_enabled))
 	sfx_enabled = bool(config.get_value(SECTION, "sfx_enabled", sfx_enabled))
+	music_volume = clampf(float(config.get_value(SECTION, "music_volume", music_volume)), 0.0, 1.0)
+	sfx_volume = clampf(float(config.get_value(SECTION, "sfx_volume", sfx_volume)), 0.0, 1.0)
 	head_look_enabled = bool(config.get_value(SECTION, "head_look_enabled", head_look_enabled))
 	head_look_intensity = clampf(
 		float(config.get_value(SECTION, "head_look_intensity", head_look_intensity)),
@@ -105,6 +111,8 @@ func save_settings() -> void:
 	var config := ConfigFile.new()
 	config.set_value(SECTION, "music_enabled", music_enabled)
 	config.set_value(SECTION, "sfx_enabled", sfx_enabled)
+	config.set_value(SECTION, "music_volume", music_volume)
+	config.set_value(SECTION, "sfx_volume", sfx_volume)
 	config.set_value(SECTION, "head_look_enabled", head_look_enabled)
 	config.set_value(SECTION, "head_look_intensity", head_look_intensity)
 	config.set_value(SECTION, "head_look_smoothness", head_look_smoothness)
@@ -127,6 +135,24 @@ func set_sfx_enabled(value: bool) -> void:
 	if sfx_enabled == value:
 		return
 	sfx_enabled = value
+	save_settings()
+	settings_changed.emit()
+
+
+func set_music_volume(value: float) -> void:
+	var clamped_value := clampf(value, 0.0, 1.0)
+	if is_equal_approx(music_volume, clamped_value):
+		return
+	music_volume = clamped_value
+	save_settings()
+	settings_changed.emit()
+
+
+func set_sfx_volume(value: float) -> void:
+	var clamped_value := clampf(value, 0.0, 1.0)
+	if is_equal_approx(sfx_volume, clamped_value):
+		return
+	sfx_volume = clamped_value
 	save_settings()
 	settings_changed.emit()
 
