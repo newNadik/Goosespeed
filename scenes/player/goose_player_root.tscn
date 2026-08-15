@@ -6,6 +6,7 @@
 [ext_resource type="Script" uid="uid://c7ybndd0dro1m" path="res://scripts/player/goose_visual_controller.gd" id="6_visual"]
 [ext_resource type="Script" uid="uid://b5uvth5moide3" path="res://scripts/player/goose_moves_runtime.gd" id="9_runtime"]
 [ext_resource type="Material" uid="uid://qj52vsqp8baw" path="res://themes/goose_flat_shadow_material.tres" id="10_goose_mat"]
+[ext_resource type="Resource" path="res://resources/movement_profiles/experimental_flap.tres" id="11_profile"]
 
 [sub_resource type="ArrayMesh" id="ArrayMesh_cf54n"]
 resource_name = "SK_AnserAnser_M"
@@ -31594,6 +31595,7 @@ _data = {
 
 [node name="GoosePlayerRoot" type="Node3D" unique_id=1870371325]
 script = ExtResource("1_root")
+movement_profile = ExtResource("11_profile")
 
 [node name="InputAdapter" type="Node" parent="." unique_id=1981455567]
 script = ExtResource("2_input")

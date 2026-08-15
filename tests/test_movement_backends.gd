@@ -1,6 +1,8 @@
 extends Node
 
 const PLAYER_SCENE := preload("res://scenes/player/goose_player_root.tscn")
+const DEFAULT_PROFILE := preload("res://resources/movement_profiles/default.tres")
+const EXPERIMENTAL_PROFILE := preload("res://resources/movement_profiles/experimental_flap.tres")
 
 
 func _ready() -> void:
@@ -37,6 +39,12 @@ func _ready() -> void:
 		get_tree().quit(1)
 		return
 	if not _goose_visual_settings_are_applied(player):
+		get_tree().quit(1)
+		return
+	if not _movement_profiles_are_configured():
+		get_tree().quit(1)
+		return
+	if not _movement_profile_is_applied(player, controller):
 		get_tree().quit(1)
 		return
 	if not await _first_person_camera_hides_goose_visual(player, controller):
@@ -129,6 +137,62 @@ func _goose_visual_settings_are_applied(player: Node) -> bool:
 	var head_look := goose_visual.get_node_or_null("GooseHeadLookController")
 	if animation_player == null or head_look == null or head_look.get_index() <= animation_player.get_index():
 		push_error("Goose head-look controller does not run after AnimationPlayer")
+		return false
+	return true
+
+
+func _movement_profiles_are_configured() -> bool:
+	if not is_equal_approx(DEFAULT_PROFILE.flight_hold_threshold, 0.3):
+		push_error("Default movement profile changed the old flight hold threshold")
+		return false
+	if not is_equal_approx(DEFAULT_PROFILE.flap_cooldown, 0.5):
+		push_error("Default movement profile changed the old flap cooldown")
+		return false
+	if not is_equal_approx(DEFAULT_PROFILE.takeoff_runup_charge_ratio, 0.5):
+		push_error("Default movement profile changed the player scene charge animation ratio")
+		return false
+	if not is_equal_approx(EXPERIMENTAL_PROFILE.flight_hold_threshold, 0.3):
+		push_error("Experimental movement profile did not set flight hold threshold")
+		return false
+	if not is_equal_approx(EXPERIMENTAL_PROFILE.flap_cooldown, 0.8):
+		push_error("Experimental movement profile did not set flap cooldown")
+		return false
+	if not is_equal_approx(EXPERIMENTAL_PROFILE.takeoff_runup_charge_ratio, 0.5):
+		push_error("Experimental movement profile changed charge animation ratio")
+		return false
+	return true
+
+
+func _movement_profile_is_applied(player: Node, controller: Node) -> bool:
+	var profile: Resource = player.get("movement_profile")
+	if profile == null:
+		push_error("Player scene does not assign a movement profile")
+		return false
+	if profile != EXPERIMENTAL_PROFILE:
+		push_error("Player scene is not using the experimental movement profile")
+		return false
+	if not is_equal_approx(
+		float(controller.get("flight_hold_threshold")),
+		float(profile.get("flight_hold_threshold")),
+	):
+		push_error("Movement profile did not apply flight hold threshold to the controller")
+		return false
+	var flight_motor = controller.get("flight_motor")
+	if flight_motor == null:
+		push_error("Movement profile cannot find controller flight motor")
+		return false
+	if not is_equal_approx(
+		float(flight_motor.get("flap_cooldown")),
+		float(profile.get("flap_cooldown")),
+	):
+		push_error("Movement profile did not apply flap cooldown to the flight motor")
+		return false
+	var goose_visual := player.get_node("GooseVisual")
+	if not is_equal_approx(
+		float(goose_visual.get("takeoff_runup_charge_ratio")),
+		float(profile.get("takeoff_runup_charge_ratio")),
+	):
+		push_error("Movement profile did not apply charge animation ratio to goose visual")
 		return false
 	return true
 

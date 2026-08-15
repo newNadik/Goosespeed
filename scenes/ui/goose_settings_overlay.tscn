@@ -22,16 +22,6 @@ border_width_right = 2
 border_width_bottom = 2
 border_color = Color(0.65882355, 0.6313726, 0.57254905, 0.72)
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_ka346"]
-bg_color = Color(0.6, 0.6, 0.6, 0)
-border_width_left = 3
-border_width_top = 3
-border_width_right = 3
-border_width_bottom = 3
-border_color = Color(0.15294118, 0.24705882, 0.30980393, 1)
-corner_radius_top_left = 15
-corner_radius_top_right = 15
-
 [node name="GooseSettingsOverlay" type="CanvasLayer" unique_id=1858243128]
 process_mode = 3
 layer = 20
@@ -159,17 +149,6 @@ theme_override_constants/separation = 14
 [node name="RightSpacer" type="Control" parent="Root/MarginContainer/Margin/VBox/FolderBody/FolderMargin/ContentScroll/ContentCenter" unique_id=1385209007]
 layout_mode = 2
 size_flags_horizontal = 3
-
-[node name="MarginContainer" type="MarginContainer" parent="Root/MarginContainer" unique_id=1044796583]
-layout_mode = 2
-theme_override_constants/margin_left = 20
-theme_override_constants/margin_top = 20
-theme_override_constants/margin_right = 20
-theme_override_constants/margin_bottom = -5
-
-[node name="Panel" type="Panel" parent="Root/MarginContainer/MarginContainer" unique_id=181384562]
-layout_mode = 2
-theme_override_styles/panel = SubResource("StyleBoxFlat_ka346")
 
 [node name="TextureRect" type="TextureRect" parent="Root/MarginContainer" unique_id=2144810062]
 custom_minimum_size = Vector2(130, 0)

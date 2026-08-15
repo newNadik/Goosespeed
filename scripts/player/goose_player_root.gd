@@ -4,6 +4,8 @@ extends Node3D
 const PLAYER_BODY_RENDER_LAYER := 20
 const SHADOW_CASTER_META := &"goose_first_person_shadow_caster"
 
+@export var movement_profile: Resource
+
 @onready var goose_moves_runtime: Node = $GooseMovesRuntime
 @onready var active_movement_controller: Node = $ActiveMovementController
 @onready var movement_state_bridge: Node = $MovementStateBridge
@@ -16,6 +18,7 @@ func _ready() -> void:
 	_configure_controller_render_contract()
 	_configure_goose_visual_render_layer()
 	_connect_settings_changed()
+	_apply_movement_profile()
 	movement_state_bridge.set_controller(active_movement_controller)
 	goose_visual.set_state_bridge(movement_state_bridge)
 	goose_visual.set_transform_source(active_movement_controller as Node3D)
@@ -49,6 +52,29 @@ func set_spawn_transform(value: Transform3D) -> void:
 
 func set_control_enabled(value: bool) -> void:
 	goose_moves_runtime.set_control_enabled(value)
+
+
+func _apply_movement_profile() -> void:
+	if movement_profile == null:
+		return
+	if active_movement_controller != null:
+		if "flight_hold_threshold" in active_movement_controller:
+			active_movement_controller.set(
+				"flight_hold_threshold",
+				float(movement_profile.get("flight_hold_threshold")),
+			)
+		var flight_motor = (
+			active_movement_controller.get("flight_motor")
+			if "flight_motor" in active_movement_controller
+			else null
+		)
+		if flight_motor != null and "flap_cooldown" in flight_motor:
+			flight_motor.set("flap_cooldown", float(movement_profile.get("flap_cooldown")))
+	if goose_visual != null and "takeoff_runup_charge_ratio" in goose_visual:
+		goose_visual.set(
+			"takeoff_runup_charge_ratio",
+			float(movement_profile.get("takeoff_runup_charge_ratio")),
+		)
 
 
 func _apply_backend_debug_visibility() -> void:
