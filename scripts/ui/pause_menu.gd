@@ -131,6 +131,8 @@ func on_main_menu_pressed() -> void:
 	set_open(false, false)
 	get_tree().paused = false
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	_track_analytics("main_menu_returned", {"source": "pause_menu"})
+	_stop_analytics_gameplay()
 	await SceneTransitionFadeScript.fade_out(get_tree())
 	await _fade_out_music_for_scene_change()
 	get_tree().change_scene_to_file(MAIN_MENU_SCENE)
@@ -235,3 +237,15 @@ func _on_close_animation_finished(update_mouse_mode: bool) -> void:
 
 func _get_closed_scrim_color() -> Color:
 	return Color(scrim_open_color.r, scrim_open_color.g, scrim_open_color.b, 0.0)
+
+
+func _track_analytics(event_name: String, props := {}) -> void:
+	var analytics := get_tree().root.get_node_or_null("GameAnalytics")
+	if analytics != null and analytics.has_method("track"):
+		analytics.track(event_name, props)
+
+
+func _stop_analytics_gameplay() -> void:
+	var analytics := get_tree().root.get_node_or_null("GameAnalytics")
+	if analytics != null and analytics.has_method("stop_gameplay"):
+		analytics.stop_gameplay()

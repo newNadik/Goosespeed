@@ -24,7 +24,11 @@ func _on_pressed() -> void:
 	if not GooseGameSettings.is_accessory_unlocked(ACCESSORY_ID):
 		_refresh()
 		return
+	var previous := GooseGameSettings.is_accessory_equipped(ACCESSORY_ID)
 	GooseGameSettings.set_accessory_equipped(ACCESSORY_ID, hat_button.button_pressed)
+	var current := GooseGameSettings.is_accessory_equipped(ACCESSORY_ID)
+	if previous != current:
+		_track_accessory_equipped_changed(current)
 	_refresh()
 
 
@@ -51,3 +55,9 @@ func set_toggle_pressed_no_signal(value: bool) -> void:
 
 func emit_toggle_pressed() -> void:
 	hat_button.pressed.emit()
+
+
+func _track_accessory_equipped_changed(equipped: bool) -> void:
+	var analytics := get_tree().root.get_node_or_null("GameAnalytics")
+	if analytics != null and analytics.has_method("track_accessory_equipped_changed"):
+		analytics.track_accessory_equipped_changed(ACCESSORY_ID, equipped)

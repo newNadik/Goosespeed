@@ -128,6 +128,10 @@ func _input(event: InputEvent) -> void:
 		return
 
 	KeybindingsSettings.set_binding(listening_action, listening_slot, binding)
+	_track_setting_changed("controls", listening_action, {
+		"slot": listening_slot,
+		"binding": _get_binding_label(binding),
+	})
 	_stop_listening_for_binding()
 	get_viewport().set_input_as_handled()
 
@@ -556,6 +560,7 @@ func _on_fullscreen_changed(enabled: bool) -> void:
 	var settings := get_node_or_null("/root/Settings")
 	if settings != null and settings.has_method("set_fullscreen"):
 		settings.set_fullscreen(enabled)
+	_track_setting_changed("visual", "fullscreen", enabled)
 
 
 func _on_music_volume_changed(value: float) -> void:
@@ -564,6 +569,7 @@ func _on_music_volume_changed(value: float) -> void:
 	if syncing_game_settings_controls:
 		return
 	GooseGameSettings.set_music_volume(value)
+	_track_setting_changed("audio", "music_volume", value)
 
 
 func _on_sfx_volume_changed(value: float) -> void:
@@ -572,6 +578,7 @@ func _on_sfx_volume_changed(value: float) -> void:
 	if syncing_game_settings_controls:
 		return
 	GooseGameSettings.set_sfx_volume(value)
+	_track_setting_changed("audio", "sfx_volume", value)
 
 
 func _on_movement_setting_slider_changed(value: float, key: String) -> void:
@@ -585,10 +592,12 @@ func _on_movement_setting_slider_changed(value: float, key: String) -> void:
 	var settings := get_node_or_null("/root/Settings")
 	if settings != null and settings.has_method("set_controller_setting"):
 		settings.set_controller_setting(key, value, MOVEMENT_SETTINGS_CONTROLLER)
+		_track_setting_changed("movement", key, value)
 
 
 func _on_hud_preset_pressed(preset: String) -> void:
 	GooseGameSettings.apply_hud_preset(preset)
+	_track_setting_changed("hud", "preset", preset)
 	_sync_hud_settings_controls()
 
 
@@ -596,6 +605,7 @@ func _on_hud_toggle_changed(enabled: bool, element: String) -> void:
 	if syncing_hud_settings_controls:
 		return
 	GooseGameSettings.set_hud_element_visible(element, enabled)
+	_track_setting_changed("hud", element, enabled)
 
 
 func _on_bind_pressed(action: String, slot: int) -> void:
@@ -609,11 +619,13 @@ func _on_clear_binding_pressed(action: String) -> void:
 	if listening_action == action:
 		_stop_listening_for_binding()
 	KeybindingsSettings.clear_action(action)
+	_track_setting_changed("controls", action, "cleared")
 
 
 func _on_reset_bindings_pressed() -> void:
 	_stop_listening_for_binding()
 	KeybindingsSettings.reset_to_defaults()
+	_track_setting_changed("controls", "bindings", "reset_defaults")
 
 
 func _stop_listening_for_binding(refresh_labels := true) -> void:
@@ -908,3 +920,9 @@ func _create_readable_ui_font() -> SystemFont:
 func _apply_readable_font(control: Control, size: int) -> void:
 	control.add_theme_font_override("font", readable_ui_font)
 	control.add_theme_font_size_override("font_size", size)
+
+
+func _track_setting_changed(category: String, key: String, value: Variant) -> void:
+	var analytics := get_tree().root.get_node_or_null("GameAnalytics")
+	if analytics != null and analytics.has_method("track_setting_changed"):
+		analytics.track_setting_changed(category, key, value)

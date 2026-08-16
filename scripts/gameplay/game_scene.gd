@@ -37,6 +37,7 @@ var countdown_active := false
 var last_finish_best_time := -1.0
 var last_finish_new_best := false
 var level_end_sequence: Node
+var run_started_tracked := false
 
 
 func _ready() -> void:
@@ -92,6 +93,7 @@ func restart_run() -> void:
 		level_end_sequence.reset_sequence()
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 	run_coin_count = 0
+	run_started_tracked = false
 	_reset_coin_pickups()
 	_reset_finish_line()
 	player.reset_to_spawn()
@@ -200,12 +202,14 @@ func _on_finish_body_entered(body: Node3D) -> void:
 			return
 		if not finished:
 			finished = true
+			var previous_best_time := get_best_time()
 			_record_level_time()
 			var wallet := get_node_or_null("/root/CoinWallet")
 			if wallet != null and wallet.has_method("add_coins"):
 				wallet.add_coins(run_coin_count)
 				if finish_line != null and finish_line.has_method("complete_finish_line"):
 					finish_line.complete_finish_line()
+			_track_run_finished(previous_best_time)
 			_set_pause_blocked(true)
 			_set_player_controls_enabled(false)
 			_set_hud_visible(false)
@@ -280,6 +284,7 @@ func _begin_level_start_countdown() -> void:
 	_play_random_game_music()
 	countdown_active = false
 	set_process(true)
+	_track_run_started()
 	_update_hud()
 
 
@@ -369,6 +374,11 @@ func _on_summary_continue_requested() -> void:
 
 func _on_summary_main_menu_requested() -> void:
 	await _play_summary_departure(&"main_menu")
+	_track_analytics("main_menu_returned", {
+		"source": "level_summary",
+		"course_path": _get_course_scene_path(),
+		"course_name": _get_course_display_name(),
+	})
 	await _go_to_main_menu()
 
 
@@ -380,6 +390,7 @@ func _play_summary_departure(destination: StringName) -> void:
 
 
 func _go_to_main_menu() -> void:
+	_stop_analytics_gameplay()
 	get_tree().paused = false
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	await _fade_out_to_transition_color()
@@ -488,3 +499,40 @@ func _read_threaded_progress(progress: Array) -> float:
 	if progress.is_empty():
 		return 0.0
 	return float(progress[0])
+
+
+func _track_run_started() -> void:
+	if run_started_tracked:
+		return
+	run_started_tracked = true
+	var analytics := get_tree().root.get_node_or_null("GameAnalytics")
+	if analytics != null and analytics.has_method("track_run_started"):
+		analytics.track_run_started(_get_course_scene_path(), _get_course_display_name())
+
+
+func _track_run_finished(previous_best_time: float) -> void:
+	var analytics := get_tree().root.get_node_or_null("GameAnalytics")
+	if analytics != null and analytics.has_method("track_run_finished"):
+		analytics.track_run_finished(
+			_get_course_scene_path(),
+			_get_course_display_name(),
+			elapsed_time,
+			run_coin_count,
+			target_coin_count,
+			get_total_coin_count(),
+			previous_best_time,
+			get_best_time(),
+			last_finish_new_best
+		)
+
+
+func _track_analytics(event_name: String, props := {}) -> void:
+	var analytics := get_tree().root.get_node_or_null("GameAnalytics")
+	if analytics != null and analytics.has_method("track"):
+		analytics.track(event_name, props)
+
+
+func _stop_analytics_gameplay() -> void:
+	var analytics := get_tree().root.get_node_or_null("GameAnalytics")
+	if analytics != null and analytics.has_method("stop_gameplay"):
+		analytics.stop_gameplay()

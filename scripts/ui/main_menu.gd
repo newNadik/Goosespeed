@@ -20,6 +20,7 @@ var starting_game := false
 
 
 func _ready() -> void:
+	_track_analytics("main_menu_opened")
 	if DisplayServer.get_name() != "headless":
 		CourseCatalog.request_course_preload(PREDICTED_COURSE_SCENE)
 	var audio_manager := get_node_or_null("/root/AudioManager")
@@ -37,6 +38,7 @@ func _ready() -> void:
 func on_start_pressed() -> void:
 	if starting_game:
 		return
+	_track_analytics("new_game_selected")
 	starting_game = true
 	start_button.disabled = true
 	settings_button.disabled = true
@@ -55,6 +57,7 @@ func on_settings_back_requested() -> void:
 
 
 func on_quit_pressed() -> void:
+	_track_analytics("quit_selected")
 	get_tree().quit()
 
 
@@ -106,3 +109,9 @@ func _get_or_create_loading_screen() -> Control:
 		loading_screen = LOADING_SCREEN_SCENE.instantiate() as Control
 		loading_layer.add_child(loading_screen)
 	return loading_screen
+
+
+func _track_analytics(event_name: String, props := {}) -> void:
+	var analytics := get_tree().root.get_node_or_null("GameAnalytics")
+	if analytics != null and analytics.has_method("track"):
+		analytics.track(event_name, props)

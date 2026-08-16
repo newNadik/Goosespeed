@@ -45,7 +45,10 @@ func collect_from(body: Node3D) -> bool:
 	if collector_body == null and not body.is_in_group(&"player"):
 		return false
 	is_collected = true
+	var was_unlocked := GooseGameSettings.is_accessory_unlocked(ACCESSORY_ID)
 	GooseGameSettings.unlock_accessory(ACCESSORY_ID, true)
+	if not was_unlocked:
+		_track_accessory_unlocked()
 	_spawn_pickup_burst()
 	_disable_pickup()
 	if pickup_sound_player != null:
@@ -76,3 +79,12 @@ func _spawn_pickup_burst() -> void:
 		target_parent = get_parent()
 	target_parent.add_child(burst)
 	burst.global_position = global_position + Vector3.UP * 1.0
+
+
+func _track_accessory_unlocked() -> void:
+	var analytics := get_tree().root.get_node_or_null("GameAnalytics")
+	if analytics != null and analytics.has_method("track_accessory_unlocked"):
+		analytics.track_accessory_unlocked(
+			ACCESSORY_ID,
+			GooseGameSettings.is_accessory_equipped(ACCESSORY_ID)
+		)
