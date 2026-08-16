@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://bbmfl2ul55ado"]
+
+[ext_resource type="Script" uid="uid://c5wfgshsthnx1" path="res://tests/test_accessory_hat_toggle.gd" id="1_test"]
+
+[node name="TestAccessoryHatToggle" type="Node"]
+script = ExtResource("1_test")

@@ -1,0 +1,113 @@
+[gd_scene format=3 uid="uid://cbd2l35xutbl0"]
+
+[ext_resource type="Script" uid="uid://dlhewhjoo02ps" path="res://scripts/ui/accessory_hat_toggle.gd" id="1_toggle"]
+[ext_resource type="Texture2D" uid="uid://ej7r26qn8est" path="res://assets/ui/icons/ic_straw_hat.png" id="2_hat"]
+[ext_resource type="Texture2D" uid="uid://bpbak25jcvem4" path="res://assets/ui/icons/ic_check.png" id="3_check"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
+bg_color = Color(0.9529412, 0.9019608, 0.83137256, 0.95)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(0.15294118, 0.24705882, 0.30980393, 0.86)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_button"]
+content_margin_left = 0.0
+content_margin_top = 0.0
+content_margin_right = 0.0
+content_margin_bottom = 0.0
+bg_color = Color(1, 1, 1, 0)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_button_pressed"]
+content_margin_left = 0.0
+content_margin_top = 0.0
+content_margin_right = 0.0
+content_margin_bottom = 0.0
+bg_color = Color(0.60784316, 0.7764706, 0.88235295, 0.24)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.99607843, 0.46666667, 0.2627451, 0.95)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_button_hover"]
+content_margin_left = 0.0
+content_margin_top = 0.0
+content_margin_right = 0.0
+content_margin_bottom = 0.0
+bg_color = Color(0.99607843, 0.46666667, 0.2627451, 0.13)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.99607843, 0.46666667, 0.2627451, 0.9)
+corner_radius_top_left = 6
+corner_radius_top_right = 6
+corner_radius_bottom_right = 6
+corner_radius_bottom_left = 6
+
+[node name="AccessoryHatToggle" type="Control" unique_id=815942263]
+custom_minimum_size = Vector2(250, 250)
+layout_mode = 3
+anchors_preset = 0
+offset_right = 152.0
+offset_bottom = 152.0
+mouse_filter = 1
+script = ExtResource("1_toggle")
+
+[node name="PanelMargin" type="MarginContainer" parent="." unique_id=50932]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 24
+theme_override_constants/margin_top = 24
+theme_override_constants/margin_right = 24
+theme_override_constants/margin_bottom = 24
+
+[node name="Panel" type="PanelContainer" parent="PanelMargin" unique_id=1013322773]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
+
+[node name="InnerMargin" type="MarginContainer" parent="PanelMargin/Panel" unique_id=2033942660]
+layout_mode = 2
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 12
+
+[node name="HatButton" type="Button" parent="PanelMargin/Panel/InnerMargin" unique_id=1304966303]
+layout_mode = 2
+theme_override_styles/normal = SubResource("StyleBoxFlat_button")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_button_pressed")
+theme_override_styles/hover = SubResource("StyleBoxFlat_button_hover")
+theme_override_styles/hover_pressed = SubResource("StyleBoxFlat_button_pressed")
+theme_override_styles/focus = SubResource("StyleBoxFlat_button_hover")
+toggle_mode = true
+icon = ExtResource("2_hat")
+flat = true
+icon_alignment = 1
+expand_icon = true
+
+[node name="CheckMark" type="TextureRect" parent="PanelMargin/Panel" unique_id=1660028491]
+visible = false
+modulate = Color(0.99607843, 0.46666667, 0.2627451, 1)
+custom_minimum_size = Vector2(100, 100)
+layout_mode = 2
+size_flags_horizontal = 8
+size_flags_vertical = 0
+mouse_filter = 2
+texture = ExtResource("3_check")
+expand_mode = 1
+stretch_mode = 5

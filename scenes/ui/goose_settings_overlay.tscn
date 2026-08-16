@@ -28,6 +28,7 @@ layer = 20
 script = ExtResource("1_overlay")
 
 [node name="Root" type="Control" parent="." unique_id=1498344686]
+visible = false
 layout_mode = 3
 anchors_preset = 15
 anchor_right = 1.0

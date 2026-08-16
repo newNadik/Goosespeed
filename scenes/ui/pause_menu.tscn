@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" uid="uid://84t74g14kt78" path="res://scripts/ui/pause_menu.gd" id="1_pause"]
 [ext_resource type="Texture2D" uid="uid://bgk2bx48iaxca" path="res://assets/ui/pause_bg.png" id="2_ht4ye"]
-[ext_resource type="PackedScene" path="res://scenes/ui/goose_settings_overlay.tscn" id="2_settings"]
+[ext_resource type="PackedScene" uid="uid://dt8lhq8b4sld2" path="res://scenes/ui/goose_settings_overlay.tscn" id="2_settings"]
 [ext_resource type="FontFile" uid="uid://bkdpp3abo73lr" path="res://assets/ui/fonts/Condor Medium Condensed.otf" id="3_7yca1"]
 [ext_resource type="PackedScene" uid="uid://bhv4nsat8y6fw" path="res://scenes/ui/goose_menu_button.tscn" id="4_lrbnh"]
 [ext_resource type="Texture2D" uid="uid://dry1r48mwn3rl" path="res://assets/ui/icons/ic_play.png" id="5_6qnem"]
@@ -11,7 +11,8 @@
 [ext_resource type="Texture2D" uid="uid://btug6m8h6qwl4" path="res://assets/ui/icons/ic_settings.png" id="8_3fvc3"]
 [ext_resource type="Texture2D" uid="uid://dvhj1a5mmwgso" path="res://assets/ui/icons/ic_home.png" id="9_kk5q1"]
 [ext_resource type="Texture2D" uid="uid://dicf6nds28vr7" path="res://assets/ui/icons/ic_quit.png" id="10_ukr1j"]
-[ext_resource type="Script" path="res://scripts/ui/menu_paper_fitter.gd" id="11_fitter"]
+[ext_resource type="Script" uid="uid://cujp2m1w06sjl" path="res://scripts/ui/menu_paper_fitter.gd" id="11_fitter"]
+[ext_resource type="PackedScene" uid="uid://cbd2l35xutbl0" path="res://scenes/ui/accessory_hat_toggle.tscn" id="12_hat_toggle"]
 
 [node name="PauseMenu" type="CanvasLayer" unique_id=1882656991]
 process_mode = 3
@@ -35,6 +36,21 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 color = Color(0.09411765, 0.18431373, 0.26666668, 0.42)
+
+[node name="AccessoryHatToggle" parent="MenuRoot" unique_id=956421968 instance=ExtResource("12_hat_toggle")]
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -152.0
+offset_top = -152.0
+offset_right = 0.0
+offset_bottom = 0.0
+grow_horizontal = 0
+grow_vertical = 0
+mouse_filter = 0
 
 [node name="MenuBackgroundShadow" type="TextureRect" parent="MenuRoot" unique_id=1474700416]
 modulate = Color(0.09411765, 0.18431373, 0.26666668, 0.18)
@@ -147,7 +163,7 @@ theme_override_fonts/font = ExtResource("3_7yca1")
 theme_override_font_sizes/font_size = 72
 horizontal_alignment = 1
 
-[node name="MenuPaperFitter" type="Node" parent="MenuRoot"]
+[node name="MenuPaperFitter" type="Node" parent="MenuRoot" unique_id=756740197]
 script = ExtResource("11_fitter")
 paper_path = NodePath("../MenuBackground")
 shadow_path = NodePath("../MenuBackgroundShadow")
