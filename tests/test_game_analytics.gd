@@ -1,9 +1,11 @@
 extends SceneTree
 
 const GameAnalyticsScript := preload("res://scripts/core/game_analytics.gd")
+const ANALYTICS_STATS_SYNC_PATH := "user://analytics_stats.cfg"
 
 
 func _initialize() -> void:
+	_clear_analytics_stats_sync()
 	var original_stats_enabled := bool(ProjectSettings.get_setting("goosespeed/analytics/talo_stats_enabled", false))
 	ProjectSettings.set_setting("goosespeed/analytics/talo_stats_enabled", true)
 	_replace_autoload("GameAnalytics")
@@ -123,6 +125,14 @@ func _replace_autoload(node_name: String) -> void:
 	if existing != null:
 		root.remove_child(existing)
 		existing.queue_free()
+
+
+func _clear_analytics_stats_sync() -> void:
+	if not FileAccess.file_exists(ANALYTICS_STATS_SYNC_PATH):
+		return
+	var user_dir := DirAccess.open("user://")
+	if user_dir != null:
+		user_dir.remove(ANALYTICS_STATS_SYNC_PATH.get_file())
 
 
 func _has_event(fake_talo: FakeTalo, event_name: String) -> bool:

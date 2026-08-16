@@ -11,6 +11,7 @@ config_version=5
 [application]
 
 config/name="Goosespeed"
+config/version="0.1.0"
 run/main_scene="res://scenes/ui/main_menu.tscn"
 config/features=PackedStringArray("4.7", "Forward Plus")
 boot_splash/bg_color=Color(0.101960786, 0.1882353, 0.27058825, 1)
@@ -129,6 +130,7 @@ player_toggle_camera={
 [goosespeed]
 
 analytics/talo_stats_enabled=true
+build/live_override=false
 
 [physics]
 

@@ -106,6 +106,23 @@ grow_vertical = 2
 mouse_filter = 2
 color = Color(1, 1, 1, 0.85)
 
+[node name="FpsLabel" type="Label" parent="Root" unique_id=682669939]
+visible = false
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -96.0
+offset_top = 16.0
+offset_right = -16.0
+offset_bottom = 38.0
+grow_horizontal = 0
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.94509804, 0.8745098, 0.7411765, 0.9)
+theme_override_font_sizes/font_size = 15
+horizontal_alignment = 2
+text = "FPS 60"
+
 [node name="DebugPanel" type="PanelContainer" parent="Root" unique_id=926726965]
 custom_minimum_size = Vector2(288, 0)
 layout_mode = 1
@@ -135,11 +152,6 @@ theme_override_constants/separation = 4
 layout_mode = 2
 theme_override_colors/font_color = Color(0.94509804, 0.8745098, 0.7411765, 1)
 text = "State  ground"
-
-[node name="FpsLabel" type="Label" parent="Root/DebugPanel/Margin/VBox" unique_id=682669939]
-layout_mode = 2
-theme_override_colors/font_color = Color(0.94509804, 0.8745098, 0.7411765, 1)
-text = "FPS  60"
 
 [node name="RawMovementLabel" type="Label" parent="Root/DebugPanel/Margin/VBox" unique_id=408011489]
 layout_mode = 2

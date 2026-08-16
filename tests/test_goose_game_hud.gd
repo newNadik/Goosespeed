@@ -32,6 +32,14 @@ func _ready() -> void:
 		push_error("HUD top-left status panel should be removed")
 		get_tree().quit(1)
 		return
+	if hud.get_node_or_null("Root/FpsLabel") == null:
+		push_error("HUD FPS label should be a standalone small label")
+		get_tree().quit(1)
+		return
+	if hud.get_node_or_null("Root/DebugPanel/Margin/VBox/FpsLabel") != null:
+		push_error("HUD FPS label should not be inside the debug panel")
+		get_tree().quit(1)
+		return
 	if not _label_contains(hud, "Root/TimerWidget/HBoxContainer/TimerLabel", "12.34"):
 		push_error("HUD timer label did not use run state")
 		get_tree().quit(1)

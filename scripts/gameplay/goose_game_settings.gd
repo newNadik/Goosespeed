@@ -12,6 +12,7 @@ const DEFAULT_SFX_VOLUME := 1.0
 const DEFAULT_HEAD_LOOK_ENABLED := true
 const DEFAULT_HEAD_LOOK_INTENSITY := 1.0
 const DEFAULT_HEAD_LOOK_SMOOTHNESS := 10.0
+const LIVE_BUILD_OVERRIDE_SETTING := "goosespeed/build/live_override"
 const ACCESSORY_STRAW_HAT := "straw_hat"
 const HUD_DIRECTION_TO_FINISH := "direction_to_finish"
 const HUD_TIMER := "timer"
@@ -54,7 +55,13 @@ const HUD_DETAILED_ELEMENTS := [
 ]
 const HUD_DEBUG_ELEMENTS := [
 	HUD_STATE,
-	HUD_FPS,
+	HUD_RAW_MOVEMENT,
+	HUD_SURFACE_FLAGS,
+	HUD_INPUT_STATE,
+	HUD_DEBUG_STATE_VIEW,
+]
+const HUD_LIVE_RESTRICTED_ELEMENTS := [
+	HUD_STATE,
 	HUD_RAW_MOVEMENT,
 	HUD_SURFACE_FLAGS,
 	HUD_INPUT_STATE,
@@ -111,6 +118,7 @@ func load_settings() -> void:
 	for element in HUD_ELEMENTS:
 		var key := "hud_%s" % element
 		hud_elements[element] = bool(config.get_value(SECTION, key, hud_elements[element]))
+	_sanitize_hud_for_build()
 	_sync_debug_hud_visible()
 	_lock_goose_moves_backend()
 
@@ -239,11 +247,15 @@ func set_accessory_equipped(accessory: String, equipped: bool) -> void:
 func is_hud_element_visible(element: String) -> bool:
 	if not hud_elements.has(element):
 		return false
+	if _is_live_restricted_hud_element(element):
+		return false
 	return bool(hud_elements[element])
 
 
 func set_hud_element_visible(element: String, value: bool) -> void:
 	if not hud_elements.has(element):
+		return
+	if value and _is_live_restricted_hud_element(element):
 		return
 	if bool(hud_elements[element]) == value:
 		return
@@ -259,11 +271,21 @@ func apply_hud_preset(preset: String) -> void:
 		for element in HUD_DETAILED_ELEMENTS:
 			hud_elements[element] = true
 	if preset == "debug":
+		hud_elements[HUD_FPS] = true
 		for element in HUD_DEBUG_ELEMENTS:
 			hud_elements[element] = true
+	_sanitize_hud_for_build()
 	_sync_debug_hud_visible()
 	save_settings()
 	settings_changed.emit()
+
+
+func is_live_build() -> bool:
+	return (
+		bool(ProjectSettings.get_setting(LIVE_BUILD_OVERRIDE_SETTING, false))
+		or OS.has_feature("live")
+		or OS.has_feature("talo_live")
+	)
 
 
 func _reset_hud_defaults(core_enabled := true) -> void:
@@ -274,6 +296,17 @@ func _reset_hud_defaults(core_enabled := true) -> void:
 
 func _sync_debug_hud_visible() -> void:
 	debug_hud_visible = bool(hud_elements.get(HUD_DEBUG_STATE_VIEW, false))
+
+
+func _sanitize_hud_for_build() -> void:
+	if not is_live_build():
+		return
+	for element in HUD_LIVE_RESTRICTED_ELEMENTS:
+		hud_elements[element] = false
+
+
+func _is_live_restricted_hud_element(element: String) -> bool:
+	return is_live_build() and element in HUD_LIVE_RESTRICTED_ELEMENTS
 
 
 func _lock_goose_moves_backend() -> void:

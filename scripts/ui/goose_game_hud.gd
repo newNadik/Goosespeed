@@ -39,9 +39,9 @@ const ACCELERATION_SMOOTHNESS := 14.0
 @onready var vertical_speed_gauge: Control = $Root/MovementWidget/VerticalSpeedGauge
 @onready var acceleration_gauge: Control = $Root/MovementWidget/AccelerationGauge
 @onready var flight_aim_dot: Control = $Root/FlightAimDot
+@onready var fps_label: Label = $Root/FpsLabel
 @onready var debug_panel: PanelContainer = $Root/DebugPanel
 @onready var state_label: Label = $Root/DebugPanel/Margin/VBox/StateLabel
-@onready var fps_label: Label = $Root/DebugPanel/Margin/VBox/FpsLabel
 @onready var raw_movement_label: Label = $Root/DebugPanel/Margin/VBox/RawMovementLabel
 @onready var surface_flags_label: Label = $Root/DebugPanel/Margin/VBox/SurfaceFlagsLabel
 @onready var input_state_label: Label = $Root/DebugPanel/Margin/VBox/InputStateLabel
@@ -168,7 +168,7 @@ func _update_visibility(state: RefCounted = null) -> void:
 	raw_movement_label.visible = raw_visible
 	surface_flags_label.visible = surface_flags_visible
 	input_state_label.visible = input_visible
-	debug_panel.visible = state_visible or fps_visible or raw_visible or surface_flags_visible or input_visible
+	debug_panel.visible = state_visible or raw_visible or surface_flags_visible or input_visible
 
 
 func _update_labels() -> void:

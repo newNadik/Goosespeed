@@ -159,6 +159,8 @@ func show_settings() -> void:
 	visible = true
 	root.visible = true
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	if not (current_tab in _get_available_tabs()):
+		current_tab = TAB_VISUAL
 	_show_tab(current_tab)
 	_focus_current_tab()
 
@@ -198,7 +200,7 @@ func _build_tabs() -> void:
 	for child in tabs_row.get_children():
 		child.queue_free()
 	tab_buttons.clear()
-	for tab_name in TABS:
+	for tab_name in _get_available_tabs():
 		var button := Button.new()
 		button.text = tab_name
 		button.custom_minimum_size = Vector2(160.0, 56.0)
@@ -210,6 +212,8 @@ func _build_tabs() -> void:
 
 
 func _show_tab(tab_name: String) -> void:
+	if not (tab_name in _get_available_tabs()):
+		tab_name = TAB_VISUAL
 	current_tab = tab_name
 	_clear_content()
 	hud_toggles.clear()
@@ -246,7 +250,7 @@ func _clear_content() -> void:
 
 
 func _update_tab_styles() -> void:
-	for tab_name in TABS:
+	for tab_name in _get_available_tabs():
 		var button := tab_buttons.get(tab_name) as Button
 		if button != null:
 			_style_tab_button(button, tab_name == current_tab)
@@ -320,7 +324,8 @@ func _build_hud_tab() -> void:
 	presets.add_theme_constant_override("separation", 10)
 	presets.add_child(_create_hud_preset_button("Core", "core"))
 	presets.add_child(_create_hud_preset_button("Detailed", "detailed"))
-	presets.add_child(_create_hud_preset_button("Debug", "debug"))
+	if not GooseGameSettings.is_live_build():
+		presets.add_child(_create_hud_preset_button("Debug", "debug"))
 	content_box.add_child(presets)
 
 	content_box.add_child(_create_group_title("Core"))
@@ -336,15 +341,19 @@ func _build_hud_tab() -> void:
 		[GooseGameSettings.HUD_VERTICAL_SPEED, "Vertical speed"],
 		[GooseGameSettings.HUD_ACCELERATION, "Acceleration"],
 	])
-	content_box.add_child(_create_group_title("Debug"))
+	content_box.add_child(_create_group_title("Performance"))
 	_add_hud_group([
-		[GooseGameSettings.HUD_STATE, "State"],
 		[GooseGameSettings.HUD_FPS, "FPS"],
-		[GooseGameSettings.HUD_RAW_MOVEMENT, "Raw movement"],
-		[GooseGameSettings.HUD_SURFACE_FLAGS, "Surface flags"],
-		[GooseGameSettings.HUD_INPUT_STATE, "Input state"],
-		[GooseGameSettings.HUD_DEBUG_STATE_VIEW, "Debug state view"],
 	])
+	if not GooseGameSettings.is_live_build():
+		content_box.add_child(_create_group_title("Debug"))
+		_add_hud_group([
+			[GooseGameSettings.HUD_STATE, "State"],
+			[GooseGameSettings.HUD_RAW_MOVEMENT, "Raw movement"],
+			[GooseGameSettings.HUD_SURFACE_FLAGS, "Surface flags"],
+			[GooseGameSettings.HUD_INPUT_STATE, "Input state"],
+			[GooseGameSettings.HUD_DEBUG_STATE_VIEW, "Debug state view"],
+		])
 
 
 func _build_audio_tab() -> void:
@@ -365,6 +374,13 @@ func _build_audio_tab() -> void:
 	sfx_volume_slider = sfx_volume_row.get_node("Slider") as HSlider
 	sfx_volume_label = sfx_volume_row.get_node("ValueLabel") as Label
 	content_box.add_child(sfx_volume_row)
+
+
+func _get_available_tabs() -> Array:
+	var tabs := TABS.duplicate()
+	if GooseGameSettings.is_live_build():
+		tabs.erase(TAB_GOOSE_MOVES)
+	return tabs
 
 
 func _build_goose_moves_tab() -> void:

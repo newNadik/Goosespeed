@@ -14,7 +14,12 @@ func _ready() -> void:
 	var original_head_look_smoothness: float = GooseGameSettings.head_look_smoothness
 	var original_straw_hat_unlocked: bool = GooseGameSettings.straw_hat_unlocked
 	var original_straw_hat_equipped: bool = GooseGameSettings.straw_hat_equipped
+	var original_live_override := bool(ProjectSettings.get_setting(
+		GooseGameSettings.LIVE_BUILD_OVERRIDE_SETTING,
+		false,
+	))
 
+	ProjectSettings.set_setting(GooseGameSettings.LIVE_BUILD_OVERRIDE_SETTING, false)
 	GooseGameSettings.debug_hud_visible = false
 	GooseGameSettings.music_enabled = false
 	GooseGameSettings.sfx_enabled = false
@@ -96,9 +101,29 @@ func _ready() -> void:
 			original_head_look_smoothness,
 			original_straw_hat_unlocked,
 			original_straw_hat_equipped,
+			original_live_override,
 		)
 		get_tree().quit(1)
 		return
+
+	ProjectSettings.set_setting(GooseGameSettings.LIVE_BUILD_OVERRIDE_SETTING, true)
+	if not await _live_settings_overlay_is_valid():
+		_restore_settings(
+			original_debug_visible,
+			original_music_enabled,
+			original_sfx_enabled,
+			original_music_volume,
+			original_sfx_volume,
+			original_head_look_enabled,
+			original_head_look_intensity,
+			original_head_look_smoothness,
+			original_straw_hat_unlocked,
+			original_straw_hat_equipped,
+			original_live_override,
+		)
+		get_tree().quit(1)
+		return
+	ProjectSettings.set_setting(GooseGameSettings.LIVE_BUILD_OVERRIDE_SETTING, false)
 
 	_restore_settings(
 		original_debug_visible,
@@ -111,6 +136,7 @@ func _ready() -> void:
 		original_head_look_smoothness,
 		original_straw_hat_unlocked,
 		original_straw_hat_equipped,
+		original_live_override,
 	)
 	print("Goose game settings OK")
 	get_tree().quit(0)
@@ -209,6 +235,41 @@ func _settings_overlay_is_valid() -> bool:
 	return true
 
 
+func _live_settings_overlay_is_valid() -> bool:
+	var overlay := SETTINGS_OVERLAY_SCENE.instantiate()
+	add_child(overlay)
+	await get_tree().process_frame
+	overlay.show_settings()
+	await get_tree().process_frame
+	var tabs := overlay.get_node("Root/MarginContainer/Margin/VBox/TabsArea/Tabs") as HBoxContainer
+	if _find_tab_button(tabs, GooseSettingsOverlay.TAB_GOOSE_MOVES) != null:
+		push_error("Live settings overlay exposed the Goose Moves tab")
+		overlay.queue_free()
+		return false
+	var hud_button := _find_tab_button(tabs, GooseSettingsOverlay.TAB_HUD)
+	if hud_button == null:
+		push_error("Live settings overlay did not expose the HUD tab")
+		overlay.queue_free()
+		return false
+	hud_button.pressed.emit()
+	await get_tree().process_frame
+	var content_box := overlay.get_node("Root/MarginContainer/Margin/VBox/FolderBody/FolderMargin/ContentScroll/ContentCenter/ContentBox") as VBoxContainer
+	if _find_button_with_text(content_box, "Debug") != null:
+		push_error("Live settings overlay exposed the Debug HUD preset")
+		overlay.queue_free()
+		return false
+	if _find_control_with_label(content_box, "Raw movement") != null:
+		push_error("Live settings overlay exposed debug HUD toggles")
+		overlay.queue_free()
+		return false
+	if _find_control_with_label(content_box, "FPS") == null:
+		push_error("Live settings overlay did not keep the FPS option")
+		overlay.queue_free()
+		return false
+	overlay.queue_free()
+	return true
+
+
 func _press_escape(target: Node) -> void:
 	var event := InputEventKey.new()
 	event.pressed = true
@@ -251,6 +312,17 @@ func _find_control_with_label(content_box: VBoxContainer, label_text: String) ->
 	return null
 
 
+func _find_button_with_text(root: Node, label_text: String) -> Button:
+	var button := root as Button
+	if button != null and button.text == label_text:
+		return button
+	for child in root.get_children():
+		var found := _find_button_with_text(child, label_text)
+		if found != null:
+			return found
+	return null
+
+
 func _find_slider_with_label(content_box: VBoxContainer, label_text: String) -> HSlider:
 	for row in content_box.get_children():
 		if not row is HBoxContainer:
@@ -273,7 +345,9 @@ func _restore_settings(
 	head_look_smoothness: float,
 	straw_hat_unlocked: bool,
 	straw_hat_equipped: bool,
+	live_override: bool,
 ) -> void:
+	ProjectSettings.set_setting(GooseGameSettings.LIVE_BUILD_OVERRIDE_SETTING, live_override)
 	GooseGameSettings.debug_hud_visible = debug_visible
 	GooseGameSettings.music_enabled = music_enabled
 	GooseGameSettings.sfx_enabled = sfx_enabled
