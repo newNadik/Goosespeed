@@ -39,7 +39,6 @@ func on_start_pressed() -> void:
 	start_button.disabled = true
 	settings_button.disabled = true
 	quit_button.disabled = true
-	await _fade_out_music_for_scene_change()
 	await _fade_to_loading_base()
 	_show_loading_screen()
 	get_tree().change_scene_to_file(LEVEL_SCENE)
@@ -55,12 +54,6 @@ func on_settings_back_requested() -> void:
 
 func on_quit_pressed() -> void:
 	get_tree().quit()
-
-
-func _fade_out_music_for_scene_change() -> void:
-	var audio_manager := get_node_or_null("/root/AudioManager")
-	if audio_manager != null and audio_manager.has_method("fade_out_music"):
-		await audio_manager.fade_out_music()
 
 
 func _fade_to_loading_base() -> void:

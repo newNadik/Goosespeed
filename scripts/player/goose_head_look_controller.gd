@@ -52,6 +52,14 @@ func queue_look(state: RefCounted, visual_basis: Basis, camera: Camera3D) -> voi
 	queued_camera = camera
 
 
+func clear_look() -> void:
+	queued_state = null
+	queued_camera = null
+	current_yaw = 0.0
+	current_pitch = 0.0
+	smoothed_flight_target_direction = Vector3.ZERO
+
+
 func apply_look(delta: float, state: RefCounted, visual_basis: Basis, camera: Camera3D) -> void:
 	if skeleton == null:
 		return

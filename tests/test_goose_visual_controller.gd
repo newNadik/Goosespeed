@@ -43,6 +43,7 @@ func _initialize() -> void:
 	_expect_visual_facing_direction(failures, visual)
 	_expect_visual_position_smoothing(failures)
 	_expect_head_look_angles(failures)
+	_expect_cutscene_idle_disables_head_look(failures)
 	_expect_transition_mapping(failures, visual)
 	_expect_flight_charge_animation_gate(failures, visual)
 	_expect_locomotion_phase_preserved(failures)
@@ -627,6 +628,27 @@ func _expect_head_look_angles(failures: Array[String]) -> void:
 	})
 	if head_look._state_intensity(moving_ground_state) <= 0.0:
 		failures.append("moving grounded head look should stay enabled")
+	head_look.free()
+
+
+func _expect_cutscene_idle_disables_head_look(failures: Array[String]) -> void:
+	var visual := VisualControllerScript.new()
+	var head_look := HeadLookControllerScript.new()
+	visual.head_look_controller = head_look
+	visual.head_look_enabled = true
+	visual.cutscene_idle_enabled = true
+	visual.latest_state = _state({
+		"mode": &"flight",
+		"grounded": false,
+		"body_basis": Basis.IDENTITY,
+	})
+	head_look.queue_look(visual.latest_state, Basis.IDENTITY, null)
+	visual._update_head_look(0.016)
+	if bool(head_look.enabled):
+		failures.append("cutscene idle should disable head look")
+	if head_look.queued_state != null:
+		failures.append("cutscene idle should clear queued head look")
+	visual.free()
 	head_look.free()
 
 

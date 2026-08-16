@@ -13,7 +13,7 @@ config_version=5
 config/name="Goosespeed"
 run/main_scene="res://scenes/ui/main_menu.tscn"
 config/features=PackedStringArray("4.7", "Forward Plus")
-boot_splash/bg_color=Color(0.03529412, 0.105882354, 0.16862746, 1)
+boot_splash/bg_color=Color(0.101960786, 0.1882353, 0.27058825, 1)
 config/icon="uid://cpll7mvn0f4gx"
 
 [autoload]

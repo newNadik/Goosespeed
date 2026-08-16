@@ -840,8 +840,11 @@ func _jump_secondary_side_for_animation(animation_name: StringName) -> float:
 func _update_head_look(_delta: float) -> void:
 	if head_look_controller == null:
 		return
-	head_look_controller.enabled = head_look_enabled
-	if not head_look_enabled:
+	var enabled_for_state := head_look_enabled and not cutscene_idle_enabled
+	head_look_controller.enabled = enabled_for_state
+	if not enabled_for_state:
+		if head_look_controller.has_method("clear_look"):
+			head_look_controller.clear_look()
 		return
 	head_look_controller.intensity = head_look_intensity
 	head_look_controller.smoothness = head_look_smoothness

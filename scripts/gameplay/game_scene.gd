@@ -60,6 +60,7 @@ func _ready() -> void:
 	_update_hud()
 	await _fade_loading_screen(0.0, LOADING_FADE_OUT_DURATION)
 	_hide_loading_screen()
+	await _fade_out_music_for_scene_change()
 	player.process_mode = Node.PROCESS_MODE_INHERIT
 	_restore_player_camera()
 	await _begin_level_start_countdown()
