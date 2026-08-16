@@ -13,12 +13,12 @@ signal departure_finished(destination: StringName)
 @export var bus_exit_marker_path: NodePath = ^"BusExitMarker"
 @export var fade_layer_path: NodePath = ^"FadeLayer"
 
-@export var camera_turn_duration := 1.2
+@export var camera_turn_duration := 2.5
 @export var finish_hold_duration := 0.35
 @export var summary_delay := 0.18
-@export var bus_approach_duration := 0.55
-@export var bus_stop_duration := 0.45
-@export var bus_exit_duration := 0.85
+@export var bus_approach_duration := 2.0
+@export var bus_stop_duration := 1.5
+@export var bus_exit_duration := 2.0
 @export var bus_skew_amount := 0.18
 @export var fade_duration := 0.65
 @export var fade_color := Color(0.035, 0.105, 0.17, 1.0)
@@ -48,6 +48,7 @@ func _ready() -> void:
 		cutscene_camera.clear_current(false)
 	if bus != null:
 		bus.visible = false
+		_configure_bus_goose_for_cutscene()
 	if fade_rect != null:
 		fade_rect.color = Color(fade_color.r, fade_color.g, fade_color.b, 0.0)
 		fade_rect.mouse_filter = Control.MOUSE_FILTER_IGNORE
@@ -71,6 +72,7 @@ func reset_sequence() -> void:
 	if bus != null:
 		bus.visible = false
 		bus.scale = Vector3.ONE
+		_configure_bus_goose_for_cutscene()
 	if fade_rect != null:
 		fade_rect.color = Color(fade_color.r, fade_color.g, fade_color.b, 0.0)
 	if player != null:
@@ -192,6 +194,7 @@ func _prepare_bus() -> void:
 	bus.scale = Vector3.ONE
 	if bus_start_marker != null:
 		bus.global_transform = bus_start_marker.global_transform
+	_configure_bus_goose_for_cutscene()
 	_sync_bus_hat()
 	_set_bus_goose_visible(false)
 
@@ -236,11 +239,36 @@ func _swap_player_to_bus_goose() -> void:
 func _set_bus_goose_visible(value: bool) -> void:
 	var bus_goose := bus.get_node_or_null("GoosePlayerRoot") if bus != null else null
 	if bus_goose != null:
+		_configure_bus_goose_for_cutscene()
 		bus_goose.visible = value
 		if bus_goose.has_method("set_control_enabled"):
 			bus_goose.set_control_enabled(false)
-		if bus_goose.has_method("enter_cutscene_idle") and not value:
+		if bus_goose.has_method("set_goose_visual_visible"):
+			bus_goose.set_goose_visual_visible(value)
+		if bus_goose.has_method("enter_cutscene_idle"):
 			bus_goose.enter_cutscene_idle()
+
+
+func _configure_bus_goose_for_cutscene() -> void:
+	var bus_goose := bus.get_node_or_null("GoosePlayerRoot") if bus != null else null
+	if bus_goose == null:
+		return
+	if bus_goose.has_method("set_control_enabled"):
+		bus_goose.set_control_enabled(false)
+	var input_adapter := bus_goose.get_node_or_null("InputAdapter")
+	if input_adapter != null:
+		input_adapter.process_mode = Node.PROCESS_MODE_DISABLED
+	var controller: Node = (
+		bus_goose.get_active_controller()
+		if bus_goose.has_method("get_active_controller")
+		else null
+	)
+	if controller != null:
+		if controller.has_method("set_control_enabled"):
+			controller.set_control_enabled(false)
+		if controller.has_method("disable_internal_cameras"):
+			controller.disable_internal_cameras()
+		controller.process_mode = Node.PROCESS_MODE_DISABLED
 
 
 func _sync_bus_hat() -> void:

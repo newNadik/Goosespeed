@@ -88,6 +88,36 @@ func _ready() -> void:
 			push_error("Game scene did not restore the player camera after loading")
 			get_tree().quit(1)
 			return
+	var initial_bus := game.get_node_or_null("CourseRoot/LevelFarm/bus") as Node3D
+	var initial_bus_goose := initial_bus.get_node_or_null("GoosePlayerRoot") if initial_bus != null else null
+	var initial_bus_controller = (
+		initial_bus_goose.get_active_controller()
+		if initial_bus_goose != null and initial_bus_goose.has_method("get_active_controller")
+		else null
+	)
+	if initial_bus_controller != null and _has_current_camera(initial_bus_controller):
+		push_error("Hidden bus goose should not own a current camera after loading")
+		get_tree().quit(1)
+		return
+	if controller.has_method("toggle_camera_mode") and player.has_method("get_active_camera"):
+		var camera_before_toggle := get_viewport().get_camera_3d()
+		controller.call("toggle_camera_mode")
+		await get_tree().process_frame
+		var toggled_player_camera := player.get_active_camera() as Camera3D
+		if toggled_player_camera == null or get_viewport().get_camera_3d() != toggled_player_camera:
+			push_error("Player camera toggle did not move viewport to the player camera")
+			get_tree().quit(1)
+			return
+		if toggled_player_camera == camera_before_toggle:
+			push_error("Player camera toggle did not change camera mode")
+			get_tree().quit(1)
+			return
+		if initial_bus_controller != null and _has_current_camera(initial_bus_controller):
+			push_error("Hidden bus goose stole camera after player camera toggle")
+			get_tree().quit(1)
+			return
+		controller.call("toggle_camera_mode")
+		await get_tree().process_frame
 	if game.get_target_coin_count() != 1:
 		push_error("Game scene default target coin count should be 1")
 		get_tree().quit(1)
@@ -135,6 +165,7 @@ func _ready() -> void:
 		get_tree().quit(1)
 		return
 
+	game.elapsed_time = 4.2
 	game._on_finish_body_entered(controller)
 	if not game.is_run_finished():
 		push_error("Game scene finish trigger did not finish run after target coins")
@@ -409,6 +440,15 @@ func _coin_pickup_radius_is_larger_than(coin: Node, minimum: float) -> bool:
 	if sphere == null:
 		return false
 	return sphere.radius > minimum
+
+
+func _has_current_camera(root: Node) -> bool:
+	if root is Camera3D and (root as Camera3D).current:
+		return true
+	for child in root.get_children():
+		if _has_current_camera(child):
+			return true
+	return false
 
 
 func _wait_for_course(game: Node) -> bool:
