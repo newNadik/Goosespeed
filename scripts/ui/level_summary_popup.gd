@@ -5,7 +5,11 @@ signal restart_requested
 signal continue_requested
 signal main_menu_requested
 
+@export var show_animation_duration := 0.28
+@export var show_animation_offset := Vector2(0.0, -72.0)
+
 @onready var root: Control = $Root
+@onready var panel: PanelContainer = $Root/Panel
 @onready var course_label: Label = $Root/Panel/Margin/VBox/Header/CourseLabel
 @onready var status_label: Label = $Root/Panel/Margin/VBox/Header/StatusLabel
 @onready var best_time_panel: Panel = $Root/Panel/Margin/VBox/Stats/TimeRow/BEST_TIME_Panel
@@ -18,9 +22,13 @@ signal main_menu_requested
 @onready var continue_button: Button = $Root/Panel/Margin/VBox/Buttons/ContinueButton
 @onready var main_menu_button: Button = $Root/Panel/Margin/VBox/Buttons/MainMenuButton
 
+var panel_rest_position := Vector2.ZERO
+var show_tween: Tween
+
 
 func _ready() -> void:
 	process_mode = Node.PROCESS_MODE_ALWAYS
+	panel_rest_position = panel.position
 	restart_button.pressed.connect(func() -> void: restart_requested.emit())
 	continue_button.pressed.connect(func() -> void: continue_requested.emit())
 	main_menu_button.pressed.connect(func() -> void: main_menu_requested.emit())
@@ -45,10 +53,17 @@ func show_summary(
 	coins_value.text = str(maxi(coins_collected, 0))
 	wallet_value.text = str(maxi(wallet_total, 0))
 	root.visible = true
+	_play_show_animation()
 	restart_button.grab_focus()
 
 
 func hide_summary() -> void:
+	if show_tween != null:
+		show_tween.kill()
+		show_tween = null
+	if panel != null:
+		panel.position = panel_rest_position
+		panel.modulate.a = 1.0
 	root.visible = false
 
 
@@ -59,3 +74,18 @@ func is_summary_visible() -> bool:
 func _format_time(time_seconds: float) -> String:
 	var safe_time := maxf(time_seconds, 0.0)
 	return "%05.2fs" % safe_time
+
+
+func _play_show_animation() -> void:
+	if panel == null:
+		return
+	if show_tween != null:
+		show_tween.kill()
+	panel.position = panel_rest_position + show_animation_offset
+	panel.modulate.a = 0.0
+	show_tween = create_tween()
+	show_tween.set_parallel(true)
+	show_tween.set_ease(Tween.EASE_OUT)
+	show_tween.set_trans(Tween.TRANS_CUBIC)
+	show_tween.tween_property(panel, "position", panel_rest_position, show_animation_duration)
+	show_tween.tween_property(panel, "modulate:a", 1.0, show_animation_duration)

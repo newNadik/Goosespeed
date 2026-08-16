@@ -48,6 +48,7 @@ func _ready() -> void:
 	var first_coin := game.get_node_or_null("CourseRoot/LevelFarm/coins/Path_1/Piece_000")
 	var first_air_coin := game.get_node_or_null("CourseRoot/LevelFarm/coins/Path_4/Piece_000")
 	var finish_line := game.get_node_or_null("CourseRoot/LevelFarm/Finish/finish_line")
+	var level_end_sequence := game.get_node_or_null("CourseRoot/LevelFarm/LevelEndSequence")
 	var summary := game.get_node_or_null("LevelSummaryPopup")
 	if first_coin == null or not first_coin.has_method("collect_from"):
 		push_error("Game scene coin pickup fixture is missing")
@@ -67,6 +68,10 @@ func _ready() -> void:
 		return
 	if finish_line == null or not finish_line.has_method("set_coin_progress"):
 		push_error("Game scene finish line fixture is missing")
+		get_tree().quit(1)
+		return
+	if level_end_sequence == null or not level_end_sequence.has_method("play_finish_intro"):
+		push_error("Game scene did not attach farm level ending sequence")
 		get_tree().quit(1)
 		return
 	if summary == null or not summary.has_method("is_summary_visible"):
@@ -132,7 +137,11 @@ func _ready() -> void:
 		push_error("Game scene did not add run coins to total on finish")
 		get_tree().quit(1)
 		return
-	if not summary.is_summary_visible():
+	if summary.is_summary_visible():
+		push_error("Game scene showed level summary before finish intro completed")
+		get_tree().quit(1)
+		return
+	if not await _wait_for_summary_visible(summary):
 		push_error("Game scene did not show level summary after finish")
 		get_tree().quit(1)
 		return
@@ -171,6 +180,27 @@ func _ready() -> void:
 	var continue_button := summary.get_node_or_null("Root/Panel/Margin/VBox/Buttons/ContinueButton") as Button
 	if continue_button == null or not continue_button.disabled:
 		push_error("Level summary continue button should be disabled")
+		get_tree().quit(1)
+		return
+	if player.has_method("set_straw_hat_visible"):
+		player.set_straw_hat_visible(true)
+	await level_end_sequence.play_departure(&"main_menu")
+	var bus := game.get_node_or_null("CourseRoot/LevelFarm/bus") as Node3D
+	var bus_goose := bus.get_node_or_null("GoosePlayerRoot") if bus != null else null
+	if bus == null or not bus.visible:
+		push_error("Farm level ending did not show the bus")
+		get_tree().quit(1)
+		return
+	if goose_visual.visible:
+		push_error("Farm level ending did not hide the player goose visual")
+		get_tree().quit(1)
+		return
+	if bus_goose == null or not bus_goose.visible:
+		push_error("Farm level ending did not show the bus goose")
+		get_tree().quit(1)
+		return
+	if bus_goose.has_method("is_straw_hat_equipped") and not bus_goose.is_straw_hat_equipped():
+		push_error("Farm level ending did not copy the player hat to the bus goose")
 		get_tree().quit(1)
 		return
 	game._on_finish_body_entered(controller)
@@ -380,6 +410,15 @@ func _wait_for_countdown_complete(game: Node) -> bool:
 	var deadline := Time.get_ticks_msec() + 10000
 	while Time.get_ticks_msec() < deadline:
 		if not bool(game.get("countdown_active")):
+			return true
+		await get_tree().create_timer(0.05).timeout
+	return false
+
+
+func _wait_for_summary_visible(summary: Node) -> bool:
+	var deadline := Time.get_ticks_msec() + 5000
+	while Time.get_ticks_msec() < deadline:
+		if summary.has_method("is_summary_visible") and summary.is_summary_visible():
 			return true
 		await get_tree().create_timer(0.05).timeout
 	return false

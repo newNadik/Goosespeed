@@ -121,6 +121,7 @@ var visual_y_initialized := false
 var jump_secondary_bone_indices: Dictionary = {}
 var flap_sound_player: AudioStreamPlayer3D
 var previous_flapping := false
+var cutscene_idle_enabled := false
 
 
 func _ready() -> void:
@@ -158,6 +159,16 @@ func snap_to_transform_source() -> void:
 	tracked_intended_movement_direction = Vector3.ZERO
 	intended_movement_time = 0.0
 	_reset_visual_position_smoothing()
+
+
+func set_cutscene_idle_enabled(value: bool) -> void:
+	cutscene_idle_enabled = value
+	if value:
+		_clear_ground_locomotion()
+		jump_visual_hold_remaining = 0.0
+		landing_hold_remaining = 0.0
+		if animation_player != null:
+			_play_animation(_first_available([ANIM_IDLE, ANIM_IDLE_ALT]), 1.0)
 
 
 func _process(delta: float) -> void:
@@ -605,6 +616,9 @@ func _configure_animation_player() -> void:
 
 func _update_animation() -> void:
 	if animation_player == null:
+		return
+	if cutscene_idle_enabled:
+		_play_animation(_first_available([ANIM_IDLE, ANIM_IDLE_ALT]), 1.0)
 		return
 	var just_landed := latest_state.just_landed or (not previous_grounded and latest_state.grounded)
 	if just_landed and _should_use_landing_animation(latest_state):

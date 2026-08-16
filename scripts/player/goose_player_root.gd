@@ -55,6 +55,44 @@ func set_control_enabled(value: bool) -> void:
 	goose_moves_runtime.set_control_enabled(value)
 
 
+func enter_cutscene_idle() -> void:
+	set_control_enabled(false)
+	var controller := get_active_controller()
+	if controller != null:
+		if "velocity" in controller:
+			controller.set("velocity", Vector3.ZERO)
+		if controller.has_method("set_control_enabled"):
+			controller.set_control_enabled(false)
+	if goose_visual != null:
+		if goose_visual.has_method("snap_to_transform_source"):
+			goose_visual.snap_to_transform_source()
+		if goose_visual.has_method("set_cutscene_idle_enabled"):
+			goose_visual.set_cutscene_idle_enabled(true)
+
+
+func exit_cutscene_idle() -> void:
+	if goose_visual != null and goose_visual.has_method("set_cutscene_idle_enabled"):
+		goose_visual.set_cutscene_idle_enabled(false)
+
+
+func get_active_camera() -> Camera3D:
+	return _get_active_camera()
+
+
+func set_goose_visual_visible(value: bool) -> void:
+	if goose_visual != null:
+		goose_visual.visible = value
+
+
+func is_straw_hat_equipped() -> bool:
+	return straw_hat != null and straw_hat.visible
+
+
+func set_straw_hat_visible(value: bool) -> void:
+	if straw_hat != null:
+		straw_hat.visible = value
+
+
 func _apply_movement_profile() -> void:
 	if movement_profile == null:
 		return

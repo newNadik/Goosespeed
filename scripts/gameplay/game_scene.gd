@@ -11,6 +11,7 @@ const LOADING_FADE_OUT_DURATION := 0.28
 const LOADING_LAYER_NAME := "LoadingLayer"
 const LOADING_FADE_BASE_NAME := "LoadingFadeBase"
 const MAIN_MENU_SCENE := "res://scenes/ui/main_menu.tscn"
+const FARM_LEVEL_END_SEQUENCE_SCRIPT := preload("res://scripts/courses/farm/farm_level_end_sequence.gd")
 
 @export_file("*.tscn") var course_scene_path: String = CourseCatalog.DEFAULT_COURSE_PATH
 @export var target_coin_count := 20
@@ -34,6 +35,7 @@ var pause_menu: PauseMenu
 var countdown_active := false
 var last_finish_best_time := -1.0
 var last_finish_new_best := false
+var level_end_sequence: Node
 
 
 func _ready() -> void:
@@ -79,6 +81,8 @@ func restart_run() -> void:
 	_set_pause_blocked(false)
 	if level_summary_popup != null:
 		level_summary_popup.hide_summary()
+	if level_end_sequence != null and level_end_sequence.has_method("reset_sequence"):
+		level_end_sequence.reset_sequence()
 	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 	run_coin_count = 0
 	_reset_coin_pickups()
@@ -130,6 +134,9 @@ func _cache_course_contract() -> void:
 	spawn_point = course_root.find_child("SpawnPoint", true, false) as Node3D
 	finish_area = course_root.find_child("FinishTrigger", true, false) as Area3D
 	finish_line = course_root.find_child("finish_line", true, false) as Node3D
+	level_end_sequence = course_root.find_child("LevelEndSequence", true, false)
+	if level_end_sequence != null and level_end_sequence.has_method("setup"):
+		level_end_sequence.setup(player, finish_line)
 	if spawn_point == null:
 		push_error("Course is missing SpawnPoint")
 	if finish_area == null:
@@ -183,6 +190,7 @@ func _on_finish_body_entered(body: Node3D) -> void:
 		if run_coin_count < target_coin_count:
 			return
 		if not finished:
+			finished = true
 			_record_level_time()
 			var wallet := get_node_or_null("/root/CoinWallet")
 			if wallet != null and wallet.has_method("add_coins"):
@@ -190,10 +198,13 @@ func _on_finish_body_entered(body: Node3D) -> void:
 				if finish_line != null and finish_line.has_method("complete_finish_line"):
 					finish_line.complete_finish_line()
 			_set_pause_blocked(true)
-			_show_level_summary()
 			_set_player_controls_enabled(false)
+			if level_end_sequence != null and level_end_sequence.has_method("play_finish_intro"):
+				await level_end_sequence.play_finish_intro(player, finish_line)
+			elif player != null and player.has_method("enter_cutscene_idle"):
+				player.enter_cutscene_idle()
+			_show_level_summary()
 			Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
-		finished = true
 		_update_hud()
 
 
@@ -293,8 +304,18 @@ func _load_and_attach_course() -> void:
 	if active_course == null:
 		push_error("Course scene root must be a Node3D: %s" % course_scene_path)
 		return
+	_attach_level_end_sequence_script(active_course)
 	course_root.add_child(active_course)
 	await get_tree().process_frame
+
+
+func _attach_level_end_sequence_script(course: Node3D) -> void:
+	if not _get_course_scene_path().ends_with("level_farm.tscn"):
+		return
+	var sequence := course.find_child("LevelEndSequence", true, false)
+	if sequence == null or sequence.get_script() != null:
+		return
+	sequence.set_script(FARM_LEVEL_END_SEQUENCE_SCRIPT)
 
 
 func _add_level_summary_popup() -> void:
@@ -312,10 +333,23 @@ func _on_summary_restart_requested() -> void:
 
 
 func _on_summary_continue_requested() -> void:
-	pass
+	await _play_summary_departure(&"continue")
+	_go_to_main_menu()
 
 
 func _on_summary_main_menu_requested() -> void:
+	await _play_summary_departure(&"main_menu")
+	_go_to_main_menu()
+
+
+func _play_summary_departure(destination: StringName) -> void:
+	if level_summary_popup != null:
+		level_summary_popup.hide_summary()
+	if level_end_sequence != null and level_end_sequence.has_method("play_departure"):
+		await level_end_sequence.play_departure(destination)
+
+
+func _go_to_main_menu() -> void:
 	get_tree().paused = false
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	get_tree().change_scene_to_file(MAIN_MENU_SCENE)
