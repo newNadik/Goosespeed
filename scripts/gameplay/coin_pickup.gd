@@ -6,6 +6,7 @@ signal collected(coin: CoinPickup)
 const PICKUP_BURST_SCENE := preload("res://scenes/effects/coin_pickup_burst.tscn")
 
 @export var value := 1
+@export var pickup_radius := 1.0
 
 @onready var pickup_area: Area3D = $PickupArea
 @onready var collision_shape: CollisionShape3D = $PickupArea/CollisionShape3D
@@ -17,6 +18,7 @@ var is_collected := false
 
 func _ready() -> void:
 	add_to_group(&"coins")
+	_apply_pickup_radius()
 	if pickup_area != null and not pickup_area.body_entered.is_connected(_on_pickup_body_entered):
 		pickup_area.body_entered.connect(_on_pickup_body_entered)
 
@@ -56,6 +58,16 @@ func collect_from(body: Node3D) -> bool:
 
 func _on_pickup_body_entered(body: Node3D) -> void:
 	collect_from(body)
+
+
+func _apply_pickup_radius() -> void:
+	if collision_shape == null:
+		return
+	var sphere := collision_shape.shape.duplicate(true) as SphereShape3D
+	if sphere == null:
+		return
+	sphere.radius = maxf(pickup_radius, 0.1)
+	collision_shape.shape = sphere
 
 
 func _spawn_pickup_burst() -> void:

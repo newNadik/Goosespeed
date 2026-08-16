@@ -46,10 +46,23 @@ func _ready() -> void:
 	var initial_controller_basis := controller.global_basis
 	var initial_visual_basis := goose_visual.global_basis
 	var first_coin := game.get_node_or_null("CourseRoot/LevelFarm/coins/Path_1/Piece_000")
+	var first_air_coin := game.get_node_or_null("CourseRoot/LevelFarm/coins/Path_4/Piece_000")
 	var finish_line := game.get_node_or_null("CourseRoot/LevelFarm/Finish/finish_line")
 	var summary := game.get_node_or_null("LevelSummaryPopup")
 	if first_coin == null or not first_coin.has_method("collect_from"):
 		push_error("Game scene coin pickup fixture is missing")
+		get_tree().quit(1)
+		return
+	if first_air_coin == null or not first_air_coin.has_method("collect_from"):
+		push_error("Game scene air coin pickup fixture is missing")
+		get_tree().quit(1)
+		return
+	if not _coin_pickup_radius_is(first_coin, 1.0):
+		push_error("Ground coin pickup radius should stay at 1.0")
+		get_tree().quit(1)
+		return
+	if not _coin_pickup_radius_is(first_air_coin, 2.25):
+		push_error("Air coin pickup radius should use the larger override")
 		get_tree().quit(1)
 		return
 	if finish_line == null or not finish_line.has_method("set_coin_progress"):
@@ -325,6 +338,16 @@ func _collect_coins(game: Node, controller: Node3D, amount: int) -> bool:
 		if collected >= amount:
 			return true
 	return collected >= amount
+
+
+func _coin_pickup_radius_is(coin: Node, expected: float) -> bool:
+	var shape_node := coin.get_node_or_null("PickupArea/CollisionShape3D") as CollisionShape3D
+	if shape_node == null:
+		return false
+	var sphere := shape_node.shape as SphereShape3D
+	if sphere == null:
+		return false
+	return is_equal_approx(sphere.radius, expected)
 
 
 func _wait_for_course(game: Node) -> bool:
