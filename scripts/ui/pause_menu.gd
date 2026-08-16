@@ -130,11 +130,18 @@ func on_main_menu_pressed() -> void:
 	set_open(false, false)
 	get_tree().paused = false
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	await _fade_out_music_for_scene_change()
 	get_tree().change_scene_to_file(MAIN_MENU_SCENE)
 
 
 func on_quit_pressed() -> void:
 	get_tree().quit()
+
+
+func _fade_out_music_for_scene_change() -> void:
+	var audio_manager := get_node_or_null("/root/AudioManager")
+	if audio_manager != null and audio_manager.has_method("fade_out_music"):
+		await audio_manager.fade_out_music()
 
 
 func _find_game_scene() -> Node:

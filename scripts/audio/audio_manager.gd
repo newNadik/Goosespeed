@@ -7,6 +7,7 @@ const GAME_MUSIC_DIR := "res://assets/music/game"
 const AUDIO_EXTENSIONS := ["mp3", "ogg", "wav"]
 const COUNTDOWN_STREAM := preload("res://assets/sounds/countdown.mp3")
 const SILENT_DB := -80.0
+const MUSIC_FADE_OUT_DURATION := 0.45
 
 var _menu_player: AudioStreamPlayer
 var _game_player: AudioStreamPlayer
@@ -14,6 +15,7 @@ var _countdown_player: AudioStreamPlayer
 var _rng := RandomNumberGenerator.new()
 var _menu_tracks: Array[AudioStream] = []
 var _game_tracks: Array[AudioStream] = []
+var _music_fade_tween: Tween
 
 
 func _ready() -> void:
@@ -33,6 +35,7 @@ func _ready() -> void:
 
 
 func play_menu_music() -> void:
+	_cancel_music_fade()
 	_apply_audio_settings()
 	_stop_player(_game_player)
 	if _menu_tracks.is_empty():
@@ -41,6 +44,7 @@ func play_menu_music() -> void:
 
 
 func play_random_game_music() -> void:
+	_cancel_music_fade()
 	_apply_audio_settings()
 	_stop_player(_menu_player)
 	if _game_tracks.is_empty():
@@ -50,8 +54,29 @@ func play_random_game_music() -> void:
 
 
 func stop_music() -> void:
+	_cancel_music_fade()
 	_stop_player(_menu_player)
 	_stop_player(_game_player)
+
+
+func fade_out_music(duration := MUSIC_FADE_OUT_DURATION) -> void:
+	_cancel_music_fade()
+	var active_players := _get_active_music_players()
+	if active_players.is_empty():
+		return
+	if duration <= 0.0:
+		stop_music()
+		return
+
+	_music_fade_tween = create_tween()
+	_music_fade_tween.set_pause_mode(Tween.TWEEN_PAUSE_PROCESS)
+	_music_fade_tween.set_parallel(true)
+	for player in active_players:
+		_music_fade_tween.tween_property(player, "volume_db", SILENT_DB, duration)
+	await _music_fade_tween.finished
+	for player in active_players:
+		_stop_player(player)
+	_music_fade_tween = null
 
 
 func play_countdown_sfx() -> void:
@@ -86,12 +111,33 @@ func _play_track(player: AudioStreamPlayer, track: AudioStream) -> void:
 		return
 	_configure_loop(track)
 	player.stream = track
+	player.volume_db = 0.0
 	player.play()
 
 
 func _stop_player(player: AudioStreamPlayer) -> void:
 	if player != null:
 		player.stop()
+		player.volume_db = 0.0
+
+
+func _cancel_music_fade() -> void:
+	if _music_fade_tween != null:
+		_music_fade_tween.kill()
+		_music_fade_tween = null
+	if _menu_player != null:
+		_menu_player.volume_db = 0.0
+	if _game_player != null:
+		_game_player.volume_db = 0.0
+
+
+func _get_active_music_players() -> Array[AudioStreamPlayer]:
+	var active_players: Array[AudioStreamPlayer] = []
+	if _menu_player != null and _menu_player.playing:
+		active_players.append(_menu_player)
+	if _game_player != null and _game_player.playing:
+		active_players.append(_game_player)
+	return active_players
 
 
 func _load_tracks_from_dir(dir_path: String) -> Array[AudioStream]:

@@ -359,12 +359,12 @@ func _on_summary_restart_requested() -> void:
 
 func _on_summary_continue_requested() -> void:
 	await _play_summary_departure(&"continue")
-	_go_to_main_menu()
+	await _go_to_main_menu()
 
 
 func _on_summary_main_menu_requested() -> void:
 	await _play_summary_departure(&"main_menu")
-	_go_to_main_menu()
+	await _go_to_main_menu()
 
 
 func _play_summary_departure(destination: StringName) -> void:
@@ -377,7 +377,14 @@ func _play_summary_departure(destination: StringName) -> void:
 func _go_to_main_menu() -> void:
 	get_tree().paused = false
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	await _fade_out_music_for_scene_change()
 	get_tree().change_scene_to_file(MAIN_MENU_SCENE)
+
+
+func _fade_out_music_for_scene_change() -> void:
+	var audio_manager := get_node_or_null("/root/AudioManager")
+	if audio_manager != null and audio_manager.has_method("fade_out_music"):
+		await audio_manager.fade_out_music()
 
 
 func _load_course_scene() -> PackedScene:
