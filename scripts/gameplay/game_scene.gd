@@ -13,7 +13,7 @@ const LOADING_FADE_BASE_NAME := "LoadingFadeBase"
 const MAIN_MENU_SCENE := "res://scenes/ui/main_menu.tscn"
 
 @export_file("*.tscn") var course_scene_path: String = CourseCatalog.DEFAULT_COURSE_PATH
-@export var target_coin_count := 10
+@export var target_coin_count := 20
 
 @onready var player: Node = $GoosePlayerRoot
 @onready var game_hud: Node = $GooseGameHud

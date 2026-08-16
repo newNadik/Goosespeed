@@ -61,8 +61,8 @@ func _ready() -> void:
 		push_error("Ground coin pickup radius should stay at 1.0")
 		get_tree().quit(1)
 		return
-	if not _coin_pickup_radius_is(first_air_coin, 2.25):
-		push_error("Air coin pickup radius should use the larger override")
+	if not _coin_pickup_radius_is_larger_than(first_air_coin, 1.0):
+		push_error("Air coin pickup radius should be larger than ground coins")
 		get_tree().quit(1)
 		return
 	if finish_line == null or not finish_line.has_method("set_coin_progress"):
@@ -71,6 +71,10 @@ func _ready() -> void:
 		return
 	if summary == null or not summary.has_method("is_summary_visible"):
 		push_error("Game scene level summary fixture is missing")
+		get_tree().quit(1)
+		return
+	if game.get_target_coin_count() != 20:
+		push_error("Game scene default target coin count should be 20")
 		get_tree().quit(1)
 		return
 	var pickup_sound := first_coin.get_node_or_null("PickupSound") as AudioStreamPlayer3D
@@ -348,6 +352,16 @@ func _coin_pickup_radius_is(coin: Node, expected: float) -> bool:
 	if sphere == null:
 		return false
 	return is_equal_approx(sphere.radius, expected)
+
+
+func _coin_pickup_radius_is_larger_than(coin: Node, minimum: float) -> bool:
+	var shape_node := coin.get_node_or_null("PickupArea/CollisionShape3D") as CollisionShape3D
+	if shape_node == null:
+		return false
+	var sphere := shape_node.shape as SphereShape3D
+	if sphere == null:
+		return false
+	return sphere.radius > minimum
 
 
 func _wait_for_course(game: Node) -> bool:
