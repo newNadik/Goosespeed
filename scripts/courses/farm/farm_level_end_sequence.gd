@@ -4,6 +4,8 @@ extends Node3D
 signal summary_ready
 signal departure_finished(destination: StringName)
 
+const GOOSE_RENDER_LAYER := 20
+
 @export var cutscene_camera_path: NodePath = ^"CutsceneCamera"
 @export var finish_camera_marker_path: NodePath = ^"FinishCameraMarker"
 @export var finish_look_marker_path: NodePath = ^"FinishLookMarker"
@@ -18,6 +20,7 @@ signal departure_finished(destination: StringName)
 @export var summary_delay := 0.18
 @export var bus_approach_duration := 2.0
 @export var bus_stop_duration := 1.5
+@export var bus_goose_board_duration := 2.0
 @export var bus_exit_duration := 2.0
 @export var bus_skew_amount := 0.18
 @export var fade_duration := 0.65
@@ -105,8 +108,10 @@ func play_departure(destination: StringName) -> void:
 
 	_prepare_bus()
 	await _move_bus(bus_start_marker, bus_stop_marker, bus_approach_duration, true)
+	_show_bus_goose_and_play_sit()
 	await get_tree().create_timer(maxf(bus_stop_duration, 0.0)).timeout
-	_swap_player_to_bus_goose()
+	_hide_player_goose_for_departure()
+	await get_tree().create_timer(maxf(bus_goose_board_duration, 0.0)).timeout
 	await _move_bus(bus_stop_marker, bus_exit_marker, bus_exit_duration, true)
 	await _fade_out()
 	departure_finished.emit(destination)
@@ -125,6 +130,7 @@ func _turn_camera_to_finish() -> void:
 	cutscene_camera.top_level = true
 	cutscene_camera.global_transform = from_transform
 	cutscene_camera.fov = from_fov
+	cutscene_camera.set_cull_mask_value(GOOSE_RENDER_LAYER, true)
 	cutscene_camera.current = true
 
 	var target_position := finish_camera_marker.global_position
@@ -226,14 +232,17 @@ func _apply_bus_speed_skew(weight: float) -> void:
 	bus.scale = Vector3(1.0 + bus_skew_amount * pulse, 1.0, 1.0 - bus_skew_amount * 0.35 * pulse)
 
 
-func _swap_player_to_bus_goose() -> void:
-	if player != null and player.has_method("set_goose_visual_visible"):
-		player.set_goose_visual_visible(false)
+func _show_bus_goose_and_play_sit() -> void:
 	_sync_bus_hat()
 	_set_bus_goose_visible(true)
 	var bus_animation_player := bus.get_node_or_null("AnimationPlayer") as AnimationPlayer
 	if bus_animation_player != null and bus_animation_player.has_animation(&"goose_sit"):
 		bus_animation_player.play(&"goose_sit")
+
+
+func _hide_player_goose_for_departure() -> void:
+	if player != null and player.has_method("set_goose_visual_visible"):
+		player.set_goose_visual_visible(false)
 
 
 func _set_bus_goose_visible(value: bool) -> void:
@@ -253,6 +262,10 @@ func _configure_bus_goose_for_cutscene() -> void:
 	var bus_goose := bus.get_node_or_null("GoosePlayerRoot") if bus != null else null
 	if bus_goose == null:
 		return
+	if bus_goose.has_method("set_visual_cutscene_local_transform_enabled"):
+		bus_goose.set_visual_cutscene_local_transform_enabled(true)
+	elif bus_goose.has_method("detach_visual_from_movement_controller"):
+		bus_goose.detach_visual_from_movement_controller()
 	if bus_goose.has_method("set_control_enabled"):
 		bus_goose.set_control_enabled(false)
 	var input_adapter := bus_goose.get_node_or_null("InputAdapter")

@@ -75,6 +75,16 @@ func exit_cutscene_idle() -> void:
 		goose_visual.set_cutscene_idle_enabled(false)
 
 
+func detach_visual_from_movement_controller() -> void:
+	if goose_visual != null and goose_visual.has_method("clear_transform_source"):
+		goose_visual.clear_transform_source()
+
+
+func set_visual_cutscene_local_transform_enabled(value: bool) -> void:
+	if goose_visual != null and goose_visual.has_method("set_cutscene_local_transform_enabled"):
+		goose_visual.set_cutscene_local_transform_enabled(value)
+
+
 func get_active_camera() -> Camera3D:
 	return _get_active_camera()
 

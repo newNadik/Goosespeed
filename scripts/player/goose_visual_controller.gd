@@ -122,9 +122,12 @@ var jump_secondary_bone_indices: Dictionary = {}
 var flap_sound_player: AudioStreamPlayer3D
 var previous_flapping := false
 var cutscene_idle_enabled := false
+var cutscene_local_transform_enabled := false
+var initial_local_transform := Transform3D.IDENTITY
 
 
 func _ready() -> void:
+	initial_local_transform = transform
 	_configure_animation_player()
 	_cache_jump_secondary_bones()
 	_ensure_flap_sound_player()
@@ -151,8 +154,22 @@ func set_transform_source(value: Node3D) -> void:
 			global_basis = _get_flight_visual_target_basis_for_basis(transform_source.global_basis)
 
 
+func clear_transform_source() -> void:
+	transform_source = null
+	tracked_intended_movement_direction = Vector3.ZERO
+	intended_movement_time = 0.0
+	_reset_visual_position_smoothing()
+
+
+func set_cutscene_local_transform_enabled(value: bool) -> void:
+	cutscene_local_transform_enabled = value
+	if value:
+		clear_transform_source()
+		transform = initial_local_transform
+
+
 func snap_to_transform_source() -> void:
-	if transform_source == null:
+	if transform_source == null or cutscene_local_transform_enabled:
 		return
 	global_position = transform_source.global_position
 	global_basis = _get_flight_visual_target_basis_for_basis(transform_source.global_basis)
@@ -182,6 +199,8 @@ func _process(delta: float) -> void:
 
 
 func _physics_process(delta: float) -> void:
+	if cutscene_local_transform_enabled:
+		return
 	_update_intended_movement_turn_state(delta)
 	_sync_visual_transform(delta)
 
@@ -210,9 +229,12 @@ func _connect_bridge() -> void:
 		state_bridge.state_changed.connect(_on_state_changed)
 	latest_state = state_bridge.get_state()
 	previous_flapping = latest_state.flapping
-	global_position = latest_state.position
+	if cutscene_local_transform_enabled:
+		transform = initial_local_transform
+	else:
+		global_position = latest_state.position
 	_reset_visual_position_smoothing()
-	if _uses_full_flight_orientation(latest_state):
+	if not cutscene_local_transform_enabled and _uses_full_flight_orientation(latest_state):
 		global_basis = _get_flight_visual_target_basis(latest_state)
 
 

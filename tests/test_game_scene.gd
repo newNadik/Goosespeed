@@ -241,6 +241,26 @@ func _ready() -> void:
 		push_error("Farm level ending did not show the bus goose")
 		get_tree().quit(1)
 		return
+	var bus_goose_mesh := (
+		bus_goose.get_node_or_null("GooseVisual/Goose/Skeleton3D/Goose_001") as MeshInstance3D
+	)
+	if bus_goose_mesh == null or not bus_goose_mesh.visible:
+		push_error("Farm level ending did not keep the bus goose mesh visible")
+		get_tree().quit(1)
+		return
+	var bus_goose_visual := bus_goose.get_node_or_null("GooseVisual")
+	if bus_goose_visual == null or bus_goose_visual.get("transform_source") != null:
+		push_error("Farm level ending did not detach the bus goose visual from movement")
+		get_tree().quit(1)
+		return
+	if not bool(bus_goose_visual.get("cutscene_local_transform_enabled")):
+		push_error("Farm level ending did not keep the bus goose visual in local cutscene mode")
+		get_tree().quit(1)
+		return
+	if bus_goose_visual.global_position.distance_to(bus_goose.global_position) > 2.0:
+		push_error("Farm level ending moved the bus goose visual away from its animated root")
+		get_tree().quit(1)
+		return
 	if bus_goose.has_method("is_straw_hat_equipped") and not bus_goose.is_straw_hat_equipped():
 		push_error("Farm level ending did not copy the player hat to the bus goose")
 		get_tree().quit(1)
