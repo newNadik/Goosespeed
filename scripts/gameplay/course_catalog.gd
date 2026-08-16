@@ -13,10 +13,6 @@ static func request_course_preload(course_path := DEFAULT_COURSE_PATH) -> void:
 	if course_path.is_empty() or ResourceLoader.has_cached(course_path):
 		return
 
-	var status := ResourceLoader.load_threaded_get_status(course_path)
-	if status != ResourceLoader.THREAD_LOAD_INVALID_RESOURCE:
-		return
-
 	var error := ResourceLoader.load_threaded_request(course_path)
 	if error != OK and error != ERR_BUSY:
 		push_warning("Could not start course preload for %s: %s" % [course_path, error])

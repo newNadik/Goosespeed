@@ -1,0 +1,41 @@
+[gd_scene format=3 uid="uid://c5t1n0hv4ui56"]
+
+[ext_resource type="PackedScene" uid="uid://v7lupax8ytim" path="res://scenes/hats/straw_hat.tscn" id="1_h1m1u"]
+[ext_resource type="Script" uid="uid://co5m8a4r1nsj5" path="res://scripts/props/spinning_prop.gd" id="2_5j0vc"]
+[ext_resource type="Script" uid="uid://ck2ijyd4aufp1" path="res://scripts/gameplay/hat_pickup.gd" id="3_pickup"]
+[ext_resource type="AudioStream" uid="uid://c2c3d0xndjbrm" path="res://assets/sounds/coin.mp3" id="4_sound"]
+[ext_resource type="Texture2D" uid="uid://cyy3jhpyvcuck" path="res://assets/ui/icons/hat_pickup_sparkle_ring.png" id="5_ring"]
+
+[sub_resource type="SphereShape3D" id="SphereShape3D_hat_pickup"]
+radius = 1.05
+
+[node name="HatPickup" type="Node3D" unique_id=460011287]
+script = ExtResource("3_pickup")
+
+[node name="hat" type="Node3D" parent="." unique_id=403518043]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+script = ExtResource("2_5j0vc")
+rotation_axis = Vector3(0, 1, 0)
+
+[node name="straw_hat" parent="hat" unique_id=2105918975 instance=ExtResource("1_h1m1u")]
+
+[node name="PrintedSparkleRing" type="Sprite3D" parent="hat" unique_id=1755925163]
+transform = Transform3D(2.05, 0, 0, 0, 2.05, 0, 0, 0, 2.05, 0, 0.28796554, 0)
+pixel_size = 0.003
+billboard = 1
+texture = ExtResource("5_ring")
+
+[node name="PickupArea" type="Area3D" parent="." unique_id=1411793661]
+collision_layer = 0
+monitorable = false
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="PickupArea" unique_id=329095204]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+shape = SubResource("SphereShape3D_hat_pickup")
+
+[node name="PickupSound" type="AudioStreamPlayer3D" parent="." unique_id=356637085]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1, 0)
+stream = ExtResource("4_sound")
+volume_db = -5.0
+unit_size = 4.0
+max_distance = 32.0

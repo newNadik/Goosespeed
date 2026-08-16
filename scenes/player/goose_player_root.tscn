@@ -4,9 +4,10 @@
 [ext_resource type="Script" uid="uid://fvc12wtetyni" path="res://scripts/player/player_input_adapter.gd" id="2_input"]
 [ext_resource type="Script" uid="uid://c15xafk0ot2uj" path="res://scripts/player/movement_state_bridge.gd" id="5_bridge"]
 [ext_resource type="Script" uid="uid://c7ybndd0dro1m" path="res://scripts/player/goose_visual_controller.gd" id="6_visual"]
+[ext_resource type="PackedScene" uid="uid://v7lupax8ytim" path="res://scenes/hats/straw_hat.tscn" id="8_hvk4n"]
 [ext_resource type="Script" uid="uid://b5uvth5moide3" path="res://scripts/player/goose_moves_runtime.gd" id="9_runtime"]
 [ext_resource type="Material" uid="uid://qj52vsqp8baw" path="res://themes/goose_flat_shadow_material.tres" id="10_goose_mat"]
-[ext_resource type="Resource" path="res://resources/movement_profiles/experimental_flap.tres" id="11_profile"]
+[ext_resource type="Resource" uid="uid://dehps6bhc815d" path="res://resources/movement_profiles/experimental_flap.tres" id="11_profile"]
 
 [sub_resource type="ArrayMesh" id="ArrayMesh_cf54n"]
 resource_name = "SK_AnserAnser_M"
@@ -31671,7 +31672,7 @@ bones/7/name = "Head"
 bones/7/parent = 6
 bones/7/rest = Transform3D(1, -3.3107135e-06, 2.8792192e-07, 2.5363447e-06, 0.8163326, 0.5775823, -2.147249e-06, -0.5775822, 0.81633276, -1.3063924e-08, 0.056159966, 1.0351069e-07)
 bones/7/enabled = true
-bones/7/position = Vector3(-2.9802294e-10, 0.056491617, 3.5394912e-08)
+bones/7/position = Vector3(-1.3063924e-08, 0.056159966, 1.0351069e-07)
 bones/7/rotation = Quaternion(-0.41080958, 0.0032045308, -0.0033876416, 0.9117092)
 bones/7/scale = Vector3(1, 1, 1.0000002)
 bones/8/name = "Jaw"
@@ -32309,6 +32310,17 @@ bones/97/scale = Vector3(1, 1, 1)
 mesh = SubResource("ArrayMesh_cf54n")
 skin = SubResource("Skin_r2b1n")
 skeleton = NodePath("..")
+
+[node name="BoneAttachment3D" type="BoneAttachment3D" parent="GooseVisual/Goose/Skeleton3D" unique_id=886797545]
+transform = Transform3D(-0.050669786, 0.9927472, -0.1090194, -0.9987142, -0.050521877, 0.004119782, -0.0014178634, 0.10908812, 0.9940312, 0.22293735, 0.012231922, 0.36790156)
+bone_name = "Head"
+bone_idx = 7
+
+[node name="Node3D" type="Node3D" parent="GooseVisual/Goose/Skeleton3D/BoneAttachment3D" unique_id=522906608]
+transform = Transform3D(0.13, 3.8725148e-10, 2.9414684e-09, 2.9414686e-09, -0.033646476, -0.12557034, 3.8725154e-10, 0.12557034, -0.033646476, -0.0013198666, 0.031162977, 0.0006906688)
+
+[node name="straw_hat" parent="GooseVisual/Goose/Skeleton3D/BoneAttachment3D/Node3D" unique_id=2105918975 instance=ExtResource("8_hvk4n")]
+visible = false
 
 [node name="AnimationPlayer" type="AnimationPlayer" parent="GooseVisual" unique_id=4721873]
 libraries/ = SubResource("AnimationLibrary_2tbew")

@@ -10,6 +10,7 @@ const SHADOW_CASTER_META := &"goose_first_person_shadow_caster"
 @onready var active_movement_controller: Node = $ActiveMovementController
 @onready var movement_state_bridge: Node = $MovementStateBridge
 @onready var goose_visual: Node = $GooseVisual
+@onready var straw_hat: Node3D = $GooseVisual/Goose/Skeleton3D/BoneAttachment3D/Node3D/straw_hat
 
 
 func _ready() -> void:
@@ -117,6 +118,10 @@ func _apply_visual_settings() -> void:
 	goose_visual.head_look_enabled = bool(game_settings.get("head_look_enabled"))
 	goose_visual.head_look_intensity = float(game_settings.get("head_look_intensity"))
 	goose_visual.head_look_smoothness = float(game_settings.get("head_look_smoothness"))
+	if straw_hat != null and game_settings.has_method("is_accessory_equipped"):
+		straw_hat.visible = game_settings.is_accessory_equipped(
+			GooseGameSettings.ACCESSORY_STRAW_HAT
+		)
 
 
 func _configure_goose_visual_render_layer() -> void:

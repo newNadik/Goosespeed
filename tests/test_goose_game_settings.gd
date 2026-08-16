@@ -12,6 +12,8 @@ func _ready() -> void:
 	var original_head_look_enabled: bool = GooseGameSettings.head_look_enabled
 	var original_head_look_intensity: float = GooseGameSettings.head_look_intensity
 	var original_head_look_smoothness: float = GooseGameSettings.head_look_smoothness
+	var original_straw_hat_unlocked: bool = GooseGameSettings.straw_hat_unlocked
+	var original_straw_hat_equipped: bool = GooseGameSettings.straw_hat_equipped
 
 	GooseGameSettings.debug_hud_visible = false
 	GooseGameSettings.music_enabled = false
@@ -21,6 +23,8 @@ func _ready() -> void:
 	GooseGameSettings.head_look_enabled = false
 	GooseGameSettings.head_look_intensity = 0.4
 	GooseGameSettings.head_look_smoothness = 11.5
+	GooseGameSettings.straw_hat_unlocked = true
+	GooseGameSettings.straw_hat_equipped = true
 	GooseGameSettings.save_settings()
 	GooseGameSettings.debug_hud_visible = true
 	GooseGameSettings.music_enabled = true
@@ -30,6 +34,8 @@ func _ready() -> void:
 	GooseGameSettings.head_look_enabled = true
 	GooseGameSettings.head_look_intensity = 0.8
 	GooseGameSettings.head_look_smoothness = 3.0
+	GooseGameSettings.straw_hat_unlocked = false
+	GooseGameSettings.straw_hat_equipped = false
 	GooseGameSettings.load_settings()
 	if GooseGameSettings.debug_hud_visible:
 		push_error("Saved debug HUD visibility did not load")
@@ -63,6 +69,14 @@ func _ready() -> void:
 		push_error("Saved head-look smoothness did not load")
 		get_tree().quit(1)
 		return
+	if not GooseGameSettings.straw_hat_unlocked:
+		push_error("Saved straw hat unlocked flag did not load")
+		get_tree().quit(1)
+		return
+	if not GooseGameSettings.straw_hat_equipped:
+		push_error("Saved straw hat equipped flag did not load")
+		get_tree().quit(1)
+		return
 
 	var prototype_settings := get_node_or_null("/root/Settings")
 	if prototype_settings != null and str(prototype_settings.get("character_controller")) != "q3_n_flight":
@@ -80,6 +94,8 @@ func _ready() -> void:
 			original_head_look_enabled,
 			original_head_look_intensity,
 			original_head_look_smoothness,
+			original_straw_hat_unlocked,
+			original_straw_hat_equipped,
 		)
 		get_tree().quit(1)
 		return
@@ -93,6 +109,8 @@ func _ready() -> void:
 		original_head_look_enabled,
 		original_head_look_intensity,
 		original_head_look_smoothness,
+		original_straw_hat_unlocked,
+		original_straw_hat_equipped,
 	)
 	print("Goose game settings OK")
 	get_tree().quit(0)
@@ -253,6 +271,8 @@ func _restore_settings(
 	head_look_enabled: bool,
 	head_look_intensity: float,
 	head_look_smoothness: float,
+	straw_hat_unlocked: bool,
+	straw_hat_equipped: bool,
 ) -> void:
 	GooseGameSettings.debug_hud_visible = debug_visible
 	GooseGameSettings.music_enabled = music_enabled
@@ -262,4 +282,6 @@ func _restore_settings(
 	GooseGameSettings.head_look_enabled = head_look_enabled
 	GooseGameSettings.head_look_intensity = head_look_intensity
 	GooseGameSettings.head_look_smoothness = head_look_smoothness
+	GooseGameSettings.straw_hat_unlocked = straw_hat_unlocked
+	GooseGameSettings.straw_hat_equipped = straw_hat_equipped
 	GooseGameSettings.save_settings()

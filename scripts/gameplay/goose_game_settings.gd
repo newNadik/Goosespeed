@@ -12,6 +12,7 @@ const DEFAULT_SFX_VOLUME := 1.0
 const DEFAULT_HEAD_LOOK_ENABLED := true
 const DEFAULT_HEAD_LOOK_INTENSITY := 1.0
 const DEFAULT_HEAD_LOOK_SMOOTHNESS := 10.0
+const ACCESSORY_STRAW_HAT := "straw_hat"
 const HUD_DIRECTION_TO_FINISH := "direction_to_finish"
 const HUD_TIMER := "timer"
 const HUD_SPEED := "speed"
@@ -68,6 +69,8 @@ var sfx_volume := DEFAULT_SFX_VOLUME
 var head_look_enabled := DEFAULT_HEAD_LOOK_ENABLED
 var head_look_intensity := DEFAULT_HEAD_LOOK_INTENSITY
 var head_look_smoothness := DEFAULT_HEAD_LOOK_SMOOTHNESS
+var straw_hat_unlocked := false
+var straw_hat_equipped := false
 var hud_elements := {}
 
 
@@ -100,6 +103,11 @@ func load_settings() -> void:
 		1.0,
 		20.0,
 	)
+	straw_hat_unlocked = bool(config.get_value(SECTION, "straw_hat_unlocked", straw_hat_unlocked))
+	straw_hat_equipped = (
+		straw_hat_unlocked
+		and bool(config.get_value(SECTION, "straw_hat_equipped", straw_hat_equipped))
+	)
 	for element in HUD_ELEMENTS:
 		var key := "hud_%s" % element
 		hud_elements[element] = bool(config.get_value(SECTION, key, hud_elements[element]))
@@ -116,6 +124,8 @@ func save_settings() -> void:
 	config.set_value(SECTION, "head_look_enabled", head_look_enabled)
 	config.set_value(SECTION, "head_look_intensity", head_look_intensity)
 	config.set_value(SECTION, "head_look_smoothness", head_look_smoothness)
+	config.set_value(SECTION, "straw_hat_unlocked", straw_hat_unlocked)
+	config.set_value(SECTION, "straw_hat_equipped", straw_hat_equipped)
 	for element in HUD_ELEMENTS:
 		config.set_value(SECTION, "hud_%s" % element, bool(hud_elements[element]))
 	var error := config.save(SAVE_PATH)
@@ -181,6 +191,49 @@ func set_head_look_smoothness(value: float) -> void:
 	head_look_smoothness = clamped_value
 	save_settings()
 	settings_changed.emit()
+
+
+func is_accessory_unlocked(accessory: String) -> bool:
+	match accessory:
+		ACCESSORY_STRAW_HAT:
+			return straw_hat_unlocked
+		_:
+			return false
+
+
+func is_accessory_equipped(accessory: String) -> bool:
+	match accessory:
+		ACCESSORY_STRAW_HAT:
+			return straw_hat_unlocked and straw_hat_equipped
+		_:
+			return false
+
+
+func unlock_accessory(accessory: String, equip_on_unlock := true) -> void:
+	match accessory:
+		ACCESSORY_STRAW_HAT:
+			var changed := false
+			if not straw_hat_unlocked:
+				straw_hat_unlocked = true
+				changed = true
+			if equip_on_unlock and not straw_hat_equipped:
+				straw_hat_equipped = true
+				changed = true
+			if changed:
+				save_settings()
+				settings_changed.emit()
+
+
+func set_accessory_equipped(accessory: String, equipped: bool) -> void:
+	match accessory:
+		ACCESSORY_STRAW_HAT:
+			if not straw_hat_unlocked:
+				return
+			if straw_hat_equipped == equipped:
+				return
+			straw_hat_equipped = equipped
+			save_settings()
+			settings_changed.emit()
 
 
 func is_hud_element_visible(element: String) -> bool:
