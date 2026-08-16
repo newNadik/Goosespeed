@@ -14,7 +14,7 @@ const MAIN_MENU_SCENE := "res://scenes/ui/main_menu.tscn"
 const FARM_LEVEL_END_SEQUENCE_SCRIPT := preload("res://scripts/courses/farm/farm_level_end_sequence.gd")
 
 @export_file("*.tscn") var course_scene_path: String = CourseCatalog.DEFAULT_COURSE_PATH
-@export var target_coin_count := 1
+@export var target_coin_count := 20
 
 @onready var player: Node = $GoosePlayerRoot
 @onready var game_hud: Node = $GooseGameHud
@@ -79,6 +79,8 @@ func restart_run() -> void:
 	elapsed_time = 0.0
 	finished = false
 	last_finish_new_best = false
+	_set_hud_visible(true)
+	_set_player_cutscene_camera_lock_enabled(false)
 	_set_pause_blocked(false)
 	if level_summary_popup != null:
 		level_summary_popup.hide_summary()
@@ -201,6 +203,8 @@ func _on_finish_body_entered(body: Node3D) -> void:
 					finish_line.complete_finish_line()
 			_set_pause_blocked(true)
 			_set_player_controls_enabled(false)
+			_set_hud_visible(false)
+			_set_player_cutscene_camera_lock_enabled(true)
 			if level_end_sequence != null and level_end_sequence.has_method("play_finish_intro"):
 				await level_end_sequence.play_finish_intro(player, finish_line)
 			elif player != null and player.has_method("enter_cutscene_idle"):
@@ -277,6 +281,16 @@ func _begin_level_start_countdown() -> void:
 func _set_player_controls_enabled(value: bool) -> void:
 	if player != null and player.has_method("set_control_enabled"):
 		player.set_control_enabled(value)
+
+
+func _set_player_cutscene_camera_lock_enabled(value: bool) -> void:
+	if player != null and player.has_method("set_cutscene_camera_lock_enabled"):
+		player.set_cutscene_camera_lock_enabled(value)
+
+
+func _set_hud_visible(value: bool) -> void:
+	if game_hud != null:
+		game_hud.visible = value
 
 
 func _restore_player_camera() -> void:

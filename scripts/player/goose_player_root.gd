@@ -55,6 +55,14 @@ func set_control_enabled(value: bool) -> void:
 	goose_moves_runtime.set_control_enabled(value)
 
 
+func set_cutscene_camera_lock_enabled(value: bool) -> void:
+	if active_movement_controller == null:
+		return
+	active_movement_controller.process_mode = (
+		Node.PROCESS_MODE_DISABLED if value else Node.PROCESS_MODE_INHERIT
+	)
+
+
 func enter_cutscene_idle() -> void:
 	set_control_enabled(false)
 	var controller := get_active_controller()

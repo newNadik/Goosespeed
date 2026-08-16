@@ -20,7 +20,7 @@ specular_mode = 1
 albedo_texture = ExtResource("1_glgnc")
 
 [sub_resource type="BoxShape3D" id="BoxShape3D_ka346"]
-size = Vector3(6.0998535, 2.7627563, 0.57421875)
+size = Vector3(6.0998535, 4.041046, 0.57421875)
 
 [node name="finish_line" type="StaticBody3D" unique_id=191640860]
 script = ExtResource("5_finish_line")
@@ -91,5 +91,5 @@ font_size = 300
 outline_size = 60
 
 [node name="CollisionShape3D" type="CollisionShape3D" parent="." unique_id=1040385225]
-transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.012329102, 1.3746033, 0)
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.012329102, 2.0137482, 0)
 shape = SubResource("BoxShape3D_ka346")

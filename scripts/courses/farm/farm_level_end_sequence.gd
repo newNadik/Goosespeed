@@ -16,6 +16,8 @@ const GOOSE_RENDER_LAYER := 20
 @export var fade_layer_path: NodePath = ^"FadeLayer"
 
 @export var camera_turn_duration := 2.5
+@export var landing_duration := 0.35
+@export var landing_height_offset := 0.0
 @export var finish_hold_duration := 0.35
 @export var summary_delay := 0.18
 @export var bus_approach_duration := 2.0
@@ -90,6 +92,7 @@ func play_finish_intro(value_player: Node, value_finish_line: Node3D) -> void:
 	if has_played_finish_intro:
 		return
 	has_played_finish_intro = true
+	await _land_player_for_finish_intro()
 	if player != null and player.has_method("enter_cutscene_idle"):
 		player.enter_cutscene_idle()
 	await _turn_camera_to_finish()
@@ -192,6 +195,39 @@ func _get_player_camera() -> Camera3D:
 	var controller = player.get_active_controller() if player.has_method("get_active_controller") else null
 	if controller != null and controller.has_method("get_view_camera"):
 		return controller.get_view_camera() as Camera3D
+	return null
+
+
+func _land_player_for_finish_intro() -> void:
+	var controller := _get_player_controller()
+	if controller == null:
+		return
+	if "velocity" in controller:
+		controller.set("velocity", Vector3.ZERO)
+	var landing_position := _get_landing_position(controller.global_position)
+	var tween := create_tween()
+	tween.set_ease(Tween.EASE_OUT)
+	tween.set_trans(Tween.TRANS_CUBIC)
+	tween.tween_property(
+		controller,
+		"global_position",
+		landing_position,
+		maxf(landing_duration, 0.01)
+	)
+	await tween.finished
+
+
+func _get_landing_position(from_position: Vector3) -> Vector3:
+	var target := from_position
+	if finish_line != null:
+		target = finish_line.global_position
+	target.y += landing_height_offset
+	return target
+
+
+func _get_player_controller() -> Node3D:
+	if player != null and player.has_method("get_active_controller"):
+		return player.get_active_controller() as Node3D
 	return null
 
 

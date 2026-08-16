@@ -50,6 +50,7 @@ func _ready() -> void:
 	var finish_line := game.get_node_or_null("CourseRoot/LevelFarm/Finish/finish_line")
 	var level_end_sequence := game.get_node_or_null("CourseRoot/LevelFarm/LevelEndSequence")
 	var summary := game.get_node_or_null("LevelSummaryPopup")
+	var game_hud := game.get_node_or_null("GooseGameHud") as CanvasLayer
 	if first_coin == null or not first_coin.has_method("collect_from"):
 		push_error("Game scene coin pickup fixture is missing")
 		get_tree().quit(1)
@@ -80,6 +81,10 @@ func _ready() -> void:
 		return
 	if summary == null or not summary.has_method("is_summary_visible"):
 		push_error("Game scene level summary fixture is missing")
+		get_tree().quit(1)
+		return
+	if game_hud == null or not game_hud.visible:
+		push_error("Game scene HUD should be visible during the run")
 		get_tree().quit(1)
 		return
 	if player.has_method("get_active_camera"):
@@ -118,8 +123,8 @@ func _ready() -> void:
 			return
 		controller.call("toggle_camera_mode")
 		await get_tree().process_frame
-	if game.get_target_coin_count() != 1:
-		push_error("Game scene default target coin count should be 1")
+	if game.get_target_coin_count() != 20:
+		push_error("Game scene default target coin count should be 20")
 		get_tree().quit(1)
 		return
 	var pickup_sound := first_coin.get_node_or_null("PickupSound") as AudioStreamPlayer3D
@@ -166,9 +171,19 @@ func _ready() -> void:
 		return
 
 	game.elapsed_time = 4.2
+	controller.global_position.y += 12.0
 	game._on_finish_body_entered(controller)
 	if not game.is_run_finished():
 		push_error("Game scene finish trigger did not finish run after target coins")
+		get_tree().quit(1)
+		return
+	if game_hud.visible:
+		push_error("Game scene did not hide HUD after finish")
+		get_tree().quit(1)
+		return
+	var finish_cutscene_camera := level_end_sequence.get_node_or_null("CutsceneCamera") as Camera3D
+	if finish_cutscene_camera == null:
+		push_error("Farm level ending cutscene camera fixture is missing")
 		get_tree().quit(1)
 		return
 	if finish_line.visible or not bool(finish_line.get("completed")):
@@ -185,6 +200,21 @@ func _ready() -> void:
 		return
 	if not await _wait_for_summary_visible(summary):
 		push_error("Game scene did not show level summary after finish")
+		get_tree().quit(1)
+		return
+	var expected_landing_y: float = (
+		finish_line.global_position.y + float(level_end_sequence.get("landing_height_offset"))
+	)
+	if absf(controller.global_position.y - expected_landing_y) > 0.25:
+		push_error("Farm level ending did not land the player before finish idle")
+		get_tree().quit(1)
+		return
+	if _horizontal_distance(controller.global_position, finish_line.global_position) > 0.05:
+		push_error("Farm level ending did not place the player at the finish line")
+		get_tree().quit(1)
+		return
+	if get_viewport().get_camera_3d() != finish_cutscene_camera:
+		push_error("Game scene finish intro returned to the player camera before summary")
 		get_tree().quit(1)
 		return
 	var summary_pause_menu := game.get_node_or_null("PauseMenu")
@@ -289,6 +319,10 @@ func _ready() -> void:
 		return
 	if summary.is_summary_visible():
 		push_error("Game scene restart did not hide level summary")
+		get_tree().quit(1)
+		return
+	if not game_hud.visible:
+		push_error("Game scene restart did not restore HUD")
 		get_tree().quit(1)
 		return
 	if not is_equal_approx(game.get_elapsed_time(), 0.0):
