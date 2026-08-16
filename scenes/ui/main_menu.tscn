@@ -9,9 +9,9 @@
 [ext_resource type="Texture2D" uid="uid://dry1r48mwn3rl" path="res://assets/ui/icons/ic_play.png" id="7_play"]
 [ext_resource type="Texture2D" uid="uid://btug6m8h6qwl4" path="res://assets/ui/icons/ic_settings.png" id="8_q85j6"]
 [ext_resource type="Texture2D" uid="uid://dicf6nds28vr7" path="res://assets/ui/icons/ic_quit.png" id="8_quit"]
-[ext_resource type="PackedScene" path="res://scenes/ui/goose_settings_overlay.tscn" id="9_settings"]
+[ext_resource type="PackedScene" uid="uid://dt8lhq8b4sld2" path="res://scenes/ui/goose_settings_overlay.tscn" id="9_settings"]
 [ext_resource type="Theme" path="res://themes/goosespeed_theme.tres" id="10_theme"]
-[ext_resource type="Script" path="res://scripts/ui/menu_paper_fitter.gd" id="11_fitter"]
+[ext_resource type="Script" uid="uid://cujp2m1w06sjl" path="res://scripts/ui/menu_paper_fitter.gd" id="11_fitter"]
 
 [node name="MainMenu" type="Control" unique_id=1763581018]
 layout_mode = 3
@@ -120,9 +120,9 @@ icon = ExtResource("8_quit")
 label_text = "Quit"
 button_icon = ExtResource("8_quit")
 
-[node name="MenuPaperFitter" type="Node" parent="."]
+[node name="MenuPaperFitter" type="Node" parent="." unique_id=1922399576]
 script = ExtResource("11_fitter")
 paper_path = NodePath("../MenuBackground")
 shadow_path = NodePath("../MenuBackgroundShadow")
 
-[node name="GooseSettingsOverlay" parent="." instance=ExtResource("9_settings")]
+[node name="GooseSettingsOverlay" parent="." unique_id=764257132 instance=ExtResource("9_settings")]

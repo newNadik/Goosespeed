@@ -2,12 +2,13 @@ class_name MainMenu
 extends Control
 
 const CourseCatalog := preload("res://scripts/gameplay/course_catalog.gd")
+const SceneTransitionFadeScript := preload("res://scripts/ui/scene_transition_fade.gd")
 const LOADING_SCREEN_SCENE := preload("res://scenes/ui/loading_screen.tscn")
 const LEVEL_SCENE := "res://scenes/game/game_scene.tscn"
 const PREDICTED_COURSE_SCENE := CourseCatalog.FIRST_COURSE_PATH
 const LOADING_LAYER_NAME := "LoadingLayer"
 const LOADING_FADE_BASE_NAME := "LoadingFadeBase"
-const LOADING_NAVY_COLOUR := Color("#182f44")
+const LOADING_NAVY_COLOUR := SceneTransitionFadeScript.FADE_COLOR
 const LOADING_NAVY_FADE_DURATION := 0.18
 
 @onready var start_button: Button = $MenuBackground/MarginContainer/VBoxContainer/StartButton
@@ -30,6 +31,7 @@ func _ready() -> void:
 	settings_overlay.back_requested.connect(on_settings_back_requested)
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	start_button.grab_focus()
+	await SceneTransitionFadeScript.fade_in(get_tree())
 
 
 func on_start_pressed() -> void:

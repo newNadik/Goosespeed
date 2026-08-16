@@ -1,7 +1,7 @@
 class_name GooseLoadingScreen
 extends Control
 
-const BACKGROUND_COLOUR := Color("#182f44")
+const BACKGROUND_COLOUR := Color(0.101960786, 0.1882353, 0.27058825, 1.0)
 const BACKGROUND_WASH_COLOUR := Color("#273f4f")
 const VIGNETTE_COLOUR := Color("#0f2133")
 const PRINT_SPECKLE_COLOUR := Color("#f1dfbd")

@@ -5,6 +5,7 @@ const PAUSE_MENU_SCENE := preload("res://scenes/ui/pause_menu.tscn")
 const LOADING_SCREEN_SCENE := preload("res://scenes/ui/loading_screen.tscn")
 const LEVEL_SUMMARY_POPUP_SCENE := preload("res://scenes/ui/level_summary_popup.tscn")
 const CourseCatalog := preload("res://scripts/gameplay/course_catalog.gd")
+const SceneTransitionFadeScript := preload("res://scripts/ui/scene_transition_fade.gd")
 const COIN_PICKUP_GROUP := &"coins"
 const LOADING_FADE_IN_DURATION := 0.06
 const LOADING_FADE_OUT_DURATION := 0.28
@@ -58,11 +59,13 @@ func _ready() -> void:
 	add_child(pause_menu)
 	_add_level_summary_popup()
 	_update_hud()
-	await _fade_loading_screen(0.0, LOADING_FADE_OUT_DURATION)
+	await _cover_with_transition_color()
 	_hide_loading_screen()
 	await _fade_out_music_for_scene_change()
 	player.process_mode = Node.PROCESS_MODE_INHERIT
 	_restore_player_camera()
+	await get_tree().process_frame
+	await _fade_in_from_transition_color()
 	await _begin_level_start_countdown()
 
 
@@ -93,6 +96,7 @@ func restart_run() -> void:
 	_reset_finish_line()
 	player.reset_to_spawn()
 	_restore_player_camera()
+	_play_restart_transition()
 	_begin_level_start_countdown()
 	_update_hud()
 
@@ -378,6 +382,7 @@ func _play_summary_departure(destination: StringName) -> void:
 func _go_to_main_menu() -> void:
 	get_tree().paused = false
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	await _fade_out_to_transition_color()
 	await _fade_out_music_for_scene_change()
 	get_tree().change_scene_to_file(MAIN_MENU_SCENE)
 
@@ -386,6 +391,22 @@ func _fade_out_music_for_scene_change() -> void:
 	var audio_manager := get_node_or_null("/root/AudioManager")
 	if audio_manager != null and audio_manager.has_method("fade_out_music"):
 		await audio_manager.fade_out_music()
+
+
+func _fade_in_from_transition_color() -> void:
+	await SceneTransitionFadeScript.fade_in(get_tree())
+
+
+func _cover_with_transition_color() -> void:
+	await SceneTransitionFadeScript.cover(get_tree())
+
+
+func _fade_out_to_transition_color() -> void:
+	await SceneTransitionFadeScript.fade_out(get_tree())
+
+
+func _play_restart_transition() -> void:
+	call_deferred("_fade_in_from_transition_color")
 
 
 func _load_course_scene() -> PackedScene:

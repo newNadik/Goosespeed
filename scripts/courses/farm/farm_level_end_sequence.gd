@@ -26,7 +26,7 @@ const GOOSE_RENDER_LAYER := 20
 @export var bus_exit_duration := 2.0
 @export var bus_skew_amount := 0.18
 @export var fade_duration := 0.65
-@export var fade_color := Color(0.035, 0.105, 0.17, 1.0)
+@export var fade_color := Color(0.101960786, 0.1882353, 0.27058825, 1.0)
 @export var cutscene_fov := 54.0
 @export var use_finish_look_marker := false
 

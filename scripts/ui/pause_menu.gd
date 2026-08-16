@@ -1,6 +1,7 @@
 class_name PauseMenu
 extends CanvasLayer
 
+const SceneTransitionFadeScript := preload("res://scripts/ui/scene_transition_fade.gd")
 const MAIN_MENU_SCENE := "res://scenes/ui/main_menu.tscn"
 const ANIMATION_DURATION := 0.22
 const CLOSED_OFFSET := Vector2(-920.0, 0.0)
@@ -130,6 +131,7 @@ func on_main_menu_pressed() -> void:
 	set_open(false, false)
 	get_tree().paused = false
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
+	await SceneTransitionFadeScript.fade_out(get_tree())
 	await _fade_out_music_for_scene_change()
 	get_tree().change_scene_to_file(MAIN_MENU_SCENE)
 
