@@ -14,7 +14,7 @@ const MAIN_MENU_SCENE := "res://scenes/ui/main_menu.tscn"
 const FARM_LEVEL_END_SEQUENCE_SCRIPT := preload("res://scripts/courses/farm/farm_level_end_sequence.gd")
 
 @export_file("*.tscn") var course_scene_path: String = CourseCatalog.DEFAULT_COURSE_PATH
-@export var target_coin_count := 20
+@export var target_coin_count := 1
 
 @onready var player: Node = $GoosePlayerRoot
 @onready var game_hud: Node = $GooseGameHud
@@ -61,6 +61,7 @@ func _ready() -> void:
 	await _fade_loading_screen(0.0, LOADING_FADE_OUT_DURATION)
 	_hide_loading_screen()
 	player.process_mode = Node.PROCESS_MODE_INHERIT
+	_restore_player_camera()
 	await _begin_level_start_countdown()
 
 
@@ -88,6 +89,7 @@ func restart_run() -> void:
 	_reset_coin_pickups()
 	_reset_finish_line()
 	player.reset_to_spawn()
+	_restore_player_camera()
 	_begin_level_start_countdown()
 	_update_hud()
 
@@ -275,6 +277,15 @@ func _begin_level_start_countdown() -> void:
 func _set_player_controls_enabled(value: bool) -> void:
 	if player != null and player.has_method("set_control_enabled"):
 		player.set_control_enabled(value)
+
+
+func _restore_player_camera() -> void:
+	if player == null:
+		return
+	if player.has_method("get_active_camera"):
+		var camera := player.get_active_camera() as Camera3D
+		if camera != null:
+			camera.make_current()
 
 
 func _set_pause_blocked(value: bool) -> void:

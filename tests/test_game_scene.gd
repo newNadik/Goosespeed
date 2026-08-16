@@ -74,12 +74,22 @@ func _ready() -> void:
 		push_error("Game scene did not attach farm level ending sequence")
 		get_tree().quit(1)
 		return
+	if bool(level_end_sequence.get("use_finish_look_marker")):
+		push_error("Farm level ending should use FinishCameraMarker rotation by default")
+		get_tree().quit(1)
+		return
 	if summary == null or not summary.has_method("is_summary_visible"):
 		push_error("Game scene level summary fixture is missing")
 		get_tree().quit(1)
 		return
-	if game.get_target_coin_count() != 20:
-		push_error("Game scene default target coin count should be 20")
+	if player.has_method("get_active_camera"):
+		var player_camera := player.get_active_camera() as Camera3D
+		if player_camera != null and get_viewport().get_camera_3d() != player_camera:
+			push_error("Game scene did not restore the player camera after loading")
+			get_tree().quit(1)
+			return
+	if game.get_target_coin_count() != 1:
+		push_error("Game scene default target coin count should be 1")
 		get_tree().quit(1)
 		return
 	var pickup_sound := first_coin.get_node_or_null("PickupSound") as AudioStreamPlayer3D
@@ -99,19 +109,20 @@ func _ready() -> void:
 		return
 
 	game.elapsed_time = 4.2
-	game._on_finish_body_entered(controller)
-	if game.is_run_finished():
-		push_error("Game scene finished before target coins were collected")
-		get_tree().quit(1)
-		return
-	if game.get_total_coin_count() != 0:
-		push_error("Game scene added coins to total before target coin finish")
-		get_tree().quit(1)
-		return
-	if not finish_line.visible or bool(finish_line.get("unlocked")):
-		push_error("Finish line unlocked before target coins were collected")
-		get_tree().quit(1)
-		return
+	if game.get_run_coin_count() < game.get_target_coin_count():
+		game._on_finish_body_entered(controller)
+		if game.is_run_finished():
+			push_error("Game scene finished before target coins were collected")
+			get_tree().quit(1)
+			return
+		if game.get_total_coin_count() != 0:
+			push_error("Game scene added coins to total before target coin finish")
+			get_tree().quit(1)
+			return
+		if not finish_line.visible or bool(finish_line.get("unlocked")):
+			push_error("Finish line unlocked before target coins were collected")
+			get_tree().quit(1)
+			return
 
 	var expected_payout: int = game.get_target_coin_count() + 1
 	if not await _collect_coins(game, controller, expected_payout - game.get_run_coin_count()):
@@ -262,6 +273,12 @@ func _ready() -> void:
 		push_error("Game scene restart did not reset goose visual facing direction")
 		get_tree().quit(1)
 		return
+	if player.has_method("get_active_camera"):
+		var restarted_player_camera := player.get_active_camera() as Camera3D
+		if restarted_player_camera != null and get_viewport().get_camera_3d() != restarted_player_camera:
+			push_error("Game scene restart did not restore the player camera")
+			get_tree().quit(1)
+			return
 	if not await _wait_for_countdown_complete(game):
 		push_error("Game scene restart countdown did not complete")
 		get_tree().quit(1)

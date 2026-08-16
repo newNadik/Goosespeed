@@ -23,6 +23,7 @@ signal departure_finished(destination: StringName)
 @export var fade_duration := 0.65
 @export var fade_color := Color(0.035, 0.105, 0.17, 1.0)
 @export var cutscene_fov := 54.0
+@export var use_finish_look_marker := false
 
 var player: Node
 var finish_line: Node3D
@@ -44,7 +45,7 @@ func _ready() -> void:
 	if fade_rect == null and fade_layer != null:
 		fade_rect = fade_layer.get_node_or_null("FadeRect") as ColorRect
 	if cutscene_camera != null:
-		cutscene_camera.current = false
+		cutscene_camera.clear_current(false)
 	if bus != null:
 		bus.visible = false
 	if fade_rect != null:
@@ -63,7 +64,7 @@ func reset_sequence() -> void:
 	has_played_finish_intro = false
 	is_departing = false
 	if cutscene_camera != null:
-		cutscene_camera.current = false
+		cutscene_camera.clear_current(false)
 	var player_camera := _get_player_camera()
 	if player_camera != null:
 		player_camera.make_current()
@@ -126,7 +127,11 @@ func _turn_camera_to_finish() -> void:
 
 	var target_position := finish_camera_marker.global_position
 	var target_basis := finish_camera_marker.global_basis
-	if finish_look_marker != null:
+	if (
+		use_finish_look_marker
+		and finish_look_marker != null
+		and target_position.distance_squared_to(finish_look_marker.global_position) > 0.0001
+	):
 		target_basis = _basis_looking_at(target_position, finish_look_marker.global_position)
 	var target_transform := Transform3D(target_basis, target_position)
 
