@@ -17,6 +17,10 @@ func _ready() -> void:
 		if not audio_manager.has_method("play_countdown_sfx"):
 			failures.append("AudioManager is missing play_countdown_sfx")
 		else:
+			if (audio_manager.get("_menu_tracks") as Array).is_empty():
+				failures.append("AudioManager has no exported menu music tracks")
+			if (audio_manager.get("_game_tracks") as Array).is_empty():
+				failures.append("AudioManager has no exported game music tracks")
 			GooseGameSettings.set_music_enabled(true)
 			GooseGameSettings.set_sfx_enabled(true)
 			GooseGameSettings.set_music_volume(0.5)

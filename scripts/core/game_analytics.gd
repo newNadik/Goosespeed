@@ -363,9 +363,11 @@ func _get_store() -> String:
 
 
 func _get_build_channel() -> String:
-	if OS.has_feature("talo_live"):
+	if OS.has_feature("talo_dev"):
+		return "dev"
+	if OS.has_feature("talo_live") or OS.has_feature("live") or OS.has_feature("web"):
 		return "live"
-	if OS.has_feature("talo_dev") or OS.has_feature("debug"):
+	if OS.has_feature("debug"):
 		return "dev"
 	return "dev"
 

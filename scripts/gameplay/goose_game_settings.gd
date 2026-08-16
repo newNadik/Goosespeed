@@ -285,6 +285,7 @@ func is_live_build() -> bool:
 		bool(ProjectSettings.get_setting(LIVE_BUILD_OVERRIDE_SETTING, false))
 		or OS.has_feature("live")
 		or OS.has_feature("talo_live")
+		or OS.has_feature("web")
 	)
 
 

@@ -148,6 +148,8 @@ func is_debug_build() -> bool:
 		return false
 	if OS.has_feature(DEV_FEATURE_TAG):
 		return true
+	if OS.has_feature("web"):
+		return false
 	return OS.is_debug_build() 
 
 ## Save the Talo settings to the config file

@@ -78,6 +78,13 @@ func _process(delta: float) -> void:
 	_update_hud()
 
 
+func _unhandled_input(event: InputEvent) -> void:
+	if not _should_request_gameplay_mouse_capture(event):
+		return
+	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+	get_viewport().set_input_as_handled()
+
+
 func restart_run() -> void:
 	if countdown_active:
 		return
@@ -284,6 +291,7 @@ func _begin_level_start_countdown() -> void:
 	_play_random_game_music()
 	countdown_active = false
 	set_process(true)
+	_request_gameplay_mouse_capture()
 	_track_run_started()
 	_update_hud()
 
@@ -291,6 +299,21 @@ func _begin_level_start_countdown() -> void:
 func _set_player_controls_enabled(value: bool) -> void:
 	if player != null and player.has_method("set_control_enabled"):
 		player.set_control_enabled(value)
+
+
+func _request_gameplay_mouse_capture() -> void:
+	if finished or countdown_active or get_tree().paused:
+		return
+	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
+
+
+func _should_request_gameplay_mouse_capture(event: InputEvent) -> bool:
+	if countdown_active or finished or get_tree().paused:
+		return false
+	if Input.mouse_mode == Input.MOUSE_MODE_CAPTURED:
+		return false
+	var mouse_button := event as InputEventMouseButton
+	return mouse_button != null and mouse_button.pressed
 
 
 func _set_player_cutscene_camera_lock_enabled(value: bool) -> void:

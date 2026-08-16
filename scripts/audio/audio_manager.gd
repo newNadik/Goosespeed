@@ -2,10 +2,17 @@ extends Node
 
 const MUSIC_BUS := "Music"
 const SFX_BUS := "SFX"
-const MENU_MUSIC_DIR := "res://assets/music/menu"
-const GAME_MUSIC_DIR := "res://assets/music/game"
-const AUDIO_EXTENSIONS := ["mp3", "ogg", "wav"]
 const COUNTDOWN_STREAM := preload("res://assets/sounds/countdown.mp3")
+const MENU_TRACKS: Array[AudioStream] = [
+	preload("res://assets/music/menu/fresh_morning-fiddle-in-my-hands.mp3"),
+]
+const GAME_TRACKS: Array[AudioStream] = [
+	preload("res://assets/music/game/jorisvermeer-bold-slide-guitar-indie.mp3"),
+	preload("res://assets/music/game/jorisvermeer-bright-smiles-instrumental.mp3"),
+	preload("res://assets/music/game/jorisvermeer-cheerful-arcade-theme.mp3"),
+	preload("res://assets/music/game/jorisvermeer-indie-rock-drive-with-powerful-slide-guitar.mp3"),
+	preload("res://assets/music/game/jorisvermeer-slide-rock-energy.mp3"),
+]
 const SILENT_DB := -80.0
 const MUSIC_FADE_OUT_DURATION := 0.45
 
@@ -26,8 +33,8 @@ func _ready() -> void:
 	_game_player = _create_music_player("GameMusicPlayer")
 	_countdown_player = _create_sfx_player("CountdownPlayer")
 	_countdown_player.process_mode = Node.PROCESS_MODE_PAUSABLE
-	_menu_tracks = _load_tracks_from_dir(MENU_MUSIC_DIR)
-	_game_tracks = _load_tracks_from_dir(GAME_MUSIC_DIR)
+	_menu_tracks = MENU_TRACKS.duplicate()
+	_game_tracks = GAME_TRACKS.duplicate()
 	var settings := _get_game_settings()
 	if settings != null and settings.has_signal("settings_changed") and not settings.is_connected("settings_changed", _on_settings_changed):
 		settings.connect("settings_changed", _on_settings_changed)
@@ -138,30 +145,6 @@ func _get_active_music_players() -> Array[AudioStreamPlayer]:
 	if _game_player != null and _game_player.playing:
 		active_players.append(_game_player)
 	return active_players
-
-
-func _load_tracks_from_dir(dir_path: String) -> Array[AudioStream]:
-	var tracks: Array[AudioStream] = []
-	var dir := DirAccess.open(dir_path)
-	if dir == null:
-		push_warning("AudioManager could not open music folder: %s" % dir_path)
-		return tracks
-
-	dir.list_dir_begin()
-	var file_name := dir.get_next()
-	while not file_name.is_empty():
-		if not dir.current_is_dir() and _is_audio_file(file_name):
-			var stream := load("%s/%s" % [dir_path, file_name]) as AudioStream
-			if stream != null:
-				tracks.append(stream)
-		file_name = dir.get_next()
-	dir.list_dir_end()
-	return tracks
-
-
-func _is_audio_file(file_name: String) -> bool:
-	var extension := file_name.get_extension().to_lower()
-	return extension in AUDIO_EXTENSIONS
 
 
 func _configure_loop(track: AudioStream) -> void:

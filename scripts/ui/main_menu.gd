@@ -43,6 +43,7 @@ func on_start_pressed() -> void:
 	start_button.disabled = true
 	settings_button.disabled = true
 	quit_button.disabled = true
+	Input.mouse_mode = Input.MOUSE_MODE_CAPTURED
 	await _fade_to_loading_base()
 	_show_loading_screen()
 	get_tree().change_scene_to_file(LEVEL_SCENE)
