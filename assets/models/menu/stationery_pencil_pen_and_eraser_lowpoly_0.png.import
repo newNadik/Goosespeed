@@ -2,17 +2,20 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cvl2ke2lkm7lm"
-path.s3tc="res://.godot/imported/main_menu_bg.png-59bbb07c119e9d6cb9f1531a340441b6.s3tc.ctex"
+uid="uid://b1juo6fj4hlrk"
+path.s3tc="res://.godot/imported/stationery_pencil_pen_and_eraser_lowpoly_0.png-f4e70382e4246ee3114d71eb0d9bc17b.s3tc.ctex"
 metadata={
 "imported_formats": ["s3tc_bptc"],
 "vram_texture": true
 }
+generator_parameters={
+"md5": "1613e128abd70b3df7ead70506ec31af"
+}
 
 [deps]
 
-source_file="res://assets/ui/main_menu_bg.png"
-dest_files=["res://.godot/imported/main_menu_bg.png-59bbb07c119e9d6cb9f1531a340441b6.s3tc.ctex"]
+source_file="res://assets/models/menu/stationery_pencil_pen_and_eraser_lowpoly_0.png"
+dest_files=["res://.godot/imported/stationery_pencil_pen_and_eraser_lowpoly_0.png-f4e70382e4246ee3114d71eb0d9bc17b.s3tc.ctex"]
 
 [params]
 

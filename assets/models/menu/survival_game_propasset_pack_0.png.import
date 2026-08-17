@@ -2,17 +2,20 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://cvl2ke2lkm7lm"
-path.s3tc="res://.godot/imported/main_menu_bg.png-59bbb07c119e9d6cb9f1531a340441b6.s3tc.ctex"
+uid="uid://csa20o45rssbr"
+path.s3tc="res://.godot/imported/survival_game_propasset_pack_0.png-49a1ecc0bead2e60315b16c2688a06ba.s3tc.ctex"
 metadata={
 "imported_formats": ["s3tc_bptc"],
 "vram_texture": true
 }
+generator_parameters={
+"md5": "2314e552b1585e2cdb6a04591dd088f9"
+}
 
 [deps]
 
-source_file="res://assets/ui/main_menu_bg.png"
-dest_files=["res://.godot/imported/main_menu_bg.png-59bbb07c119e9d6cb9f1531a340441b6.s3tc.ctex"]
+source_file="res://assets/models/menu/survival_game_propasset_pack_0.png"
+dest_files=["res://.godot/imported/survival_game_propasset_pack_0.png-49a1ecc0bead2e60315b16c2688a06ba.s3tc.ctex"]
 
 [params]
 
