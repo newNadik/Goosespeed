@@ -6,7 +6,6 @@ signal departure_finished(destination: StringName)
 
 const GOOSE_RENDER_LAYER := 20
 
-@export var cutscene_camera_path: NodePath = ^"CutsceneCamera"
 @export var finish_camera_marker_path: NodePath = ^"FinishCameraMarker"
 @export var finish_look_marker_path: NodePath = ^"FinishLookMarker"
 @export var bus_path: NodePath = ^"../bus"
@@ -34,8 +33,14 @@ var player: Node
 var finish_line: Node3D
 var has_played_finish_intro := false
 var is_departing := false
+var cutscene_player_camera: Camera3D
+var cutscene_player_camera_transform := Transform3D.IDENTITY
+var cutscene_player_camera_global_transform := Transform3D.IDENTITY
+var cutscene_player_camera_fov := 75.0
+var cutscene_player_camera_cull_mask := 0
+var cutscene_player_camera_was_top_level := false
+var has_cutscene_player_camera_state := false
 
-@onready var cutscene_camera: Camera3D = get_node_or_null(cutscene_camera_path) as Camera3D
 @onready var finish_camera_marker: Node3D = get_node_or_null(finish_camera_marker_path) as Node3D
 @onready var finish_look_marker: Node3D = get_node_or_null(finish_look_marker_path) as Node3D
 @onready var bus: Node3D = get_node_or_null(bus_path) as Node3D
@@ -49,8 +54,6 @@ var is_departing := false
 func _ready() -> void:
 	if fade_rect == null and fade_layer != null:
 		fade_rect = fade_layer.get_node_or_null("FadeRect") as ColorRect
-	if cutscene_camera != null:
-		cutscene_camera.clear_current(false)
 	if bus != null:
 		bus.visible = false
 		_configure_bus_goose_for_cutscene()
@@ -69,8 +72,7 @@ func setup(value_player: Node, value_finish_line: Node3D) -> void:
 func reset_sequence() -> void:
 	has_played_finish_intro = false
 	is_departing = false
-	if cutscene_camera != null:
-		cutscene_camera.clear_current(false)
+	_restore_cutscene_player_camera()
 	var player_camera := _get_player_camera()
 	if player_camera != null:
 		player_camera.make_current()
@@ -121,20 +123,19 @@ func play_departure(destination: StringName) -> void:
 
 
 func _turn_camera_to_finish() -> void:
-	if cutscene_camera == null or finish_camera_marker == null:
+	if finish_camera_marker == null:
 		return
 	var source_camera := _get_player_camera()
-	var from_transform := cutscene_camera.global_transform
-	var from_fov := cutscene_camera.fov
-	if source_camera != null:
-		from_transform = source_camera.global_transform
-		from_fov = source_camera.fov
-		source_camera.clear_current(false)
-	cutscene_camera.top_level = true
-	cutscene_camera.global_transform = from_transform
-	cutscene_camera.fov = from_fov
-	cutscene_camera.set_cull_mask_value(GOOSE_RENDER_LAYER, true)
-	cutscene_camera.current = true
+	if source_camera == null:
+		return
+	_capture_cutscene_player_camera_state(source_camera)
+	var from_transform := source_camera.global_transform
+	var from_fov := source_camera.fov
+	source_camera.top_level = true
+	source_camera.global_transform = from_transform
+	source_camera.fov = from_fov
+	source_camera.set_cull_mask_value(GOOSE_RENDER_LAYER, true)
+	source_camera.current = true
 
 	var target_position := finish_camera_marker.global_position
 	var target_basis := finish_camera_marker.global_basis
@@ -151,6 +152,7 @@ func _turn_camera_to_finish() -> void:
 	tween.set_trans(Tween.TRANS_CUBIC)
 	tween.tween_method(
 		Callable(self, "_apply_camera_blend").bind(
+			source_camera,
 			from_transform,
 			target_transform,
 			from_fov,
@@ -165,20 +167,49 @@ func _turn_camera_to_finish() -> void:
 
 func _apply_camera_blend(
 	weight: float,
+	camera: Camera3D,
 	from_transform: Transform3D,
 	target_transform: Transform3D,
 	from_fov: float,
 	target_fov: float
 ) -> void:
-	if cutscene_camera == null:
+	if camera == null or not is_instance_valid(camera):
 		return
 	var from_rotation := from_transform.basis.get_rotation_quaternion()
 	var target_rotation := target_transform.basis.get_rotation_quaternion()
-	cutscene_camera.global_transform = Transform3D(
+	camera.global_transform = Transform3D(
 		Basis(from_rotation.slerp(target_rotation, weight)),
 		from_transform.origin.lerp(target_transform.origin, weight)
 	)
-	cutscene_camera.fov = lerpf(from_fov, target_fov, weight)
+	camera.fov = lerpf(from_fov, target_fov, weight)
+
+
+func _capture_cutscene_player_camera_state(camera: Camera3D) -> void:
+	if has_cutscene_player_camera_state:
+		return
+	cutscene_player_camera = camera
+	cutscene_player_camera_transform = camera.transform
+	cutscene_player_camera_global_transform = camera.global_transform
+	cutscene_player_camera_fov = camera.fov
+	cutscene_player_camera_cull_mask = camera.cull_mask
+	cutscene_player_camera_was_top_level = camera.top_level
+	has_cutscene_player_camera_state = true
+
+
+func _restore_cutscene_player_camera() -> void:
+	if not has_cutscene_player_camera_state:
+		return
+	if cutscene_player_camera != null and is_instance_valid(cutscene_player_camera):
+		cutscene_player_camera.fov = cutscene_player_camera_fov
+		cutscene_player_camera.cull_mask = cutscene_player_camera_cull_mask
+		cutscene_player_camera.top_level = cutscene_player_camera_was_top_level
+		if cutscene_player_camera_was_top_level:
+			cutscene_player_camera.global_transform = cutscene_player_camera_global_transform
+		else:
+			cutscene_player_camera.transform = cutscene_player_camera_transform
+		cutscene_player_camera.make_current()
+	cutscene_player_camera = null
+	has_cutscene_player_camera_state = false
 
 
 func _basis_looking_at(origin: Vector3, target: Vector3) -> Basis:

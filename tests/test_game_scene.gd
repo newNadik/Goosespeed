@@ -172,6 +172,11 @@ func _ready() -> void:
 
 	game.elapsed_time = 4.2
 	controller.global_position.y += 12.0
+	var finish_player_camera := player.get_active_camera() as Camera3D if player.has_method("get_active_camera") else null
+	if finish_player_camera == null:
+		push_error("Game scene player camera fixture is missing before finish")
+		get_tree().quit(1)
+		return
 	game._on_finish_body_entered(controller)
 	if not game.is_run_finished():
 		push_error("Game scene finish trigger did not finish run after target coins")
@@ -181,9 +186,8 @@ func _ready() -> void:
 		push_error("Game scene did not hide HUD after finish")
 		get_tree().quit(1)
 		return
-	var finish_cutscene_camera := level_end_sequence.get_node_or_null("CutsceneCamera") as Camera3D
-	if finish_cutscene_camera == null:
-		push_error("Farm level ending cutscene camera fixture is missing")
+	if level_end_sequence.get_node_or_null("CutsceneCamera") != null:
+		push_error("Farm level ending should use the player camera instead of a CutsceneCamera")
 		get_tree().quit(1)
 		return
 	if finish_line.visible or not bool(finish_line.get("completed")):
@@ -213,8 +217,8 @@ func _ready() -> void:
 		push_error("Farm level ending did not place the player at the finish line")
 		get_tree().quit(1)
 		return
-	if get_viewport().get_camera_3d() != finish_cutscene_camera:
-		push_error("Game scene finish intro returned to the player camera before summary")
+	if get_viewport().get_camera_3d() != finish_player_camera:
+		push_error("Game scene finish intro did not keep the player camera current")
 		get_tree().quit(1)
 		return
 	var summary_pause_menu := game.get_node_or_null("PauseMenu")
