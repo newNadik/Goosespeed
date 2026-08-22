@@ -109,10 +109,27 @@ func _ready() -> void:
 		push_error("HUD vertical speed gauge did not accept vertical speed data")
 		get_tree().quit(1)
 		return
-	hud.play_level_start_countdown()
+	if not _controls_hint_uses_current_flap_binding(hud):
+		get_tree().quit(1)
+		return
+	hud.play_level_start_countdown(true)
 	await get_tree().process_frame
 	if not hud.is_level_start_countdown_playing():
 		push_error("HUD countdown did not start")
+		get_tree().quit(1)
+		return
+	var controls_hint := hud.get_node_or_null("Root/ControlsHintPanel") as Control
+	if controls_hint == null or not controls_hint.visible:
+		push_error("HUD countdown controls hint did not appear when requested")
+		get_tree().quit(1)
+		return
+	if not _node_tree_contains_text(controls_hint, "Space") or not _node_tree_contains_text(controls_hint, "Jump / Hold to Fly"):
+		push_error("HUD countdown controls hint did not include the flight control text")
+		get_tree().quit(1)
+		return
+	var flap_hint := controls_hint.get_node_or_null("Margin/Row/FlapHint") as Control
+	if flap_hint == null:
+		push_error("HUD countdown controls hint is missing the flap binding row")
 		get_tree().quit(1)
 		return
 	get_tree().paused = true
@@ -127,6 +144,10 @@ func _ready() -> void:
 		push_error("HUD countdown did not complete after unpausing")
 		get_tree().quit(1)
 		return
+	if controls_hint.visible:
+		push_error("HUD countdown controls hint did not hide after countdown")
+		get_tree().quit(1)
+		return
 	print("Goose game HUD OK")
 	get_tree().quit(0)
 
@@ -134,6 +155,16 @@ func _ready() -> void:
 func _label_contains(root: Node, path: NodePath, expected_text: String) -> bool:
 	var label := root.get_node_or_null(path) as Label
 	return label != null and label.text.contains(expected_text)
+
+
+func _node_tree_contains_text(root: Node, expected_text: String) -> bool:
+	var label := root as Label
+	if label != null and label.text.contains(expected_text):
+		return true
+	for child in root.get_children():
+		if _node_tree_contains_text(child, expected_text):
+			return true
+	return false
 
 
 func _hud_acceleration_uses_smoothed_horizontal_velocity(hud: Node) -> bool:
@@ -165,6 +196,35 @@ func _hud_acceleration_uses_smoothed_horizontal_velocity(hud: Node) -> bool:
 	hud.set("state_bridge", original_state_bridge)
 	fake_bridge.queue_free()
 	return true
+
+
+func _controls_hint_uses_current_flap_binding(hud: Node) -> bool:
+	var original_events := InputMap.action_get_events(&"player_flap")
+	InputMap.action_erase_events(&"player_flap")
+	var flap_key := InputEventKey.new()
+	flap_key.physical_keycode = KEY_F
+	InputMap.action_add_event(&"player_flap", flap_key)
+	hud._update_controls_hint_bindings()
+	var jump_action_label := hud.get_node_or_null(
+		"Root/ControlsHintPanel/Margin/Row/JumpHint/ActionLabel"
+	) as Label
+	var flap_hint := hud.get_node_or_null("Root/ControlsHintPanel/Margin/Row/FlapHint") as Control
+	var flap_key_label := hud.get_node_or_null("Root/ControlsHintPanel/Margin/Row/FlapHint/KeyLabel") as Label
+	var valid := (
+		jump_action_label != null
+		and jump_action_label.text == "Jump"
+		and flap_hint != null
+		and flap_hint.visible
+		and flap_key_label != null
+		and flap_key_label.text == "F"
+	)
+	InputMap.action_erase_events(&"player_flap")
+	for event in original_events:
+		InputMap.action_add_event(&"player_flap", event)
+	hud._update_controls_hint_bindings()
+	if not valid:
+		push_error("HUD controls hint did not use the current separate flap binding")
+	return valid
 
 
 func _wait_for_countdown_complete(hud: Node) -> bool:

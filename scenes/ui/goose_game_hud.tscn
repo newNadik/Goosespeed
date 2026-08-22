@@ -1,9 +1,9 @@
 [gd_scene format=3 uid="uid://mj5be17mpbx0"]
 
 [ext_resource type="Script" uid="uid://c37hmmhy0q1xh" path="res://scripts/ui/goose_game_hud.gd" id="1_hud"]
-[ext_resource type="PackedScene" path="res://scenes/ui/hud_direction_widget.tscn" id="2_direction"]
-[ext_resource type="PackedScene" path="res://scenes/ui/hud_timer_widget.tscn" id="3_timer"]
-[ext_resource type="PackedScene" path="res://scenes/ui/hud_movement_widget.tscn" id="4_movement"]
+[ext_resource type="PackedScene" uid="uid://dawdk5itlhoft" path="res://scenes/ui/hud_direction_widget.tscn" id="2_direction"]
+[ext_resource type="PackedScene" uid="uid://bq12lxwjgwxye" path="res://scenes/ui/hud_timer_widget.tscn" id="3_timer"]
+[ext_resource type="PackedScene" uid="uid://cle27bu5d0lrd" path="res://scenes/ui/hud_movement_widget.tscn" id="4_movement"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hud_panel_dark"]
 bg_color = Color(0.09411765, 0.18431373, 0.26666668, 0.82)
@@ -16,6 +16,33 @@ corner_radius_top_left = 4
 corner_radius_top_right = 4
 corner_radius_bottom_right = 4
 corner_radius_bottom_left = 4
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_controls_hint_panel"]
+content_margin_left = 18.0
+content_margin_top = 10.0
+content_margin_right = 18.0
+content_margin_bottom = 10.0
+bg_color = Color(0.12, 0.16, 0.18, 0.66)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_controls_hint_key"]
+content_margin_left = 8.0
+content_margin_top = 2.0
+content_margin_right = 8.0
+content_margin_bottom = 2.0
+bg_color = Color(0.95, 0.82, 0.54, 0.18)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(1, 0.94, 0.75, 0.4)
+corner_radius_top_left = 5
+corner_radius_top_right = 5
+corner_radius_bottom_right = 5
+corner_radius_bottom_left = 5
 
 [node name="GooseGameHud" type="CanvasLayer" unique_id=1863358241]
 layer = 2
@@ -69,7 +96,6 @@ grow_horizontal = 2
 
 [node name="TimerWidget" parent="Root" unique_id=95327482 instance=ExtResource("3_timer")]
 layout_mode = 1
-anchors_preset = 0
 offset_left = 16.0
 offset_top = 14.0
 offset_right = 316.0
@@ -88,6 +114,141 @@ offset_right = -16.0
 offset_bottom = -16.0
 grow_horizontal = 0
 grow_vertical = 0
+
+[node name="ControlsHintPanel" type="PanelContainer" parent="Root" unique_id=1483325823]
+visible = false
+z_index = 99
+custom_minimum_size = Vector2(940, 0)
+layout_mode = 1
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -470.0
+offset_top = -86.0
+offset_right = 470.0
+offset_bottom = -30.0
+grow_horizontal = 2
+grow_vertical = 0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_controls_hint_panel")
+
+[node name="Margin" type="MarginContainer" parent="Root/ControlsHintPanel" unique_id=1105312294]
+layout_mode = 2
+
+[node name="Row" type="HBoxContainer" parent="Root/ControlsHintPanel/Margin" unique_id=924904056]
+layout_mode = 2
+theme_override_constants/separation = 14
+alignment = 1
+
+[node name="MoveHint" type="HBoxContainer" parent="Root/ControlsHintPanel/Margin/Row" unique_id=384969061]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="KeyLabel" type="Label" parent="Root/ControlsHintPanel/Margin/Row/MoveHint" unique_id=492566008]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.94, 0.75, 1)
+theme_override_font_sizes/font_size = 18
+theme_override_styles/normal = SubResource("StyleBoxFlat_controls_hint_key")
+text = "WASD"
+horizontal_alignment = 1
+
+[node name="ActionLabel" type="Label" parent="Root/ControlsHintPanel/Margin/Row/MoveHint" unique_id=1767063936]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.95, 0.91, 0.8, 1)
+theme_override_font_sizes/font_size = 18
+text = "Move"
+
+[node name="LookHint" type="HBoxContainer" parent="Root/ControlsHintPanel/Margin/Row" unique_id=1333942240]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="KeyLabel" type="Label" parent="Root/ControlsHintPanel/Margin/Row/LookHint" unique_id=1298505700]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.94, 0.75, 1)
+theme_override_font_sizes/font_size = 18
+theme_override_styles/normal = SubResource("StyleBoxFlat_controls_hint_key")
+text = "Mouse"
+horizontal_alignment = 1
+
+[node name="ActionLabel" type="Label" parent="Root/ControlsHintPanel/Margin/Row/LookHint" unique_id=1462384472]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.95, 0.91, 0.8, 1)
+theme_override_font_sizes/font_size = 18
+text = "Look"
+
+[node name="JumpHint" type="HBoxContainer" parent="Root/ControlsHintPanel/Margin/Row" unique_id=831738941]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="KeyLabel" type="Label" parent="Root/ControlsHintPanel/Margin/Row/JumpHint" unique_id=936681845]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.94, 0.75, 1)
+theme_override_font_sizes/font_size = 18
+theme_override_styles/normal = SubResource("StyleBoxFlat_controls_hint_key")
+text = "Space"
+horizontal_alignment = 1
+
+[node name="ActionLabel" type="Label" parent="Root/ControlsHintPanel/Margin/Row/JumpHint" unique_id=549586534]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.95, 0.91, 0.8, 1)
+theme_override_font_sizes/font_size = 18
+text = "Jump"
+
+[node name="FlapHint" type="HBoxContainer" parent="Root/ControlsHintPanel/Margin/Row" unique_id=66015740]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="KeyLabel" type="Label" parent="Root/ControlsHintPanel/Margin/Row/FlapHint" unique_id=1514434930]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.94, 0.75, 1)
+theme_override_font_sizes/font_size = 18
+theme_override_styles/normal = SubResource("StyleBoxFlat_controls_hint_key")
+text = "Space"
+horizontal_alignment = 1
+
+[node name="ActionLabel" type="Label" parent="Root/ControlsHintPanel/Margin/Row/FlapHint" unique_id=148508026]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.95, 0.91, 0.8, 1)
+theme_override_font_sizes/font_size = 18
+text = "Hold to Fly / Flap"
+
+[node name="SlideHint" type="HBoxContainer" parent="Root/ControlsHintPanel/Margin/Row" unique_id=2095039717]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="KeyLabel" type="Label" parent="Root/ControlsHintPanel/Margin/Row/SlideHint" unique_id=1788130057]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.94, 0.75, 1)
+theme_override_font_sizes/font_size = 18
+theme_override_styles/normal = SubResource("StyleBoxFlat_controls_hint_key")
+text = "Ctrl"
+horizontal_alignment = 1
+
+[node name="ActionLabel" type="Label" parent="Root/ControlsHintPanel/Margin/Row/SlideHint" unique_id=451858354]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.95, 0.91, 0.8, 1)
+theme_override_font_sizes/font_size = 18
+text = "Slide / Dive"
+
+[node name="HonkHint" type="HBoxContainer" parent="Root/ControlsHintPanel/Margin/Row" unique_id=439396132]
+layout_mode = 2
+theme_override_constants/separation = 6
+
+[node name="KeyLabel" type="Label" parent="Root/ControlsHintPanel/Margin/Row/HonkHint" unique_id=1834000508]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.94, 0.75, 1)
+theme_override_font_sizes/font_size = 18
+theme_override_styles/normal = SubResource("StyleBoxFlat_controls_hint_key")
+text = "Q"
+horizontal_alignment = 1
+
+[node name="ActionLabel" type="Label" parent="Root/ControlsHintPanel/Margin/Row/HonkHint" unique_id=2139648320]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.95, 0.91, 0.8, 1)
+theme_override_font_sizes/font_size = 18
+text = "Honk"
 
 [node name="FlightAimDot" type="ColorRect" parent="Root" unique_id=706175434]
 visible = false
@@ -117,11 +278,10 @@ offset_top = 16.0
 offset_right = -16.0
 offset_bottom = 38.0
 grow_horizontal = 0
-mouse_filter = 2
 theme_override_colors/font_color = Color(0.94509804, 0.8745098, 0.7411765, 0.9)
 theme_override_font_sizes/font_size = 15
-horizontal_alignment = 2
 text = "FPS 60"
+horizontal_alignment = 2
 
 [node name="DebugPanel" type="PanelContainer" parent="Root" unique_id=926726965]
 custom_minimum_size = Vector2(288, 0)

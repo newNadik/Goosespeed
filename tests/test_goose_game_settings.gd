@@ -14,6 +14,7 @@ func _ready() -> void:
 	var original_head_look_smoothness: float = GooseGameSettings.head_look_smoothness
 	var original_straw_hat_unlocked: bool = GooseGameSettings.straw_hat_unlocked
 	var original_straw_hat_equipped: bool = GooseGameSettings.straw_hat_equipped
+	var original_controls_hint_seen: bool = GooseGameSettings.controls_hint_seen
 	var original_live_override := bool(ProjectSettings.get_setting(
 		GooseGameSettings.LIVE_BUILD_OVERRIDE_SETTING,
 		false,
@@ -30,6 +31,7 @@ func _ready() -> void:
 	GooseGameSettings.head_look_smoothness = 11.5
 	GooseGameSettings.straw_hat_unlocked = true
 	GooseGameSettings.straw_hat_equipped = true
+	GooseGameSettings.controls_hint_seen = true
 	GooseGameSettings.save_settings()
 	GooseGameSettings.debug_hud_visible = true
 	GooseGameSettings.music_enabled = true
@@ -41,6 +43,7 @@ func _ready() -> void:
 	GooseGameSettings.head_look_smoothness = 3.0
 	GooseGameSettings.straw_hat_unlocked = false
 	GooseGameSettings.straw_hat_equipped = false
+	GooseGameSettings.controls_hint_seen = false
 	GooseGameSettings.load_settings()
 	if GooseGameSettings.debug_hud_visible:
 		push_error("Saved debug HUD visibility did not load")
@@ -82,6 +85,16 @@ func _ready() -> void:
 		push_error("Saved straw hat equipped flag did not load")
 		get_tree().quit(1)
 		return
+	if not GooseGameSettings.controls_hint_seen:
+		push_error("Saved controls hint seen flag did not load")
+		get_tree().quit(1)
+		return
+	GooseGameSettings.controls_hint_seen = false
+	GooseGameSettings.mark_controls_hint_seen()
+	if not GooseGameSettings.controls_hint_seen or GooseGameSettings.should_show_controls_hint():
+		push_error("Controls hint seen helper did not update first-run state")
+		get_tree().quit(1)
+		return
 
 	var prototype_settings := get_node_or_null("/root/Settings")
 	if prototype_settings != null and str(prototype_settings.get("character_controller")) != "q3_n_flight":
@@ -101,6 +114,7 @@ func _ready() -> void:
 			original_head_look_smoothness,
 			original_straw_hat_unlocked,
 			original_straw_hat_equipped,
+			original_controls_hint_seen,
 			original_live_override,
 		)
 		get_tree().quit(1)
@@ -119,6 +133,7 @@ func _ready() -> void:
 			original_head_look_smoothness,
 			original_straw_hat_unlocked,
 			original_straw_hat_equipped,
+			original_controls_hint_seen,
 			original_live_override,
 		)
 		get_tree().quit(1)
@@ -136,6 +151,7 @@ func _ready() -> void:
 		original_head_look_smoothness,
 		original_straw_hat_unlocked,
 		original_straw_hat_equipped,
+		original_controls_hint_seen,
 		original_live_override,
 	)
 	print("Goose game settings OK")
@@ -345,6 +361,7 @@ func _restore_settings(
 	head_look_smoothness: float,
 	straw_hat_unlocked: bool,
 	straw_hat_equipped: bool,
+	controls_hint_seen: bool,
 	live_override: bool,
 ) -> void:
 	ProjectSettings.set_setting(GooseGameSettings.LIVE_BUILD_OVERRIDE_SETTING, live_override)
@@ -358,4 +375,5 @@ func _restore_settings(
 	GooseGameSettings.head_look_smoothness = head_look_smoothness
 	GooseGameSettings.straw_hat_unlocked = straw_hat_unlocked
 	GooseGameSettings.straw_hat_equipped = straw_hat_equipped
+	GooseGameSettings.controls_hint_seen = controls_hint_seen
 	GooseGameSettings.save_settings()

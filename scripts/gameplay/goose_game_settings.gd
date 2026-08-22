@@ -78,6 +78,7 @@ var head_look_intensity := DEFAULT_HEAD_LOOK_INTENSITY
 var head_look_smoothness := DEFAULT_HEAD_LOOK_SMOOTHNESS
 var straw_hat_unlocked := false
 var straw_hat_equipped := false
+var controls_hint_seen := false
 var hud_elements := {}
 
 
@@ -115,6 +116,7 @@ func load_settings() -> void:
 		straw_hat_unlocked
 		and bool(config.get_value(SECTION, "straw_hat_equipped", straw_hat_equipped))
 	)
+	controls_hint_seen = bool(config.get_value(SECTION, "controls_hint_seen", controls_hint_seen))
 	for element in HUD_ELEMENTS:
 		var key := "hud_%s" % element
 		hud_elements[element] = bool(config.get_value(SECTION, key, hud_elements[element]))
@@ -134,6 +136,7 @@ func save_settings() -> void:
 	config.set_value(SECTION, "head_look_smoothness", head_look_smoothness)
 	config.set_value(SECTION, "straw_hat_unlocked", straw_hat_unlocked)
 	config.set_value(SECTION, "straw_hat_equipped", straw_hat_equipped)
+	config.set_value(SECTION, "controls_hint_seen", controls_hint_seen)
 	for element in HUD_ELEMENTS:
 		config.set_value(SECTION, "hud_%s" % element, bool(hud_elements[element]))
 	var error := config.save(SAVE_PATH)
@@ -242,6 +245,18 @@ func set_accessory_equipped(accessory: String, equipped: bool) -> void:
 			straw_hat_equipped = equipped
 			save_settings()
 			settings_changed.emit()
+
+
+func should_show_controls_hint() -> bool:
+	return not controls_hint_seen
+
+
+func mark_controls_hint_seen() -> void:
+	if controls_hint_seen:
+		return
+	controls_hint_seen = true
+	save_settings()
+	settings_changed.emit()
 
 
 func is_hud_element_visible(element: String) -> bool:

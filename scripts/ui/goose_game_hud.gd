@@ -40,6 +40,14 @@ const ACCELERATION_SMOOTHNESS := 14.0
 @onready var acceleration_gauge: Control = $Root/MovementWidget/AccelerationGauge
 @onready var flight_aim_dot: Control = $Root/FlightAimDot
 @onready var fps_label: Label = $Root/FpsLabel
+@onready var controls_hint_panel: PanelContainer = $Root/ControlsHintPanel
+@onready var move_hint_key_label: Label = $Root/ControlsHintPanel/Margin/Row/MoveHint/KeyLabel
+@onready var jump_hint_key_label: Label = $Root/ControlsHintPanel/Margin/Row/JumpHint/KeyLabel
+@onready var jump_hint_action_label: Label = $Root/ControlsHintPanel/Margin/Row/JumpHint/ActionLabel
+@onready var flap_hint_item: Control = $Root/ControlsHintPanel/Margin/Row/FlapHint
+@onready var flap_hint_key_label: Label = $Root/ControlsHintPanel/Margin/Row/FlapHint/KeyLabel
+@onready var slide_hint_key_label: Label = $Root/ControlsHintPanel/Margin/Row/SlideHint/KeyLabel
+@onready var honk_hint_key_label: Label = $Root/ControlsHintPanel/Margin/Row/HonkHint/KeyLabel
 @onready var debug_panel: PanelContainer = $Root/DebugPanel
 @onready var state_label: Label = $Root/DebugPanel/Margin/VBox/StateLabel
 @onready var raw_movement_label: Label = $Root/DebugPanel/Margin/VBox/RawMovementLabel
@@ -103,12 +111,15 @@ func set_coin_target(value: int) -> void:
 	_update_labels()
 
 
-func play_level_start_countdown() -> void:
+func play_level_start_countdown(show_controls_hint := false) -> void:
 	_ensure_countdown_rect()
 	countdown_playing = true
+	_update_controls_hint_bindings()
+	controls_hint_panel.visible = show_controls_hint
 	for texture in COUNTDOWN_TEXTURES:
 		await _play_countdown_step(texture)
 	countdown_rect.visible = false
+	controls_hint_panel.visible = false
 	countdown_playing = false
 
 
@@ -462,6 +473,113 @@ func _ensure_countdown_rect() -> void:
 	countdown_rect.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
 	countdown_rect.z_index = 100
 	root.add_child(countdown_rect)
+
+
+func _update_controls_hint_bindings() -> void:
+	var jump_binding := _primary_binding_label(&"player_jump", "Space")
+	var flap_binding := _primary_binding_label(&"player_flap", jump_binding)
+	move_hint_key_label.text = _movement_binding_label()
+	jump_hint_key_label.text = jump_binding
+	slide_hint_key_label.text = _primary_binding_label(&"player_crouch", "Ctrl")
+	honk_hint_key_label.text = _primary_binding_label(&"player_honk", "Q")
+	if flap_binding == jump_binding:
+		jump_hint_action_label.text = "Jump / Hold to Fly"
+		flap_hint_item.visible = false
+	else:
+		jump_hint_action_label.text = "Jump"
+		flap_hint_key_label.text = flap_binding
+		flap_hint_item.visible = true
+
+
+func _movement_binding_label() -> String:
+	var forward := _primary_binding_label(&"player_forward", "W")
+	var left := _primary_binding_label(&"player_left", "A")
+	var back := _primary_binding_label(&"player_back", "S")
+	var right := _primary_binding_label(&"player_right", "D")
+	if forward == "W" and left == "A" and back == "S" and right == "D":
+		return "WASD"
+	if forward == "Up" and left == "Left" and back == "Down" and right == "Right":
+		return "Arrows"
+	return "%s/%s/%s/%s" % [forward, left, back, right]
+
+
+func _primary_binding_label(action: StringName, fallback: String) -> String:
+	if not InputMap.has_action(action):
+		return fallback
+	var events := InputMap.action_get_events(action)
+	for event in events:
+		var key_event := event as InputEventKey
+		if key_event != null:
+			return _key_event_label(key_event, fallback)
+	for event in events:
+		var mouse_event := event as InputEventMouseButton
+		if mouse_event != null:
+			return _mouse_button_label(mouse_event.button_index)
+	for event in events:
+		var joy_button := event as InputEventJoypadButton
+		if joy_button != null:
+			return _joy_button_label(joy_button.button_index)
+	for event in events:
+		var joy_motion := event as InputEventJoypadMotion
+		if joy_motion != null:
+			return _joy_motion_label(joy_motion)
+	return fallback
+
+
+func _key_event_label(event: InputEventKey, fallback: String) -> String:
+	var keycode := event.physical_keycode if event.physical_keycode != 0 else event.keycode
+	if keycode == 0:
+		return fallback
+	match keycode:
+		KEY_UP:
+			return "Up"
+		KEY_DOWN:
+			return "Down"
+		KEY_LEFT:
+			return "Left"
+		KEY_RIGHT:
+			return "Right"
+		_:
+			var label := OS.get_keycode_string(keycode)
+			return fallback if label.is_empty() else label
+
+
+func _mouse_button_label(button: MouseButton) -> String:
+	match button:
+		MOUSE_BUTTON_LEFT:
+			return "Mouse 1"
+		MOUSE_BUTTON_RIGHT:
+			return "Mouse 2"
+		MOUSE_BUTTON_MIDDLE:
+			return "Mouse 3"
+		_:
+			return "Mouse %d" % int(button)
+
+
+func _joy_button_label(button: JoyButton) -> String:
+	match button:
+		JOY_BUTTON_A:
+			return "Pad A"
+		JOY_BUTTON_B:
+			return "Pad B"
+		JOY_BUTTON_X:
+			return "Pad X"
+		JOY_BUTTON_Y:
+			return "Pad Y"
+		JOY_BUTTON_LEFT_SHOULDER:
+			return "LB"
+		JOY_BUTTON_RIGHT_SHOULDER:
+			return "RB"
+		_:
+			return "Pad %d" % int(button)
+
+
+func _joy_motion_label(event: InputEventJoypadMotion) -> String:
+	if event.axis == JOY_AXIS_LEFT_X:
+		return "LS X"
+	if event.axis == JOY_AXIS_LEFT_Y:
+		return "LS Y"
+	return "Axis %d" % int(event.axis)
 
 
 func _play_countdown_step(texture: Texture2D) -> void:

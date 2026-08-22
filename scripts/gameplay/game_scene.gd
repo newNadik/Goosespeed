@@ -285,8 +285,11 @@ func _begin_level_start_countdown() -> void:
 	_set_player_controls_enabled(false)
 	_stop_music()
 	_play_countdown_sfx()
+	var show_controls_hint := _should_show_controls_hint()
 	if game_hud.has_method("play_level_start_countdown"):
-		await game_hud.play_level_start_countdown()
+		await game_hud.play_level_start_countdown(show_controls_hint)
+	if show_controls_hint:
+		_mark_controls_hint_seen()
 	_set_player_controls_enabled(true)
 	_play_random_game_music()
 	countdown_active = false
@@ -350,6 +353,17 @@ func _stop_music() -> void:
 	var audio_manager := get_node_or_null("/root/AudioManager")
 	if audio_manager != null and audio_manager.has_method("stop_music"):
 		audio_manager.stop_music()
+
+
+func _should_show_controls_hint() -> bool:
+	var settings := get_node_or_null("/root/GooseGameSettings")
+	return settings != null and settings.has_method("should_show_controls_hint") and settings.should_show_controls_hint()
+
+
+func _mark_controls_hint_seen() -> void:
+	var settings := get_node_or_null("/root/GooseGameSettings")
+	if settings != null and settings.has_method("mark_controls_hint_seen"):
+		settings.mark_controls_hint_seen()
 
 
 func _load_and_attach_course() -> void:
