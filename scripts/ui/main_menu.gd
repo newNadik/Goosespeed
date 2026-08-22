@@ -29,6 +29,7 @@ func _ready() -> void:
 	start_button.pressed.connect(on_start_pressed)
 	settings_button.pressed.connect(on_settings_pressed)
 	quit_button.pressed.connect(on_quit_pressed)
+	quit_button.visible = not OS.has_feature("web")
 	settings_overlay.back_requested.connect(on_settings_back_requested)
 	Input.mouse_mode = Input.MOUSE_MODE_VISIBLE
 	start_button.grab_focus()
