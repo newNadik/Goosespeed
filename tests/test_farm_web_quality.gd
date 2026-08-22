@@ -147,6 +147,17 @@ func _build_fixture(force_enabled: bool) -> Node3D:
 	mud.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
 	root.add_child(mud)
 
+	var plants := Node3D.new()
+	plants.name = "plants"
+	root.add_child(plants)
+
+	var plant_mesh := MeshInstance3D.new()
+	plant_mesh.name = "TreeMesh"
+	plant_mesh.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
+	plant_mesh.visibility_range_end = 0.0
+	plant_mesh.visibility_range_end_margin = 0.0
+	plants.add_child(plant_mesh)
+
 	var animals := Node3D.new()
 	animals.name = "animals"
 	root.add_child(animals)
@@ -185,6 +196,11 @@ func _build_fixture(force_enabled: bool) -> Node3D:
 	coin_area.monitorable = true
 	coins.add_child(coin_area)
 
+	var coin_mesh := MeshInstance3D.new()
+	coin_mesh.name = "CoinMesh"
+	coin_mesh.cast_shadow = GeometryInstance3D.SHADOW_CASTING_SETTING_ON
+	coins.add_child(coin_mesh)
+
 	var coin_spinner := Node3D.new()
 	coin_spinner.name = "CoinSpinner"
 	coin_spinner.set_script(SpinningPropScript)
@@ -205,12 +221,14 @@ func _inactive_fixture_remained_unchanged(root: Node3D) -> bool:
 	var corn_field := root.get_node("FarmCornFields/CornField0") as MultiMeshInstance3D
 	var barn_mesh := root.get_node("buildings/BarnMesh") as MeshInstance3D
 	var car_mesh := root.get_node("cars/CarMesh") as MeshInstance3D
+	var plant_mesh := root.get_node("plants/TreeMesh") as MeshInstance3D
 	var animals := root.get_node("animals") as Node3D
 	var animal_area := root.get_node("animals/ChickenWanderArea") as Area3D
 	var animal_collision := root.get_node("animals/ChickenWanderArea/AnimalCollision") as CollisionShape3D
 	var animal_mesh := root.get_node("animals/AnimalMesh") as MeshInstance3D
 	var decorative_animal := root.get_node("animals/Sheep") as Node3D
 	var coin_area := root.get_node("coins/CoinArea") as Area3D
+	var coin_mesh := root.get_node("coins/CoinMesh") as MeshInstance3D
 	var coin_spinner := root.get_node("coins/CoinSpinner")
 	if Engine.max_fps != 0:
 		push_error("Inactive farm web quality changed max FPS")
@@ -242,6 +260,9 @@ func _inactive_fixture_remained_unchanged(root: Node3D) -> bool:
 	if not is_equal_approx(car_mesh.visibility_range_end, 0.0):
 		push_error("Inactive farm web quality changed small scenery visibility range")
 		return false
+	if plant_mesh.cast_shadow != GeometryInstance3D.SHADOW_CASTING_SETTING_ON:
+		push_error("Inactive farm web quality changed plant shadows")
+		return false
 	if animal_mesh.cast_shadow != GeometryInstance3D.SHADOW_CASTING_SETTING_ON:
 		push_error("Inactive farm web quality changed animal shadows")
 		return false
@@ -263,6 +284,9 @@ func _inactive_fixture_remained_unchanged(root: Node3D) -> bool:
 	if not coin_area.monitoring or not coin_area.monitorable:
 		push_error("Inactive farm web quality changed coin areas")
 		return false
+	if coin_mesh.cast_shadow != GeometryInstance3D.SHADOW_CASTING_SETTING_ON:
+		push_error("Inactive farm web quality changed coin shadows")
+		return false
 	if not is_equal_approx(float(coin_spinner.get("update_interval")), 0.0):
 		push_error("Inactive farm web quality changed coin spin interval")
 		return false
@@ -277,12 +301,14 @@ func _active_fixture_applied_settings(root: Node3D) -> bool:
 	var barn_mesh := root.get_node("buildings/BarnMesh") as MeshInstance3D
 	var car_mesh := root.get_node("cars/CarMesh") as MeshInstance3D
 	var mud := root.get_node("mud") as MeshInstance3D
+	var plant_mesh := root.get_node("plants/TreeMesh") as MeshInstance3D
 	var animals := root.get_node("animals") as Node3D
 	var animal_area := root.get_node("animals/ChickenWanderArea") as Area3D
 	var animal_collision := root.get_node("animals/ChickenWanderArea/AnimalCollision") as CollisionShape3D
 	var animal_mesh := root.get_node("animals/AnimalMesh") as MeshInstance3D
 	var decorative_animal := root.get_node("animals/Sheep") as Node3D
 	var coin_area := root.get_node("coins/CoinArea") as Area3D
+	var coin_mesh := root.get_node("coins/CoinMesh") as MeshInstance3D
 	var coin_spinner := root.get_node("coins/CoinSpinner")
 	if Engine.max_fps != 60:
 		push_error("Farm web quality did not cap max FPS")
@@ -323,8 +349,8 @@ func _active_fixture_applied_settings(root: Node3D) -> bool:
 	if corn_field.cast_shadow != GeometryInstance3D.SHADOW_CASTING_SETTING_OFF:
 		push_error("Farm web quality did not disable corn shadows")
 		return false
-	if barn_mesh.cast_shadow != GeometryInstance3D.SHADOW_CASTING_SETTING_OFF:
-		push_error("Farm web quality did not disable building shadows")
+	if barn_mesh.cast_shadow != GeometryInstance3D.SHADOW_CASTING_SETTING_ON:
+		push_error("Farm web quality changed building shadows")
 		return false
 	if not is_equal_approx(barn_mesh.visibility_range_end, 280.0):
 		push_error("Farm web quality did not set building visibility range")
@@ -338,8 +364,17 @@ func _active_fixture_applied_settings(root: Node3D) -> bool:
 	if not is_equal_approx(car_mesh.visibility_range_end_margin, 25.0):
 		push_error("Farm web quality did not set small scenery visibility margin")
 		return false
+	if car_mesh.cast_shadow != GeometryInstance3D.SHADOW_CASTING_SETTING_ON:
+		push_error("Farm web quality changed car shadows")
+		return false
 	if mud.cast_shadow != GeometryInstance3D.SHADOW_CASTING_SETTING_OFF:
 		push_error("Farm web quality did not disable top-level scenery shadows")
+		return false
+	if plant_mesh.cast_shadow != GeometryInstance3D.SHADOW_CASTING_SETTING_ON:
+		push_error("Farm web quality changed plant shadows")
+		return false
+	if not is_equal_approx(plant_mesh.visibility_range_end, 180.0):
+		push_error("Farm web quality did not set plant visibility range")
 		return false
 	if animal_mesh.cast_shadow != GeometryInstance3D.SHADOW_CASTING_SETTING_ON:
 		push_error("Farm web quality changed animal shadows")
@@ -353,14 +388,17 @@ func _active_fixture_applied_settings(root: Node3D) -> bool:
 	if decorative_animal.process_mode != Node.PROCESS_MODE_DISABLED:
 		push_error("Farm web quality did not disable decorative animal processing")
 		return false
-	if animal_area.monitoring or animal_area.monitorable:
-		push_error("Farm web quality did not disable animal areas")
+	if not animal_area.monitoring or not animal_area.monitorable:
+		push_error("Farm web quality changed animal areas")
 		return false
-	if not animal_collision.disabled:
-		push_error("Farm web quality did not disable animal collisions")
+	if animal_collision.disabled:
+		push_error("Farm web quality changed animal collisions")
 		return false
 	if not coin_area.monitoring or not coin_area.monitorable:
 		push_error("Farm web quality changed coin areas")
+		return false
+	if coin_mesh.cast_shadow != GeometryInstance3D.SHADOW_CASTING_SETTING_OFF:
+		push_error("Farm web quality did not disable coin shadows")
 		return false
 	if not is_equal_approx(float(coin_spinner.get("update_interval")), 0.1):
 		push_error("Farm web quality did not throttle coin spin")

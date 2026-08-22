@@ -27,13 +27,10 @@ const VIEWPORT_3D_SCALE_PROPERTY := "scaling_3d_scale"
 @export var corn_disable_shadows := true
 @export var scenery_disable_shadows := true
 @export var scenery_shadow_roots := PackedStringArray([
-	"buildings",
-	"cars",
 	"FarmRoad",
 	"trash",
 	"stoneroad",
 	"mud",
-	"plants",
 	"bus",
 ])
 @export var animal_disable_runtime := true
@@ -42,9 +39,10 @@ const VIEWPORT_3D_SCALE_PROPERTY := "scaling_3d_scale"
 	"ChickenWanderArea",
 	"PigeonWanderArea",
 ])
-@export var animal_disable_collision_shapes := true
-@export var animal_disable_areas := true
+@export var animal_disable_collision_shapes := false
+@export var animal_disable_areas := false
 @export var animal_stop_audio := true
+@export var coin_disable_shadows := true
 @export_range(0.0, 1.0, 0.01, "or_greater") var coin_spin_update_interval := 0.1
 @export var scenery_visibility_range_end := 180.0
 @export var scenery_visibility_range_end_margin := 25.0
@@ -255,6 +253,9 @@ func _apply_coin_settings(course_root: Node) -> void:
 	var coin_root := course_root.find_child("coins", true, false)
 	if coin_root == null:
 		return
+
+	if coin_disable_shadows:
+		_disable_shadows_for_tree(coin_root)
 
 	for child in coin_root.find_children("*", "Node3D", true, false):
 		_set_property_if_available(child, "update_interval", coin_spin_update_interval)
