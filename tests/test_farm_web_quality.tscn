@@ -1,0 +1,6 @@
+[gd_scene load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://tests/test_farm_web_quality.gd" id="1_web_quality_test"]
+
+[node name="FarmWebQualityTest" type="Node"]
+script = ExtResource("1_web_quality_test")

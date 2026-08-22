@@ -15,12 +15,14 @@ extends Node3D
 @export_range(0, 8, 1, "or_greater") var bird_spawn_max_count := 1
 @export var bird_speed_range := Vector2(18.0, 24.0)
 @export_range(0.1, 1.0, 0.01) var bird_flight_area_scale := 0.7
+@export_range(0.0, 1.0, 0.01, "or_greater") var update_interval := 0.0
 
 var rng := RandomNumberGenerator.new()
 var drift_direction := Vector3.RIGHT
 var drift_speed := 0.5
 var wrap_margin := 28.0
 var _bird_spawn_time_remaining := 0.0
+var _update_time_buffer := 0.0
 
 
 func _ready() -> void:
@@ -30,6 +32,13 @@ func _ready() -> void:
 
 
 func _process(delta: float) -> void:
+	if update_interval > 0.0:
+		_update_time_buffer += delta
+		if _update_time_buffer < update_interval:
+			return
+		delta = _update_time_buffer
+		_update_time_buffer = 0.0
+
 	if drift_speed > 0.0:
 		for cloud in get_children():
 			if cloud is Node3D and bool(cloud.get_meta(&"is_cloud", false)):
